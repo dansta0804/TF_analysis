@@ -15,7 +15,6 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
         name <- gsub(" ", "_", names(peak_set[object]))
         peak <- peak_set[[object]]
         seqlengths(peak) <- seqlengths(peak) - 10001
-        anno_db <- "org.Mm.eg.db"
         peak_annotation <-
             annotatePeak(peak, tssRegion = c(-3000, 3000), TxDb = known_genes,
             annoDb = anno_db)
