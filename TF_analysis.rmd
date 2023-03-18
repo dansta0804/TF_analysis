@@ -1,0 +1,79 @@
+```{r LIBRARIES, echo=FALSE, message=FALSE, warning=FALSE}
+library(pacman)
+p_load(GenomicRanges, rtracklayer, dplyr, plyranges, org.Mm.eg.db,
+TxDb.Mmusculus.UCSC.mm10.knownGene, ChIPseeker, BSgenome.Mmusculus.UCSC.mm10,
+annotables)
+```
+
+
+```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
+PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
+BIGBEDS     <- paste0(PROJECT, "Input/")
+MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
+HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
+INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
+FUNCTIONS   <- paste0(PROJECT, "functions.R")
+RESULTS     <- paste0(INTER_FILES, "Annotated_peaks")
+
+samples <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
+# nolint end
+```
+
+```{r FUNCTION_SOURCING, echo=FALSE, message=FALSE, warning=FALSE}
+source(FUNCTIONS)
+```
+
+```{r BIGBED_READING, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
+# Listing sample BigBed files for each analyzed organism:
+bbfiles_mm <- list.files(path = MMUSCULUS, "*bb")
+bbfiles_hg <- list.files(path = HSAPIENS, "*bb")
+
+# Making a granges list for each analyzed organism:
+grl_mm <- GRangesList()
+grl_hg <- GRangesList()
+
+chr_abr <- c(paste0("chr", 1:19), "chrX", "chrY")
+len_mm <- length(bbfiles_mm)    # Length of samples for Mus musculus
+len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
+
+# Creating GRanges objects and extracting certain chromosomes for Mus musculus:
+for (i in 1:len_mm) {
+    grl_mm[[i]] <-
+        import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
+        filter(seqnames %in% chr_abr)
+    names(grl_mm)[i] <- samples$Graph_names[samples$Filename == bbfiles_mm[i]]
+}
+
+# Creating GRanges objects and extracting certain chromosomes for Homo sapiens:
+for (i in 1:len_hg) {
+    grl_hg[[i]] <-
+        import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
+        filter(seqnames %in% chr_abr)
+    names(grl_hg)[i] <- samples$Graph_names[samples$Filename == bbfiles_hg[i]]
+}
+# nolint end
+```
+
+
+```{r PWM_READING, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
+# Making a list of analyzed TF PWM matrices from different organisms:
+pwm <- get_PWM("GATA3_MOUSE.H11MO.0.A.pwm")
+# nolint end
+```
+
+```{r MM_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+
+mm_annotated_peaks <-
+    annotate_peaks(grl_mm, grcm38, TxDb.Mmusculus.UCSC.mm10.knownGene,
+                   "org.Mm.eg.db")
+
+write.table(mm_annotated_peaks,
+            file = paste0(RESULTS, "/mm_annotated_peaks.txt"), sep = "\t",
+            quote = FALSE, row.names = FALSE)
+
+# nolint end
+```
