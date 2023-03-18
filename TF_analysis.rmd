@@ -2,7 +2,8 @@
 library(pacman)
 p_load(GenomicRanges, rtracklayer, dplyr, plyranges, org.Mm.eg.db,
 TxDb.Mmusculus.UCSC.mm10.knownGene, ChIPseeker, BSgenome.Mmusculus.UCSC.mm10,
-annotables)
+annotables, BSgenome.Hsapiens.UCSC.hg19, TxDb.Hsapiens.UCSC.hg19.knownGene,
+org.Hs.eg.db)
 ```
 
 
@@ -74,6 +75,35 @@ mm_annotated_peaks <-
 write.table(mm_annotated_peaks,
             file = paste0(RESULTS, "/mm_annotated_peaks.txt"), sep = "\t",
             quote = FALSE, row.names = FALSE)
+
+# nolint end
+```
+
+```{r HG_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+# Getting positions of Homo sapiens genes:
+gene_ranges <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+
+# Adding 'gene_symbol' column to gene_ranges GRange:
+gene_ranges$gene_symbol <-
+    mapIds(org.Hs.eg.db, keys = gene_ranges$gene_id, column = "SYMBOL",
+           keytype = "ENTREZID", multiVals = "first")
+
+hg_genes <- GRangesList()
+
+# Šią dalį pakoreguoti - reikia, kad kiekvienas pelės mėginys būtų lyginamas
+# su kiekvienu žmogaus duomenų rinkiniu.
+# Getting the genes that overlap with Mus musculus genes:
+for (sample in 1:length(mm_annotated_peaks)) {
+    selected_genes <-
+        tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
+        tolower(gene_ranges$gene_symbol)
+                            
+    genes <- gene_ranges[selected_genes]
+
+    hg_genes[[sample]] <- genes
+    names(hg_genes)[sample] <- names(mm_annotated_peaks[sample])
+}
 
 # nolint end
 ```
