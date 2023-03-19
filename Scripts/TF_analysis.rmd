@@ -1,11 +1,10 @@
 ```{r LIBRARIES, echo=FALSE, message=FALSE, warning=FALSE}
 library(pacman)
-p_load(GenomicRanges, rtracklayer, dplyr, plyranges, org.Mm.eg.db,
+p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, org.Mm.eg.db,
 TxDb.Mmusculus.UCSC.mm10.knownGene, ChIPseeker, BSgenome.Mmusculus.UCSC.mm10,
 annotables, BSgenome.Hsapiens.UCSC.hg19, TxDb.Hsapiens.UCSC.hg19.knownGene,
 org.Hs.eg.db)
 ```
-
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
@@ -14,15 +13,17 @@ BIGBEDS     <- paste0(PROJECT, "Input/")
 MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
 HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
-FUNCTIONS   <- paste0(PROJECT, "functions.R")
+SCRIPTS     <- paste0(PROJECT, "Scripts/")
 RESULTS     <- paste0(INTER_FILES, "Annotated_peaks")
+FIGURES     <- paste0(PROJECT, "Figures/")
 
-samples <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
+SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
 # nolint end
 ```
 
 ```{r FUNCTION_SOURCING, echo=FALSE, message=FALSE, warning=FALSE}
-source(FUNCTIONS)
+source(paste0(SCRIPTS, "functions.R"))
+source(paste0(SCRIPTS, "plots.R"))
 ```
 
 ```{r BIGBED_READING, echo=FALSE, message=FALSE, warning=FALSE}
@@ -44,19 +45,20 @@ for (i in 1:len_mm) {
     grl_mm[[i]] <-
         import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
         filter(seqnames %in% chr_abr)
-    names(grl_mm)[i] <- samples$Graph_names[samples$Filename == bbfiles_mm[i]]
+    names(grl_mm)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_mm[i]]
 }
 
-# Creating GRanges objects and extracting certain chromosomes for Homo sapiens:
+# Creating GRanges objects and extracting certain chromosomes for Homo sapiens.
+# These files will be used as control samples to check whether TF binding sites
+# were predicted successfully using Homo sapiens annotation:
 for (i in 1:len_hg) {
     grl_hg[[i]] <-
         import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
         filter(seqnames %in% chr_abr)
-    names(grl_hg)[i] <- samples$Graph_names[samples$Filename == bbfiles_hg[i]]
+    names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
 }
 # nolint end
 ```
-
 
 ```{r PWM_READING, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
@@ -89,21 +91,109 @@ gene_ranges$gene_symbol <-
     mapIds(org.Hs.eg.db, keys = gene_ranges$gene_id, column = "SYMBOL",
            keytype = "ENTREZID", multiVals = "first")
 
+write.table(gene_ranges,
+            file = paste0(RESULTS, "/hg_annotation_genes.txt"), sep = "\t",
+            quote = FALSE, row.names = FALSE)
+
 hg_genes <- GRangesList()
 
-# Šią dalį pakoreguoti - reikia, kad kiekvienas pelės mėginys būtų lyginamas
-# su kiekvienu žmogaus duomenų rinkiniu.
-# Getting the genes that overlap with Mus musculus genes:
-for (sample in 1:length(mm_annotated_peaks)) {
+for (sample in seq_along(mm_annotated_peaks)) {
     selected_genes <-
         tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
         tolower(gene_ranges$gene_symbol)
                             
     genes <- gene_ranges[selected_genes]
 
-    hg_genes[[sample]] <- genes
-    names(hg_genes)[sample] <- names(mm_annotated_peaks[sample])
+    # These are the Homo sapiens genes that overlap with annotated Mus musculus
+    # peak genes. This information will be used to compare the results with
+    # control Homo sapiens samples:
+    hg_genes[[sample]] <- genes 
 }
+# nolint end
+```
+
+
+```{r GENE_COUNTS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+genes_samples <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(genes_samples) <- c("Sample", "Gene_count", "Percentage")
+
+for (sample in seq_along(mm_annotated_peaks)) {
+    genes_in_sample <- length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
+    row <-
+        c(names(mm_annotated_peaks[sample]), genes_in_sample,
+          (genes_in_sample / length(unique(gene_ranges$gene_symbol))) * 100)
+    genes_samples[nrow(genes_samples) + 1, ] <- row
+}
+
+plot1 <- show_gene_counts(genes_samples)
+png(file = paste0(FIGURES, "MM_gene_counts.png"), width = 700)
+plot1
+dev.off()
+# nolint end
+```
+
+```{r PWM_HITS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+# Making a data frame that stores data of how many PWM hits were found in
+# Homo sapiens genome:
+gene_hits_hg <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(gene_hits_hg) <- c("Gene", "Hits", "Length")
+
+
+
+seq_dataset_hg <- c()
+
+# Creating a sequence dataset that stores Homo sapiens gene sequences:
+for (object in seq_along(hg_genes)) {
+    gene_sequences <- getSeq(BSgenome.Hsapiens.UCSC.hg19, hg_genes)
+    names(gene_sequences) <- hg_genes$gene_symbol
+
+    # Creating a sequence set:
+    seq_dataset_hg <- c(seq_dataset_hg, gene_sequences)
+    names(seq_dataset_hg)[object] <- names(hg_genes)[object]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Determining the number of transcription factor binding hits:
+for (gene in 1:length(seq_dataset_dr[[6]])) {
+    hits <- countPWM(as.matrix(mpwm), as.character(seq_dataset_dr[[1]][gene]),
+                     min.score = "75%")
+    # matchPWM(as.matrix(mpwm), as.character(seq_dataset[[gene]]]),
+            #   min.score = "75%")
+    row = c(names(seq_dataset_dr[[6]][gene]), hits,
+            length(seq_dataset_dr[[6]][[gene]]))
+    gene_hits_dr[nrow(gene_hits_dr) + 1, ] <- row
+}
+
+# Writing the results into a file:
+write.table(gene_hits_dr, file = paste0(INTER_FILES, "/Dr_Hits.txt"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+scatterplot(as.numeric(Hits) ~ as.numeric(Length), data = gene_hits_dr,
+            xlab="Weight of Car", ylab="Miles Per Gallon",
+            main="Enhanced Scatter Plot")
 
 # nolint end
 ```
