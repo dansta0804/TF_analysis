@@ -1,4 +1,10 @@
 # nolint start
+PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
+INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
+RESULTS     <- paste0(INTER_FILES, "Generated_files")
+
+
+
 # A function that reads PWM of certain transcription factor:
 get_PWM <- function(pwm_name) {
     TF_pwm <-
@@ -36,6 +42,33 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
         names(grl_annotation)[object] <- names(peak_set)[object]
     }
     return(grl_annotation)
+}
+
+count_pwm_hits <- function(sequence_dataset, pwm) {
+    # This is a list that stores pwm hit counts for each sample:
+    gene_hits_total <- list()
+
+    # Predicting the number of transcription factor binding hits in Homo
+    # sapiens by using PWM matrix:
+    for (sample in 1:length(sequence_dataset)) {
+        gene_hits <- data.frame(matrix(ncol = 3, nrow = 0))
+        colnames(gene_hits) <- c("Gene", "Hits", "Length")
+        for (gene in 1:length(sequence_dataset[[sample]])) {
+            pwm_hits <- countPWM(as.matrix(pwm),
+                                as.character(sequence_dataset[[sample]][gene]),
+                                min.score = "75%")
+            row <- c(names(sequence_dataset[[sample]][gene]), pwm_hits,
+                    length(sequence_dataset[[sample]][[gene]]))
+            gene_hits[nrow(gene_hits) + 1, ] <- row
+        }
+        gene_hits_total[[sample]] <- gene_hits
+
+        # Writing the results into a file:
+        write.table(gene_hits_total[[sample]],
+                    file = paste0(RESULTS, "/Hg_pwm_hits.txt"),
+                    sep = "\t", quote = FALSE, row.names = FALSE)
+    }
+    return(gene_hits_total)
 }
 
 
