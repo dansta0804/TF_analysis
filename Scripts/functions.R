@@ -26,14 +26,14 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
             filter(entrez %in% entrezids) %>%
             dplyr::select(entrez, symbol)
 
-        m <- match(mm_annot$geneId, entrez2gene$entrez)
+        m <- match(annotation$geneId, entrez2gene$entrez)
         organism_annot <-
-            cbind(mm_annot[, 1:14], gene_symbol = entrez2gene$symbol[m],
-                  mm_annot[, 15:16])
+            cbind(annotation[, 1:14], gene_symbol = entrez2gene$symbol[m],
+                  annotation[, 15:16])
 
         # Defining an object that has two extra columns with gene id and symbol:
         grl_annotation[[object]] <- organism_annot
-        names(grl_annotation)[object] <- names(grl_annotation)[object]
+        names(grl_annotation)[object] <- names(peak_set)[object]
     }
     return(grl_annotation)
 }
