@@ -118,7 +118,7 @@ for (sample in seq_along(mm_annotated_peaks)) {
 genes_samples <- data.frame(matrix(ncol = 3, nrow = 0))
 colnames(genes_samples) <- c("Sample", "Gene_count", "Percentage")
 
-for (sample in seq_along(mm_annotated_peaks)) {
+for (sample in 1:length(mm_annotated_peaks)) {
     genes_in_sample <- length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
     row <-
         c(names(mm_annotated_peaks[sample]), genes_in_sample,
