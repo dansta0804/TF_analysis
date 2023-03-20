@@ -35,7 +35,6 @@ show_gene_counts <- function(data_frame) {
                     element_line(colour = "#cab5b5", size = 0.2,
                                  linetype = "longdash"),
                 legend.position = c(0.777, 0.788))
-
 return(plot)
 }
 
