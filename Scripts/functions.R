@@ -44,7 +44,25 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
     return(grl_annotation)
 }
 
-count_pwm_hits <- function(sequence_dataset, pwm) {
+# A function that is used to create a sequence dataset be retrieving specified
+# sequences from certain genome:
+get_sequences <- function(genome, genes_of_interest) {
+    sequence_dataset <- c()
+
+    # Creating a sequence dataset that stores certain genome gene sequences:
+    for (gene in 1:length(genes_of_interest)) {
+        gene_sequences <- getSeq(BSgenome.Hsapiens.UCSC.hg38,
+                                 genes_of_interest[[gene]])
+        names(gene_sequences) <-
+            as.data.frame(genes_of_interest[[gene]])$gene_symbol
+
+        # Creating a sequence vector for all the samples:
+        sequence_dataset <- c(sequence_dataset, gene_sequences)
+    }
+}
+
+# State is one of the two: ("predicted", "control")
+count_pwm_hits <- function(sequence_dataset, pwm, state) {
     # This is a list that stores pwm hit counts for each sample:
     gene_hits_total <- list()
 
@@ -60,13 +78,16 @@ count_pwm_hits <- function(sequence_dataset, pwm) {
             row <- c(names(sequence_dataset[[sample]][gene]), pwm_hits,
                     length(sequence_dataset[[sample]][[gene]]))
             gene_hits[nrow(gene_hits) + 1, ] <- row
+            # print(pwm_hits)
         }
         gene_hits_total[[sample]] <- gene_hits
+        # print(gene_hits)
 
         # Writing the results into a file:
         write.table(gene_hits_total[[sample]],
-                    file = paste0(RESULTS, "/Hg_pwm_hits.txt"),
-                    sep = "\t", quote = FALSE, row.names = FALSE)
+                    file = paste0(RESULTS, paste0("/Hg_pwm_hits_", state, "_",
+                    sample, ".txt")), sep = "\t", quote = FALSE,
+                    row.names = FALSE)
     }
     return(gene_hits_total)
 }
