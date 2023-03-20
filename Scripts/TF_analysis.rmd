@@ -1,9 +1,9 @@
 ```{r LIBRARIES, echo=FALSE, message=FALSE, warning=FALSE}
 library(pacman)
-p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, org.Mm.eg.db,
-TxDb.Mmusculus.UCSC.mm10.knownGene, ChIPseeker, BSgenome.Mmusculus.UCSC.mm10,
-annotables, BSgenome.Hsapiens.UCSC.hg19, TxDb.Hsapiens.UCSC.hg38.knownGene,
-org.Hs.eg.db)
+p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
+TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
+BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
+org.Hs.eg.db, annotables)
 ```
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
@@ -84,7 +84,7 @@ write.table(mm_annotated_peaks,
 ```{r HG_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
 # Getting positions of Homo sapiens genes:
-gene_ranges <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+gene_ranges <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
 
 # Adding 'gene_symbol' column to gene_ranges GRange:
 gene_ranges$gene_symbol <-
@@ -133,37 +133,27 @@ dev.off()
 # nolint end
 ```
 
-```{r SEQUENCE_RETRIEVAL, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+```{r SEQUENCE_RETRIEVAL_PREDICTED, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
 # Making a data frame that stores data of how many PWM hits were found in
 # Homo sapiens genome:
-seq_dataset_hg <- c()
-
-# Creating a sequence dataset that stores Homo sapiens gene sequences:
-for (object in 1:length(hg_genes)) {
-    gene_sequences <- getSeq(BSgenome.Hsapiens.UCSC.hg19, hg_genes[[object]])
-    names(gene_sequences) <- as.data.frame(hg_genes[[object]])$gene_symbol
-
-    # Creating a sequence vector for all the samples:
-    seq_dataset_hg <- c(seq_dataset_hg, gene_sequences)
-}
+seq_dataset_predicted <- get_sequences(BSgenome.Hsapiens.UCSC.hg38, hg_genes)
 # nolint end
 ```
 
-```{r PWM_COUNTS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+```{r PWM_COUNTS_PREDICTED, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-pwm_hit_counts <- count_pwm_hits(seq_dataset_hg, pwm) 
-
+pwm_hit_predicted <- count_pwm_hits(seq_dataset_predicted, pwm, "predicted")
 # nolint end
 ```
 
 
-PRATĘSTI NUO ŠIOS DALIES KOREGAVIMO IR FUNKCIJŲ PARAŠYMO!!!
+'HG_PEAK_ANNOTATION' chunk has to be re-written by making a function to avoid
+duplicated code!
 
 
 ```{r HG_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-
 hg_annotated_peaks <-
     annotate_peaks(grl_hg, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
                    "org.Hs.eg.db")
@@ -172,33 +162,52 @@ write.table(hg_annotated_peaks,
             file = paste0(RESULTS, "/hg_annotated_peaks.txt"), sep = "\t",
             quote = FALSE, row.names = FALSE)
 
-
 hg_genes2 <- GRangesList()
 
 for (sample in seq_along(hg_annotated_peaks)) {
-    selected_genes <-
-        tolower(unique(hg_annotated_peaks[[sample]]$gene_symbol)) %in%
-        tolower(gene_ranges$gene_symbol)
-                            
-    genes <- gene_ranges[selected_genes]
-
-    # These are the Homo sapiens genes that overlap with annotated Mus musculus
-    # peak genes. This information will be used to compare the results with
-    # control Homo sapiens samples:
-    hg_genes2[[sample]] <- genes 
+    for (sample2 in 1:length(hg_genes)) {
+        selected_genes <-
+            tolower(unique(hg_annotated_peaks[[sample]]$gene_symbol)) %in%
+            tolower(hg_genes[[sample2]]$gene_symbol)
+                                
+        genes <- gene_ranges[selected_genes]        
+    }
+    hg_genes2[[sample]] <- genes
 }
 
+```
 
-seq_dataset_hg2 <- c()
+```{r SEQUENCE_RETRIEVAL_CONTROL, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+# Making a data frame that stores data of how many PWM hits were found in
+# Homo sapiens samples:
+seq_dataset_control <- get_sequences(BSgenome.Hsapiens.UCSC.hg38, hg_genes2)
+# nolint end
+```
 
-# Creating a sequence dataset that stores Homo sapiens gene sequences:
-for (object in 1:length(hg_genes2)) {
-    gene_sequences <- getSeq(BSgenome.Hsapiens.UCSC.hg19, hg_genes2[[object]])
-    names(gene_sequences) <- as.data.frame(hg_genes2[[object]])$gene_symbol
+```{r PWM_COUNTS_CONTROL, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+pwm_hit_control <- count_pwm_hits(seq_dataset_control, pwm, "control")
+# nolint end
+```
 
-    # Creating a sequence vector for all the samples:
-    seq_dataset_hg2 <- c(seq_dataset_hg2, gene_sequences)
-}
+
+```{r}
+
+
+# a <- as.data.frame(pwm_hit_counts[1])
+# b <- as.data.frame(pwm_hit_counts2[1])
+
+# length(rownames(a))
+# length(rownames(b))
+# length(rownames(a[aa, ]))
+# length(rownames(b[bb, ]))
+# intersecting_genes <- intersect(a[, "Gene"],b[, "Gene"])
+# length(intersecting_genes)
+
+
+# length(rownames(a[a$"Gene" %in% intersecting_genes, ]))
+
 # nolint end
 ```
 
