@@ -59,6 +59,7 @@ get_sequences <- function(genome, genes_of_interest) {
         # Creating a sequence vector for all the samples:
         sequence_dataset <- c(sequence_dataset, gene_sequences)
     }
+    return(sequence_dataset)
 }
 
 # State is one of the two: ("predicted", "control")
