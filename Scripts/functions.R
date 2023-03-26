@@ -93,9 +93,4 @@ count_pwm_hits <- function(sequence_dataset, pwm, state) {
     return(gene_hits_total)
 }
 
-
-
-
-
-
 # nolint end

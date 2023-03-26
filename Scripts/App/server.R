@@ -5,20 +5,24 @@ library(rtracklayer)
 library(randomcoloR)
 library(ggplot2)
 library(scales)
+library(GenomicRanges)
 options(shiny.maxRequestSize=30*1024^2)
+
+source("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Scripts/functions.R")
 
 
 server <- function(input, output, session) {
   output$table <- renderPlot({
+
     req(input$bigbed)
     bigbed_files <- list()
 
-    for(sample in 1:length(input$bigbed[, 1])) {
-      bigbed_files[[sample]] <-
-        read.table(file = input$bigbed[[sample, 'datapath']])
-      names(bigbed_files)[sample] <-
-        substring(input$bigbed[[sample, 'name']],1, 11)
-    }
+      for(sample in 1:length(input$bigbed[, 1])) {
+        bigbed_files[[sample]] <-
+          read.table(file = input$bigbed[[sample, 'datapath']])
+        names(bigbed_files)[sample] <-
+          substring(input$bigbed[[sample, 'name']],1, 11)
+      }
 
     peaks <- data.frame(matrix(ncol = 2, nrow = 0))
     colnames(peaks) <- c("Experiment", "Peak_count")
@@ -53,6 +57,18 @@ server <- function(input, output, session) {
             axis.title.x = element_text(size = 2),
             axis.title.y = element_text(size = 16),
             plot.title = element_text(hjust = 0.5, face = "bold"))
+    })
+
+    output$plot2 <- renderPlot({
+      req(input$bigbed)
+      bigbed_files <- list()
+
+      for(sample in 1:length(input$bigbed[, 1])) {
+        bigbed_files[[sample]] <-
+          read.table(file = input$bigbed[[sample, 'datapath']])
+        names(bigbed_files)[sample] <-
+          substring(input$bigbed[[sample, 'name']],1, 11)
+      }
     })
 }
 # nolint end
