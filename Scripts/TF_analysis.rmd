@@ -81,6 +81,72 @@ write.table(mm_annotated_peaks,
 # nolint end
 ```
 
+```{r}
+mmgene_ranges <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+
+# Adding 'gene_symbol' column to gene_ranges GRange:
+mmgene_ranges$gene_symbol <-
+    mapIds(org.Mm.eg.db, keys = mmgene_ranges$gene_id, column = "SYMBOL",
+           keytype = "ENTREZID", multiVals = "first")
+
+mm_genes <- GRangesList()
+
+for (sample in seq_along(mm_annotated_peaks)) {
+    selected_genes <-
+        tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
+        tolower(mmgene_ranges$gene_symbol)
+                            
+    genes <- mmgene_ranges[selected_genes]
+
+    # These are the Homo sapiens genes that overlap with annotated Mus musculus
+    # peak genes. This information will be used to compare the results with
+    # control Homo sapiens samples:
+    mm_genes[[sample]] <- genes 
+}
+
+gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes)
+
+names(gene_sequences[[1]]) <- mm_genes[[1]][1]$gene_symbol
+
+
+write.table(gene_sequences,
+            file = paste0(RESULTS, "/sequences.txt"), sep = "\t",
+            quote = FALSE, row.names = FALSE)
+
+
+
+# nolint endn
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r HG_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
 # Getting positions of Homo sapiens genes:
@@ -148,9 +214,9 @@ pwm_hit_predicted <- count_pwm_hits(seq_dataset_predicted, pwm, "predicted")
 ```
 
 
-'HG_PEAK_ANNOTATION' chunk has to be re-written by making a function to avoid
-duplicated code!
 
+NUO ŠIOS VIETOS YRA NEVISAI GERAI! REIKIA IMTI GENŲ SEKAS, O NE PAVADINIMUS!
+PRATĘSTI TAISYTI NUO ČIA!
 
 ```{r HG_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
@@ -191,22 +257,33 @@ pwm_hit_control <- count_pwm_hits(seq_dataset_control, pwm, "control")
 # nolint end
 ```
 
+PRATĘSTI NUO ČIA!!!
 
 ```{r}
 
 
-# a <- as.data.frame(pwm_hit_counts[1])
-# b <- as.data.frame(pwm_hit_counts2[1])
+a <- as.data.frame(pwm_hit_predicted[1])
+b <- as.data.frame(pwm_hit_control[1])
 
-# length(rownames(a))
-# length(rownames(b))
+length(rownames(a))
+(length(rownames(b)) / length(rownames(a))) *100
 # length(rownames(a[aa, ]))
 # length(rownames(b[bb, ]))
-# intersecting_genes <- intersect(a[, "Gene"],b[, "Gene"])
-# length(intersecting_genes)
+intersecting_genes <- intersect(a[, "Gene"],b[, "Gene"])
+length(intersecting_genes)
 
 
 # length(rownames(a[a$"Gene" %in% intersecting_genes, ]))
+
+
+aa <- a[a$"Gene" %in% unique(intersecting_genes), ]
+bb <- b[b$"Gene" %in% unique(intersecting_genes), ]
+head(bb)
+
+total <- merge(aa, bb, by=c("Gene"))
+total
+length(rownames(aa))
+length(rownames(bb))
 
 # nolint end
 ```
