@@ -51,7 +51,7 @@ get_sequences <- function(genome, genes_of_interest) {
 
     # Creating a sequence dataset that stores certain genome gene sequences:
     for (gene in 1:length(genes_of_interest)) {
-        gene_sequences <- getSeq(BSgenome.Hsapiens.UCSC.hg38,
+        gene_sequences <- getSeq(genome,
                                  genes_of_interest[[gene]])
         names(gene_sequences) <-
             as.data.frame(genes_of_interest[[gene]])$gene_symbol
