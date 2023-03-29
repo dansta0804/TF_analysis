@@ -93,4 +93,10 @@ count_pwm_hits <- function(sequence_dataset, pwm, state) {
     return(gene_hits_total)
 }
 
+###################### FUNCTIONS FROM TBX5 ANALYSIS PART I #####################
+jaccard <- function(data, a, b) {
+    len <- reduce(c(data[[a]], data[[a]])) %>% length()
+    return((length(intersect(data[[a]], data[[b]])) / len) * 100)
+}
+
 # nolint end
