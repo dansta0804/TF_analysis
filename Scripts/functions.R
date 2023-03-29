@@ -3,8 +3,6 @@ PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 RESULTS     <- paste0(INTER_FILES, "Generated_files")
 
-;aosidfj;laskdfj;laskjdf
-
 # A function that reads PWM of certain transcription factor:
 get_PWM <- function(pwm_name) {
     TF_pwm <-
