@@ -3,7 +3,7 @@ library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables)
+org.Hs.eg.db, annotables, rBLAST)
 ```
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
@@ -18,6 +18,7 @@ RESULTS     <- paste0(INTER_FILES, "Generated_files")
 FIGURES     <- paste0(PROJECT, "Figures/")
 
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
+DATABASE    <- paste0(PROJECT, "Input/Genome_DB/human_genome.00")
 # nolint end
 ```
 
@@ -69,7 +70,6 @@ pwm <- get_PWM("GATA3_MOUSE.H11MO.0.A.pwm")
 
 ```{r MM_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-
 mm_annotated_peaks <-
     annotate_peaks(grl_mm, grcm38, TxDb.Mmusculus.UCSC.mm10.knownGene,
                    "org.Mm.eg.db")
@@ -77,11 +77,11 @@ mm_annotated_peaks <-
 write.table(mm_annotated_peaks,
             file = paste0(RESULTS, "/mm_annotated_peaks.txt"), sep = "\t",
             quote = FALSE, row.names = FALSE)
-
 # nolint end
 ```
 
 ```{r}
+# nolint start
 mmgene_ranges <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
 # Adding 'gene_symbol' column to gene_ranges GRange:
@@ -97,27 +97,26 @@ for (sample in seq_along(mm_annotated_peaks)) {
         tolower(mmgene_ranges$gene_symbol)
                             
     genes <- mmgene_ranges[selected_genes]
-
-    # These are the Homo sapiens genes that overlap with annotated Mus musculus
-    # peak genes. This information will be used to compare the results with
-    # control Homo sapiens samples:
     mm_genes[[sample]] <- genes 
 }
 
 gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes)
 
-names(gene_sequences[[1]]) <- mm_genes[[1]][1]$gene_symbol
-
-
-write.table(gene_sequences,
-            file = paste0(RESULTS, "/sequences.txt"), sep = "\t",
-            quote = FALSE, row.names = FALSE)
-
-
-
-# nolint endn
+for (sample in 1:length(gene_sequences)) {
+    for (gene in 1:length(gene_sequences[[sample]])) {
+        names(gene_sequences[[sample]][gene]) <-
+            mm_genes[[sample]][gene]$gene_symbol
+    }
+}
+# nolint end
 ```
 
+
+```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
+blast_db <- blast(db = DATABASE)
+# nolint end
+```
 
 
 
