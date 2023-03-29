@@ -25,10 +25,10 @@ ui <- fluidPage(
     )
   ),
   mainPanel(
-    plotOutput(outputId = "table")
+    # plotOutput(outputId = "table"),
+    # plotOutput(outputId = "plot2"),
+    plotOutput(outputId = "plot3")
   )
-    
-
 )
 
 # nolint end
