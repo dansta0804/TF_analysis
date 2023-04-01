@@ -16,6 +16,12 @@ ui <- fluidPage(
         choices = c("Tbx5", "GATA3", "Tcf21"),
         selected = "GATA3"
     ),
+    radioButtons(
+        inputId = "genome",
+        label = "Specify genome:",
+        choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+                    "Danio rerio" = "dr")
+    ),
     fileInput(
         inputId = "pwm",
         label = "Provide PWM matrix:",
