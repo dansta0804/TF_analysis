@@ -122,7 +122,7 @@ jaccard <- function(data, a, b) {
     return((length(intersect(data[[a]], data[[b]])) / len) * 100)
 }
 
-find_motif_hits <- function(sequences) {
+find_motif_hits <- function(sequences, mpwm) {
     hit_vec <- c()
     for (i in 1:length(sequences)) {
         hits <- countPWM(as.matrix(mpwm), sequences[[i]], min.score = "75%")
