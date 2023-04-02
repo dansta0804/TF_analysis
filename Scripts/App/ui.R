@@ -1,8 +1,15 @@
 # nolint start
+library(shinydashboard)
 
-ui <- fluidPage( 
-  titlePanel("Transcription factor analysis dashboard"),
-  sidebarPanel(
+
+ui <- dashboardPage(
+  
+  dashboardHeader(
+    title = "Transcription factor analysis dashboard",
+    titleWidth = 350
+  ),
+  dashboardSidebar(
+    width = 350,
     fileInput(
         inputId = "bigbed",
         label = "Provide BigBed file(-s):",
@@ -28,15 +35,30 @@ ui <- fluidPage(
         multiple = FALSE,
         buttonLabel = "Browse files",
         placeholder = "No file selected"
+  )),
+  dashboardBody(
+     tags$head(tags$style(HTML("
+      .skin-blue .main-header .navbar {
+        background-color: #cf882a;
+      }
+      .skin-blue .main-header .logo {
+        background-color: #dda153;
+        color: black;
+        font-weight: bolder;
+        border-bottom: 0 solid transparent;
+      }
+    "))),
+    fluidRow(
+      box(plotOutput(outputId = "plot1")),
+      box(plotOutput(outputId = "plot2")),
+      box(plotOutput(outputId = "plot3")),
+      box(plotOutput(outputId = "plot4")),
+      box(plotOutput(outputId = "plot5"))
     )
-  ),
-  mainPanel(
-    plotOutput(outputId = "plot1"),
-    plotOutput(outputId = "plot2"),
-    plotOutput(outputId = "plot3"),
-    plotOutput(outputId = "plot4"),
-    plotOutput(outputId = "plot5")
   )
 )
+
+
+
 
 # nolint end
