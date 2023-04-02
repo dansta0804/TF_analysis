@@ -2,7 +2,7 @@
 
 library(pacman)
 p_load(dplyr, data.table, rtracklayer, randomcoloR, ggplot2, scales,
-       GenomicRanges, ggseqlogo)
+       GenomicRanges, ggseqlogo, BSgenome.Mmusculus.UCSC.mm10)
 
 options(scipen = 100)
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
@@ -156,9 +156,9 @@ server <- function(input, output, session) {
       melt_coef_mat <- melt(coef_mat_bind, na.rm = TRUE)
 
       # Creating a heatmap that shows similarity between samples:
-      ggplot(melt_coef_mat, aes(x = grlr2, y = grlr1, fill = grllue)) +
+      ggplot(melt_coef_mat, aes(x = Var2, y = Var1, fill = value)) +
         geom_tile(color = "black") +
-        geom_text(aes(label = round(grllue, digits = 3)), size = 4.5,
+        geom_text(aes(label = round(value, digits = 3)), size = 4.5,
                       color = "#030101", fontface = "bold") +
         labs(x = "", y = "") +
         scale_fill_gradient(low = "#ffee8e", high = "#ab1f1f") +
@@ -188,6 +188,7 @@ server <- function(input, output, session) {
     ####################### 5th PLOT FROM TBX5_ANALYSIS_I ###################### <- WORKS
     output$plot5 <- renderPlot({
       req(input$bigbed)
+      req(input$pwm)
       bigbed_files <- list()
 
       for(sample in 1:length(input$bigbed[, 1])) {
@@ -219,15 +220,15 @@ server <- function(input, output, session) {
         names(peak_sequences)[file] <- names(bigbed_files)[file]
       }
 
-      tbx5_motifs <- data.frame(matrix(nrow = 0, ncol = length(columns)))
+      tbx5_motifs <- data.frame(matrix(nrow = 0, ncol = 4))
       colnames(tbx5_motifs) <-
           c("Sample", "Motif_count", "Peak_count", "Percentage")
 
       for (i in 1:length(peak_sequences)) {
-          filename <- paste0(paste0(INPUTS, "BED/", names(peak_sequences[i])))
+          filename <- input$bigbed[[i, 'datapath']]
           name <- substring(names(peak_sequences[i]), 1, 11)
 
-          motif <- find_motif_hits(peak_sequences[[i]])
+          motif <- find_motif_hits(peak_sequences[[i]], mpwm)
           peaks <- calculate_peaks(filename)
           percentage <- round((motif / peaks) * 100, 2)
 
@@ -248,11 +249,11 @@ server <- function(input, output, session) {
       # 'Melting' the dataframe:
       melted_df <- melt(subset_df, id = c("Sample"))
 
-      ggplot(data = melted_df, aes(x = Sample, y = as.numeric(grllue),
-                                   fill = grlriable, label = grllue)) +
+      ggplot(data = melted_df, aes(x = Sample, y = as.numeric(value),
+                                   fill = variable, label = value)) +
         geom_bar(stat = "identity", colour = "#35170450", size = 0.5,
                  width = 0.8) +
-        scale_fill_manual(grllues = c("#e3a15e", "#c7633b"),
+        scale_fill_manual(values = c("#e3a15e", "#c7633b"),
                           labels = c("Tbx5 motyvų skaičius", "Pikų skaičius")) +
         scale_y_continuous(labels = label_number(suffix = " K", scale = 1e-3)) +
         guides(fill = guide_legend(title = "Spalvų paaiškinimas", size = 6)) +
