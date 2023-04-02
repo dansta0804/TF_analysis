@@ -92,9 +92,51 @@ count_pwm_hits <- function(sequence_dataset, pwm, state) {
 }
 
 ###################### FUNCTIONS FROM TBX5 ANALYSIS PART I #####################
+# A function that calculates how many peaks are in each chromosome:
+count_peaks <- function(name, objects) {
+    chr_abr <- c(paste0("chr", 1:19), "chrX", "chrY")
+
+    # Defining chromosome lenghts (Mbp) based on MGI data:
+    chr_mbp <- c(195, 182, 160, 157, 152, 150, 145, 130, 124, 131,
+                 122, 120, 121, 125, 104, 98, 95, 91, 61, 169, 91)
+
+    # Calculating chromosome lenghts in bp:
+    chr_bp <- chr_mbp * 1000000
+
+    # Creating a dataframe that stores data about peak counts in each
+    # chromosome for different samples:
+    peak_counts <- data.frame(matrix(ncol = 3, nrow = 0)) %>%
+                        setNames(., c("Name", "Chromosome", "Peak_count"))
+
+    for (chr in 1:21) {
+        peaks <- objects[[name]] %>%
+            filter(seqnames == chr_abr[chr]) %>%
+            length() / chr_bp[chr] * 100000000
+        peak_counts[nrow(peak_counts) + 1, ] <- c(name, chr_abr[chr], peaks)
+    }
+    return(peak_counts)
+}
+
 jaccard <- function(data, a, b) {
     len <- reduce(c(data[[a]], data[[a]])) %>% length()
     return((length(intersect(data[[a]], data[[b]])) / len) * 100)
+}
+
+find_motif_hits <- function(sequences) {
+    hit_vec <- c()
+    for (i in 1:length(sequences)) {
+        hits <- countPWM(as.matrix(mpwm), sequences[[i]], min.score = "75%")
+        if (hits == 0) { next }
+        else { hit_vec <- c(hit_vec, hits)}
+    }
+    return(sum(hit_vec))
+}
+
+# A function that calculates total peak count in each sample:
+calculate_peaks <- function(filename) {
+    file <- read.table(filename)
+    region_count <- length(rownames(file))
+    return(region_count)
 }
 
 # nolint end
