@@ -31,9 +31,11 @@ ui <- fluidPage(
     )
   ),
   mainPanel(
-    # plotOutput(outputId = "table"),
-    # plotOutput(outputId = "plot2"),
-    plotOutput(outputId = "plot3")
+    plotOutput(outputId = "plot1"),
+    plotOutput(outputId = "plot2"),
+    plotOutput(outputId = "plot3"),
+    plotOutput(outputId = "plot4"),
+    plotOutput(outputId = "plot5")
   )
 )
 
