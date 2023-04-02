@@ -1,6 +1,5 @@
 # nolint start
 
-
 library(pacman)
 p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
