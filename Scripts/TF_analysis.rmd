@@ -1,9 +1,11 @@
 ```{r LIBRARIES, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
 library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
 org.Hs.eg.db, annotables, rBLAST)
+# nolint end
 ```
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
@@ -18,7 +20,7 @@ RESULTS     <- paste0(INTER_FILES, "Generated_files")
 FIGURES     <- paste0(PROJECT, "Figures/")
 
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
-DATABASE    <- paste0(PROJECT, "Input/Genome_DB/human_genome.00")
+DATABASES    <- paste0(PROJECT, "Databases/")
 # nolint end
 ```
 
@@ -100,21 +102,31 @@ for (sample in seq_along(mm_annotated_peaks)) {
     mm_genes[[sample]] <- genes 
 }
 
-gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes)
+gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
 
 for (sample in 1:length(gene_sequences)) {
-    for (gene in 1:length(gene_sequences[[sample]])) {
-        names(gene_sequences[[sample]][gene]) <-
-            mm_genes[[sample]][gene]$gene_symbol
-    }
+        names(gene_sequences)[sample] <-
+            as.character(mm_genes[[1]][sample]$gene_symbol)
 }
+
+# as.character(mm_genes[[1]][1]$gene_symbol)
+endoapply(names(gene_sequences), function(x) (names(gene_sequences)[x] <-
+            as.character(mm_genes[[1]][x]$gene_symbol)))
+
 # nolint end
 ```
 
 
 ```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
-blast_db <- blast(db = DATABASE)
+human_db <- blast(db = paste0(DATABASES,
+    "Human_genome_DB/GCF_000001405.39_top_level.00"))
+? blast
+
+gene_sequences[1]
+cl <- predict(human_db, gene_sequences[1], BLAST_args = "-perc_identity 99",
+       custom_format = "qseqid ssciname sseqid pident bitscore length stitle")
+cl[1:5, ]
 # nolint end
 ```
 
