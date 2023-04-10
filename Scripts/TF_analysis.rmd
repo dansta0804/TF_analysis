@@ -17,6 +17,7 @@ HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 SCRIPTS     <- paste0(PROJECT, "Scripts/")
 RESULTS     <- paste0(INTER_FILES, "Generated_files")
+FASTAS      <- paste0(INTER_FILES, "FASTA/")
 FIGURES     <- paste0(PROJECT, "Figures/")
 
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
@@ -139,6 +140,7 @@ predictions <- predictions %>%
     filter(row_number() == 1) %>%
     as.data.frame
 
+# Nuo šios dalies pratęsti!
 for (acc in 1:length(predictions$qseqid)) {
     if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks))$start &&
         predictions$send[acc] <= as.data.frame(ranges(significant_peaks))$end ||
@@ -150,7 +152,7 @@ for (acc in 1:length(predictions$qseqid)) {
     # sequence <-
     #     rentrez::entrez_fetch(db = "nucleotide", id = predictions$sacc[acc], 
     #                           rettype = "fasta")
-    # write(sequence, paste0(PROJECT, predictions$sacc[acc]))
+    # write(sequence, paste0(FASTA, predictions$sacc[acc]))
     # IMPROVE ABOVE LINE OF CODE!!! (DO NOT WRITE INTO A FILE!)
 }
 
@@ -181,12 +183,6 @@ pwm_hit_predicted <- count_pwm_hits(sequence_list, pwm, "predicted")
 # q value must be lower than 2 (-log10(0.01) = 2). These peaks are
 # significant peaks:
 significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ]
-
-
-
-
-
-subsetByOverlaps(mm_genes[[1]], significant_peaks)
 
 # nolint end
 ```
