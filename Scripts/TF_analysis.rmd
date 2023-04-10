@@ -4,7 +4,7 @@ library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables, rBLAST)
+org.Hs.eg.db, annotables, rBLAST, rentrez, ChIPpeakAnno)
 # nolint end
 ```
 
@@ -104,14 +104,19 @@ for (sample in seq_along(mm_annotated_peaks)) {
 
 gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
 
+# REIKIA PASPARTINTI?
 for (sample in 1:length(gene_sequences)) {
+    if (is.na(as.character(mm_genes[[1]][sample]$gene_symbol))) {
+        names(gene_sequences)[sample] <- "Unknown"
+    } else {
         names(gene_sequences)[sample] <-
-            as.character(mm_genes[[1]][sample]$gene_symbol)
+        as.character(mm_genes[[1]][sample]$gene_symbol)
+    }
 }
 
 # as.character(mm_genes[[1]][1]$gene_symbol)
-endoapply(names(gene_sequences), function(x) (names(gene_sequences)[x] <-
-            as.character(mm_genes[[1]][x]$gene_symbol)))
+# endoapply(names(gene_sequences), function(x) (names(gene_sequences)[x] <-
+#             as.character(mm_genes[[1]][x]$gene_symbol)))
 
 # nolint end
 ```
@@ -120,24 +125,71 @@ endoapply(names(gene_sequences), function(x) (names(gene_sequences)[x] <-
 ```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 human_db <- blast(db = paste0(DATABASES,
-    "Human_genome_DB/GCF_000001405.39_top_level.00"))
-? blast
+                  "Human_genome_DB/GCF_000001405.39_top_level.00"))
 
-gene_sequences[1]
-cl <- predict(human_db, gene_sequences[1], BLAST_args = "-perc_identity 99",
-       custom_format = "qseqid ssciname sseqid pident bitscore length stitle")
-cl[1:5, ]
+gene_sequencess <- gene_sequences[100:600]
+names(gene_sequences[100:200])
+predictions <-
+    predict(human_db, gene_sequencess, BLAST_args = "-perc_identity 99",
+            custom_format = "qseqid sacc sstart send bitscore length stitle")
+
+colnames(predictions)[8] <- "Assembly"
+predictions <- predictions %>%
+    group_by(qseqid) %>%
+    filter(row_number() == 1) %>%
+    as.data.frame
+
+for (acc in 1:length(predictions$qseqid)) {
+    if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks))$start &&
+        predictions$send[acc] <= as.data.frame(ranges(significant_peaks))$end ||
+        predictions$sstart[acc] <= as.data.frame(ranges(significant_peaks))$start &&
+        predictions$send[acc] >= as.data.frame(ranges(significant_peaks))$end) {
+            print("OOOK")
+        }
+        else {print("BAAAAD")}
+    # sequence <-
+    #     rentrez::entrez_fetch(db = "nucleotide", id = predictions$sacc[acc], 
+    #                           rettype = "fasta")
+    # write(sequence, paste0(PROJECT, predictions$sacc[acc]))
+    # IMPROVE ABOVE LINE OF CODE!!! (DO NOT WRITE INTO A FILE!)
+}
+
+
+predictions$sacc[1]
+length(predictions$qseqid)
+
+sequence_list <- list()
+
+for (seq in 1:length(predictions$sacc)) {
+    sequence_list[[seq]] <-
+        readDNAStringSet(paste0(PROJECT, predictions$sacc[seq]),
+                         format = "fasta")
+    names(sequence_list[[seq]]) <- predictions$sacc[seq]
+    names(sequence_list)[seq] <- predictions$sacc[seq]
+}
+
+# NAUDOTI ŠĮ REZULTATĄ!
+pwm_hit_predicted <- count_pwm_hits(sequence_list, pwm, "predicted")
+
 # nolint end
 ```
 
 
 
+```{r SIGNIFICANT_PEAKS}
+# nolint start
+# q value must be lower than 2 (-log10(0.01) = 2). These peaks are
+# significant peaks:
+significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ]
 
 
 
 
 
+subsetByOverlaps(mm_genes[[1]], significant_peaks)
 
+# nolint end
+```
 
 
 
