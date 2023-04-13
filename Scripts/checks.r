@@ -438,4 +438,18 @@ fil <- read.table(paste0(INPUTS, "BED/", bed_files[3]))
 
 system(paste0("findMotifsGenome.pl ~/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Inputs/BED/", bed_files[3], " mm10 ~/Desktop/IV_course/II_semester/TF_analysis/results/ -size 200 -mask"), intern = FALSE)
 
+
+a <- read.table("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/results/knownResults.txt", sep="\t", header = FALSE, skip = 1)
+
+head(a)
+
+for (motif in 1:nrow(a)) {
+    a$V1[motif] <- strsplit(a$V1, "/")[[motif]][1]
+}
+strsplit(a$V1, "/")[[1]][1]
+
+
+
 # nolint end
+
+file.exists("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/results/knownResults.txt")
