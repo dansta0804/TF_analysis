@@ -1,48 +1,51 @@
-
-library(pacman)
-p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
-TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
-BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables, rBLAST, rentrez)
-
 # nolint start
-PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
-BIGBEDS     <- paste0(PROJECT, "Input/")
-MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
-HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
-INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
-SCRIPTS     <- paste0(PROJECT, "Scripts/")
-RESULTS     <- paste0(INTER_FILES, "Generated_files")
-FASTAS      <- paste0(INTER_FILES, "FASTA/")
-FIGURES     <- paste0(PROJECT, "Figures/")
+server <- function(input, output, session) {
+output$plot1 <- renderPlot({
+    req(input$bigbed)
+    bigbed_files <- list()
 
-SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
+    for(sample in 1:length(input$bigbed[, 1])) {
+      bigbed_files[[sample]] <-
+        read.table(file = input$bigbed[[sample, 'datapath']])
+      names(bigbed_files)[sample] <-
+        substring(input$bigbed[[sample, 'name']],1, 11)
+    }
+
+    peaks <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(peaks) <- c("Experiment", "Peak_count")
+
+    for (file in 1:length(bigbed_files)) {
+        nrows <- length(rownames(bigbed_files[[file]]))
+        row <- c(names(bigbed_files[file]), nrows)
+        peaks[nrow(peaks) + 1, ] <- row
+    }
+
+    ggplot(peaks, aes(x = Experiment, y = as.numeric(Peak_count))) +
+      geom_bar(stat = "identity", position = "dodge", width = 0.5,
+                color = "black", fill = "#930d1f") +
+      labs(x = "", y = "Pikų skaičius", size = 5) +
+      ylim(0, 200000) +
+      scale_y_continuous(labels = label_number(suffix = " K", scale = 1e-3)) +
+      theme(panel.background = element_rect(fill = "#eeeef1",
+                                            colour = "#4c0001"),
+            panel.grid.major.y = element_line(colour = "#cab5b5", size = 0.3,
+                                              linetype = "dashed"),
+            panel.grid.minor.y = element_line(colour = "#cab5b5", size = 0.3,
+                                              linetype = "dashed"),
+            panel.grid.major.x = element_line(colour = "#cab5b5", size = 0.2,
+                                              linetype = "longdash"),
+            panel.grid.minor.x = element_line(colour = "#cab5b5", size = 0.2,
+                                              linetype = "longdash"),
+            axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
+                                        size = 11, face = "bold",
+                                        color = "black"),
+            axis.text.y = element_text(size = 11, face = "bold",
+                                        color = "black"),
+            axis.title.x = element_text(size = 2),
+            axis.title.y = element_text(size = 16),
+            plot.title = element_text(hjust = 0.5, face = "bold"))
+})
 
 
-# nolint start
-# Listing sample BigBed files for each analyzed organism:
-bbfiles_mm <- list.files(path = MMUSCULUS, "*bb")
-bbfiles_hg <- list.files(path = HSAPIENS, "*bb")
-
-grl_mm <- GRangesList()
-for (object in 1:length(grl)) {
-    name <- gsub(" ", "_", names(grl[object]))
-    peak <- grl[[object]]
-    seqlengths(peak) <- seqlengths(peak) - 10001
-    peak_annotation <- annotatePeak(peak, tssRegion = c(-3000, 3000),
-                         TxDb = mm_known_genes, annoDb = "org.Mm.eg.db")
-
-    mm_annot <- as.data.frame(peak_annotation@anno)
-    entrezids <- unique(mm_annot$geneId)
-    entrez2gene <- grcm38 %>% filter(entrez %in% entrezids) %>%
-                                dplyr::select(entrez, symbol)
-
-    m <- match(mm_annot$geneId, entrez2gene$entrez)
-    mm_annot <- cbind(mm_annot[, 1:14], gene_symbol = entrez2gene$symbol[m],
-                      mm_annot[, 15:16])
-
-    # Defining the same grl_smlr object that has two extra columns with
-    # gene id and gene symbol:
-    grl_mm[[object]] <- mm_annot
-    names(grl_mm)[object] <- names(grl)[object]
 }
+# nolint end
