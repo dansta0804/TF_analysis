@@ -4,13 +4,13 @@ library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables, rBLAST, rentrez, ChIPpeakAnno)
+org.Hs.eg.db, annotables, rBLAST, rentrez)
 # nolint end
 ```
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
-PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
+PROJECT     <- paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/")
 BIGBEDS     <- paste0(PROJECT, "Input/")
 MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
 HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
@@ -21,7 +21,7 @@ FASTAS      <- paste0(INTER_FILES, "FASTA/")
 FIGURES     <- paste0(PROJECT, "Figures/")
 
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
-DATABASES    <- paste0(PROJECT, "Databases/")
+DATABASES   <- paste0(PROJECT, "Databases/")
 # nolint end
 ```
 
@@ -128,34 +128,99 @@ for (sample in 1:length(gene_sequences)) {
 human_db <- blast(db = paste0(DATABASES,
                   "Human_genome_DB/GCF_000001405.39_top_level.00"))
 
-gene_sequencess <- gene_sequences[100:600]
-names(gene_sequences[100:200])
+gene_sequencess <- gene_sequences
 predictions <-
-    predict(human_db, gene_sequencess, BLAST_args = "-perc_identity 99",
+    predict(human_db, gene_sequencess, BLAST_args = "-perc_identity 90",
             custom_format = "qseqid sacc sstart send bitscore length stitle")
 
-colnames(predictions)[8] <- "Assembly"
-predictions <- predictions %>%
-    group_by(qseqid) %>%
-    filter(row_number() == 1) %>%
-    as.data.frame
+
+# KAI -perc_identity 99, tada jokių atitikimų nesuranda.
+
+
+sink(paste0(PROJECT, "predictions3.txt"))
+print(predictions)
+sink()
+# write(predictions, paste0(PROJECT, "predictions3.txt"))
+
+
+# colnames(predictions)[8] <- "Assembly"
+# predictions <- predictions %>%
+#     group_by(qseqid) %>%
+#     filter(row_number() == 1) %>%
+#     as.data.frame
+
+predictions <- read.table(paste0(PROJECT, "predictions_3.txt"))
+colnames(predictions)
+
+head(predictions)
+
+a <- 
+predictions %>%
+as.data.frame() %>%
+dplyr::select(c(sacc, sstart, send))
+
+
+ %>%
+makeGRangesFromDataFrame()
+
+
+colnames(a) <- c("seqnames", "start", "end")
+a <- makeGRangesFromDataFrame(a)
+
+a <- 
+a %>%
+  add_column(strand = NA)
+
+for (i in 1:length(rownames(a))) {
+    if (a$start[i] > a$end[i]) {
+        a$strand <- "-"
+        start <- a$end[i]
+        end <- a$start[i] 
+        a$start[i] <- start
+        a$end[i] <- end
+    } else {
+        a$strand <- "+"
+    }
+}
+
+head(a)
+
+library(GenomicRanges)
+
+subsetByOverlaps(a, significant_peaks)
+
+ranges(a)
+ranges(significant_peaks)
+
+library(dplyr)
+library(tibble)
+
+# KODĖL NESURANDA JOKIŲ POZICIJŲ?
 
 # Nuo šios dalies pratęsti!
 for (acc in 1:length(predictions$qseqid)) {
-    if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks))$start &&
-        predictions$send[acc] <= as.data.frame(ranges(significant_peaks))$end ||
-        predictions$sstart[acc] <= as.data.frame(ranges(significant_peaks))$start &&
-        predictions$send[acc] >= as.data.frame(ranges(significant_peaks))$end) {
-            print("OOOK")
-        }
-        else {print("BAAAAD")}
+    # if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks))$start &&
+    #     predictions$send[acc] <= as.data.frame(ranges(significant_peaks))$end ||
+    #     predictions$sstart[acc] <= as.data.frame(ranges(significant_peaks))$start &&
+    #     predictions$send[acc] >= as.data.frame(ranges(significant_peaks))$end) {
+    #         print("OOOK")
+    #     }
+    #     else {print("BAAAAD")}
     # sequence <-
     #     rentrez::entrez_fetch(db = "nucleotide", id = predictions$sacc[acc], 
     #                           rettype = "fasta")
     # write(sequence, paste0(FASTA, predictions$sacc[acc]))
     # IMPROVE ABOVE LINE OF CODE!!! (DO NOT WRITE INTO A FILE!)
+
+    for (i in 1:length(ranges(significant_peaks))) {
+        if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks)[i])$start &&
+        predictions$send[acc] <= as.data.frame(ranges(significant_peaks)[i])$end) {
+            print("OOOK")
+        }
+    }
 }
 
+as.data.frame(ranges(significant_peaks)[1])$start
 
 predictions$sacc[1]
 length(predictions$qseqid)
@@ -182,8 +247,21 @@ pwm_hit_predicted <- count_pwm_hits(sequence_list, pwm, "predicted")
 # nolint start
 # q value must be lower than 2 (-log10(0.01) = 2). These peaks are
 # significant peaks:
-significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ]
+significant_peaks <- grl_hg[[2]][grl_hg[[2]]$q_value < 2, ]
 
+significant_peaks <- list(significant_peaks)
+hg_annotated_peaks <-
+    annotate_peaks(significant_peaks, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
+                   "org.Hs.eg.db")
+
+hg_annotated_peaks <- as.data.frame(hg_annotated_peaks)
+b <- toupper(unique(hg_annotated_peaks$gene_symbol))
+
+c <- toupper(unique(predictions$qseqid))
+
+write.csv(as.data.frame(b), paste0(PROJECT, "b2.txt"), row.names = FALSE, quote = FALSE)
+write.csv(as.data.frame(c), paste0(PROJECT, "c2.txt"), row.names = FALSE, quote = FALSE)
+intersect(b, c)
 # nolint end
 ```
 
