@@ -15,260 +15,170 @@ source(paste0(PROJECT, "Scripts/App/server.R"))
 #   PIKŲ SKAIČIUS CHROMOSOMOSE;
 #   MĖGINIŲ PANAŠUMAS;
 
-# VARIANTAS 2:
-
-# body <- dashboardBody(
-#     fluidRow(
-#         tabBox(
-#             title = NULL, width = 12,
-#             # The id lets us use input$tabset1 on the server to find the current tab
-#             id = "tabset1", height = "250px",
-#             tabPanel("Victim", "Victim tab"),
-#             tabPanel("Trafficker", "Trafficker tab")
-#         )
-#     ),
-#     fluidRow(infoBoxOutput("tabset1Selected"))
-# )
-
 ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
-tags$style(HTML("
-  body {
-    font-family: 'Source Sans Pro',sans-serif;
-    font-size: 15px;
-    line-height: 1.42857143;
-    color: #333333;
-    background-color: #ffffff;
-  }
-  .navbar-default {
-    background-color: #683030;
-  }
-  .navbar-default .navbar-nav>.active>a, .navbar-default
-  .navbar-nav>.active>a:hover, .navbar-default .navbar-nav>.active>a:focus {
-    color: #ffffff;
-    background-color: #340a0a;
-  }
-  .btn-default {
-    color: #ffffff;
-    background-color: #a75f21;
-    border-color: #723e0d;
-  }
-  a {
-    color: #700c0c;
-    font-weight: bold;
-  }
-  a:hover, a:focus {
-    color: #a75f21;
-    text-decoration: underline;
-  }
-  p {
-    margin: 20px;
-    text-align: justify;
-    font-size: 22px;
-  }
-")),
+  tags$style(HTML("
+    body {
+      font-family: sans-serif;
+      font-size: 15px;
+      line-height: 1.42857143;
+      color: #333333;
+      background-color: #ffffff;
+    }
+    .navbar-default {
+      background-color: #683030;
+    }
+    .navbar-default .navbar-nav>.active>a, .navbar-default
+    .navbar-nav>.active>a:hover, .navbar-default .navbar-nav>.active>a:focus {
+      color: #ffffff;
+      background-color: #340a0a;
+    }
+    .btn-default {
+      color: #ffffff;
+      background-color: #a75f21;
+      border-color: #723e0d;
+    }
+    a {
+      color: #700c0c;
+      font-weight: bold;
+    }
+    a:hover, a:focus {
+      color: #a75f21;
+      text-decoration: underline;
+    }
+    p {
+      margin: 18px;
+      text-align: justify;
+      font-size: 22px;
+    }
+  ")),
   tabPanel("Duomenų kokybė",
     sidebarLayout(
-        sidebarPanel(
-            width = 4,
-            fileInput(
-                inputId = "bigbed",
-                label = "Provide BigBed file(-s):",
-                multiple = TRUE,
-                buttonLabel = "Browse files",
-                placeholder = "No file selected"
-            ),
-            selectInput(
-                inputId = "tf_options",
-                label = "Specify transcription factor:",
-                choices = c("Tbx5", "GATA3", "Tcf21"),
-                selected = "GATA3"
-            ),
-            radioButtons(
-                inputId = "genome",
-                label = "Specify genome:",
-                choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
-                            "Danio rerio" = "dr")
-            ),
-            fileInput(
-                inputId = "pwm",
-                label = "Provide PWM matrix:",
-                multiple = FALSE,
-                buttonLabel = "Browse files",
-                placeholder = "No file selected"
-          )
+      sidebarPanel(
+        width = 4,
+        fileInput(
+          inputId = "bigbed",
+          label = "Įkelkite BED formato failą (-us):",
+          multiple = TRUE,
+          buttonLabel = "Ieškoti failo",
+          placeholder = "Failas nepasirinktas"
         ),
-        mainPanel(
-          width = 8,
-      #         fluidRow(
-      #   box(
-      #     title = "Pikų skaičius mėginiuose", solidHeader = TRUE,
-      #     status = "primary", plotOutput(outputId = "plot1")
-      #   ),
-      #   box(
-      #     title = "Pikų skaičius chromosomose", solidHeader = TRUE,
-      #     status = "primary", plotOutput(outputId = "plot2")
-      #   ),
-      #   box(
-      #     title = "Mėginių panašumas", solidHeader = TRUE,
-      #     status = "primary", plotOutput(outputId = "plot3")
-      #   ),
-      #   box(
-      #     title = "Transkripcijos faktoriaus motyvas", solidHeader = TRUE,
-      #     status = "primary", plotOutput(outputId = "plot4")
-      #   ),
-      #   box(
-      #     title = "PWM matricos atitikimai", solidHeader = TRUE,
-      #     status = "primary", plotOutput(outputId = "plot5")
-      #   ),
-      #   box(
-      #     width = 10, title = "Genominis pasiskirstymas", solidHeader = TRUE,
-      #     status = "primary", DT::dataTableOutput(outputId = "table1"),
-      #     downloadButton("downloadData", "Download")
-      #   )
-      # )
-      tabsetPanel(
-        
-        tabPanel("Pikų skaičius mėginiuose", 
-          p("Description goes here..."),
-          box(
-            width = 12, 
-            withLoader(plotOutput("plot1"), type = "html", loader = "dnaspin")
-          )
-        ),
-        tabPanel("Pikų skaičius chromosomose",
-          p("Description goes here..."),
-          box(
-            width = 12,
-            withLoader(plotOutput("plot2"), type = "html", loader = "dnaspin")
-          )
-        ),
-        tabPanel("Mėginių panašumas",
-          p("Description goes here..."),
-          box(
-            width = 12,
-            withLoader(plotOutput("plot3"), type = "html", loader = "dnaspin")
-          ))
-      )
+        radioButtons(
+          inputId = "genome",
+          label = "Pasirinkite genomą:",
+          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+                      "Danio rerio" = "dr")
         )
+      ),
+      mainPanel(
+        width = 8,
+        tabsetPanel(
+          tabPanel("Pikų skaičius mėginiuose", 
+            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek yra pikų
+              kiekviename pateiktame BED formato faile:"),
+            box(
+              width = 12, 
+              withLoader(plotOutput("plot1"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("Pikų skaičius chromosomose",
+            p("Pateiktose stulpelinėse diagramose pavaizduota, kaip pikų skaičius
+              pasiskirstęs skirtingose chromosomose:"),
+            box(
+              width = 12,
+              withLoader(plotOutput("plot2"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("Mėginių panašumas",
+            p("Pateiktame spalvų intensyvumo grafike pavaizduota, kokia pikų
+              dalis (procentiškai) sutampa tarp skirtingų mėginių:"),
+            box(
+              width = 12,
+              withLoader(plotOutput("plot3"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("Genominė distribucija",
+            p("DESCRIPTION GOES HERE..."),
+            box(
+              width = 12,
+              withLoader(DT::dataTableOutput("table2"), type = "html",
+                         loader = "dnaspin")
+            ) 
+          )
+        )
+      )
     )
   ),
   tabPanel("Analizės",
-          h2("Trafficker tab")
+    sidebarLayout(
+      sidebarPanel(
+        width = 4,
+        selectInput(
+          inputId = "tf_options",
+          label = "Pasirinkite transkripcijos faktorių:",
+          choices = c("Tbx5", "GATA3", "Tcf21"),
+          selected = "GATA3"
+        ),
+        fileInput(
+          inputId = "pwm",
+          label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
+          multiple = FALSE,
+          buttonLabel = "Ieškoti failo",
+          placeholder = "Failas nepasirinktas"
+        ),
+        radioButtons(
+          inputId = "genome",
+          label = "Pasirinkite genomą:",
+          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+                      "Danio rerio" = "dr")
+        )
+      ),
+      mainPanel(
+        width = 8,
+        tabsetPanel(
+          tabPanel("Transkripcijos faktoriaus motyvas", 
+            p("Description goes here..."),
+            box(
+              width = 12, 
+              withLoader(plotOutput("plot4"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("PWM matricos atitikimai",
+            p("Description goes here..."),
+            box(
+              width = 12,
+              withLoader(plotOutput("plot5"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("Genominis pasiskirstymas",
+            p("Description goes here..."),
+            box(
+              width = 12,
+              withLoader(DT::dataTableOutput(outputId = "table1"),
+                         type = "html", loader = "dnaspin"),
+              downloadButton("downloadData", "Download")
+            )
+          )
+        )
+      )
+    )
   ),
-  tabPanel("Taikinių spėjimas")
+  tabPanel("Taikinių spėjimas",
+    sidebarLayout(
+      sidebarPanel(
+        width = 4,
+        radioButtons(
+          inputId = "genome",
+          label = "Pasirinkite genomą:",
+          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+                      "Danio rerio" = "dr")
+        )
+      ),
+      mainPanel(
+        width = 8,
+        
+      )
+    )
+  )
 )
-
-# ui <- dashboardPage(
-#   dashboardHeader(
-#     title = "Transcription factor analysis dashboard",
-#     titleWidth = 350),
-
-#   dashboardSidebar(
-#     width = 350,
-#     fileInput(
-#         inputId = "bigbed",
-#         label = "Provide BigBed file(-s):",
-#         multiple = TRUE,
-#         buttonLabel = "Browse files",
-#         placeholder = "No file selected"
-#     ),
-#     selectInput(
-#         inputId = "tf_options",
-#         label = "Specify transcription factor:",
-#         choices = c("Tbx5", "GATA3", "Tcf21"),
-#         selected = "GATA3"
-#     ),
-#     radioButtons(
-#         inputId = "genome",
-#         label = "Specify genome:",
-#         choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
-#                     "Danio rerio" = "dr")
-#     ),
-#     fileInput(
-#         inputId = "pwm",
-#         label = "Provide PWM matrix:",
-#         multiple = FALSE,
-#         buttonLabel = "Browse files",
-#         placeholder = "No file selected"
-#   )),
-#   dashboardBody(
-#      tags$head(tags$style(HTML("
-#       .skin-blue .main-header .navbar {
-#         background-color: #cf882a;
-#       }
-#       .skin-blue .main-header .logo {
-#         background-color: #dda153;
-#         color: black;
-#         font-weight: bolder;
-#         border-bottom: 0 solid transparent;
-#       }
-#     "))),
-#     fluidRow(
-#       box(
-#         title = "Pikų skaičius mėginiuose", solidHeader = TRUE,
-#         status = "primary", plotOutput(outputId = "plot1")
-#       ),
-#       box(
-#         title = "Pikų skaičius chromosomose", solidHeader = TRUE,
-#         status = "primary", plotOutput(outputId = "plot2")
-#       ),
-#       box(
-#         title = "Mėginių panašumas", solidHeader = TRUE,
-#         status = "primary", plotOutput(outputId = "plot3")
-#       ),
-#       box(
-#         title = "Transkripcijos faktoriaus motyvas", solidHeader = TRUE,
-#         status = "primary", plotOutput(outputId = "plot4")
-#       ),
-#       box(
-#         title = "PWM matricos atitikimai", solidHeader = TRUE,
-#         status = "primary", plotOutput(outputId = "plot5")
-#       ),
-#       box(
-#         width = 10, title = "Genominis pasiskirstymas", solidHeader = TRUE,
-#         status = "primary", DT::dataTableOutput(outputId = "table1"),
-#         downloadButton("downloadData", "Download")
-#       )
-#     )
-
-
-    
-#   )
-# )
-
-# ui <- shinyUI(  
-#   navbarPage(title = "Transkripcijos faktorių analizė",
-#   tabPanel(
-#     "Duomenų kokybė",
-#     box(
-#       title = "Pikų skaičius mėginiuose", solidHeader = TRUE,
-#       status = "primary", plotOutput(outputId = "plot1")
-#     ),
-#     box(
-#       title = "Pikų skaičius chromosomose", solidHeader = TRUE,
-#       status = "primary", plotOutput(outputId = "plot2")
-#     ),
-#     box(
-#       title = "Mėginių panašumas", solidHeader = TRUE,
-#       status = "primary", plotOutput(outputId = "plot3")
-#     ),
-#     box(
-#       title = "Transkripcijos faktoriaus motyvas", solidHeader = TRUE,
-#       status = "primary", plotOutput(outputId = "plot4")
-#     ),
-#     box(
-#       title = "PWM matricos atitikimai", solidHeader = TRUE,
-#       status = "primary", plotOutput(outputId = "plot5")
-#     )
-#   ),
-#   tabPanel(
-#     "Analizės", p("labasĄ")
-#   ),
-#   tabPanel(
-#     "Taikinių spėjimas", p("labas!")
-#   )
-#   )
-# )
-
 
 # nolint end
