@@ -15,6 +15,10 @@ source(paste0(PROJECT, "Scripts/App/server.R"))
 #   PIKŲ SKAIČIUS CHROMOSOMOSE;
 #   MĖGINIŲ PANAŠUMAS;
 
+# Pridėti lentelę, kur naudotojas gali pasirinkti mėginį, kurio duomenų kokybę
+# nori įvertinti. Toliau išsidėstymą apie TSS, genominę distribuciją vaizduoti
+# tik pasirinktam mėginiui! Antradienį!
+
 ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
   tags$style(HTML("
     body {
@@ -50,7 +54,83 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
       text-align: justify;
       font-size: 22px;
     }
+    table.dataTable.hover>tbody>tr.selected:hover>*,table.dataTable.display>tbody>tr.selected:hover>* {
+      box-shadow: inset 0 0 0 9999px rgb(77 6 6 / 90%)
+    }
+    table.dataTable.stripe>tbody>tr.odd.selected>*, table.dataTable.display>tbody>tr.odd.selected>* {
+      box-shadow: inset 0 0 0 9999px rgb(77 6 6 / 90%)
+    }
+    table.dataTable.stripe>tbody>tr.odd.selected>*,table.dataTable.display>tbody>tr.odd.selected>* {
+      box-shadow: inset 0 0 0 9999px rgb(77 6 6 / 90%)
+      color: white
+      font-weight: bold
+    }
+    table.dataTable tbody tr.selected>* {
+      box-shadow: inset 0 0 0 9999px rgb(77 6 6 / 90%);
+      color: white
+      text-decoration: none
+      font-weight: bold
+    }
+    table.dataTable tbody tr.selected>* {
+      color: white;
+      font-weight: bold;
+    }
+    .DNA:after {
+      letter-spacing: 5px;
+      display: inline-block;
+      padding-top: 100px;
+      color: black;
+      font-family: arial;
+      text-align: center;
+      font-size: 36pt;
+      content: 'Skaičiuojama...';
+    }
+    .strain:before {
+      content: '';
+      display: block;
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #4f0707;
+      left: 0;
+      margin-top: -9px;
+      margin-left: -9px;
+      -webkit-animation-name: strain-size-left;
+              animation-name: strain-size-left;
+      -webkit-animation-duration: 1.7s;
+              animation-duration: 1.7s;
+      -webkit-animation-timing-function: linear;
+              animation-timing-function: linear;
+      -webkit-animation-iteration-count: infinite;
+              animation-iteration-count: infinite;
+      -webkit-animation-play-state: running;
+              animation-play-state: running;
+    }
+    .strain:after {
+      content: '';
+      display: block;
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #d68325;
+      right: 0;
+      margin-top: -9px;
+      margin-right: -9px;
+      -webkit-animation-name: strain-size-right;
+              animation-name: strain-size-right;
+      -webkit-animation-duration: 1.7s;
+              animation-duration: 1.7s;
+      -webkit-animation-timing-function: linear;
+              animation-timing-function: linear;
+      -webkit-animation-iteration-count: infinite;
+              animation-iteration-count: infinite;
+      -webkit-animation-play-state: running;
+              animation-play-state: running;
+    }
   ")),
+  # GALBŪT ČIA REIKIA NAUJO TAB'O, KURIAME REIKĖTŲ ĮKELTI VISUS DUOMENIS?
   tabPanel("Duomenų kokybė",
     sidebarLayout(
       sidebarPanel(
@@ -75,6 +155,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           tabPanel("Pikų skaičius mėginiuose", 
             p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek yra pikų
               kiekviename pateiktame BED formato faile:"),
+              DT::dataTableOutput('samples'),
             box(
               width = 12, 
               withLoader(plotOutput("plot1"), type = "html", loader = "dnaspin")
@@ -107,78 +188,80 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         )
       )
     )
-  ),
-  tabPanel("Analizės",
-    sidebarLayout(
-      sidebarPanel(
-        width = 4,
-        selectInput(
-          inputId = "tf_options",
-          label = "Pasirinkite transkripcijos faktorių:",
-          choices = c("Tbx5", "GATA3", "Tcf21"),
-          selected = "GATA3"
-        ),
-        fileInput(
-          inputId = "pwm",
-          label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
-          multiple = FALSE,
-          buttonLabel = "Ieškoti failo",
-          placeholder = "Failas nepasirinktas"
-        ),
-        radioButtons(
-          inputId = "genome",
-          label = "Pasirinkite genomą:",
-          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
-                      "Danio rerio" = "dr")
-        )
-      ),
-      mainPanel(
-        width = 8,
-        tabsetPanel(
-          tabPanel("Transkripcijos faktoriaus motyvas", 
-            p("Description goes here..."),
-            box(
-              width = 12, 
-              withLoader(plotOutput("plot4"), type = "html", loader = "dnaspin")
-            )
-          ),
-          tabPanel("PWM matricos atitikimai",
-            p("Description goes here..."),
-            box(
-              width = 12,
-              withLoader(plotOutput("plot5"), type = "html", loader = "dnaspin")
-            )
-          ),
-          tabPanel("Genominis pasiskirstymas",
-            p("Description goes here..."),
-            box(
-              width = 12,
-              withLoader(DT::dataTableOutput(outputId = "table1"),
-                         type = "html", loader = "dnaspin"),
-              downloadButton("downloadData", "Download")
-            )
-          )
-        )
-      )
-    )
-  ),
-  tabPanel("Taikinių spėjimas",
-    sidebarLayout(
-      sidebarPanel(
-        width = 4,
-        radioButtons(
-          inputId = "genome",
-          label = "Pasirinkite genomą:",
-          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
-                      "Danio rerio" = "dr")
-        )
-      ),
-      mainPanel(
-        width = 8,
-        
-      )
-    )
   )
+  # tabPanel("Analizės",
+  #   sidebarLayout(
+  #     sidebarPanel(
+  #       width = 4,
+  #       selectInput(
+  #         inputId = "tf_options",
+  #         label = "Pasirinkite transkripcijos faktorių:",
+  #         choices = c("Tbx5", "GATA3", "Tcf21"),
+  #         selected = "GATA3"
+  #       ),
+  #       fileInput(
+  #         inputId = "pwm",
+  #         label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
+  #         multiple = FALSE,
+  #         buttonLabel = "Ieškoti failo",
+  #         placeholder = "Failas nepasirinktas"
+  #       ),
+  #       radioButtons(
+  #         inputId = "genome",
+  #         label = "Pasirinkite genomą:",
+  #         choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+  #                     "Danio rerio" = "dr")
+  #       )
+  #     ),
+  #     mainPanel(
+  #       width = 8,
+  #       tabsetPanel(
+  #         tabPanel("Transkripcijos faktoriaus motyvas", 
+  #           p("Description goes here..."),
+  #           box(
+  #             width = 12, 
+  #             withLoader(plotOutput("plot4"), type = "html", loader = "dnaspin")
+  #           )
+  #         ),
+  #         tabPanel("PWM matricos atitikimai",
+  #           p("Description goes here..."),
+  #           box(
+  #             width = 12,
+  #             withLoader(plotOutput("plot5"), type = "html", loader = "dnaspin")
+  #           )
+  #         ),
+  #         tabPanel("Genominis pasiskirstymas",
+  #           p("Description goes here..."),
+  #           box(
+  #             width = 12,
+  #             withLoader(DT::dataTableOutput(outputId = "table1"),
+  #                        type = "html", loader = "dnaspin"),
+  #             downloadButton("downloadData", "Download"),
+  #           #   DT::dataTableOutput('x3'),
+  #           # verbatimTextOutput('x4')
+  #           )
+  #         )
+  #       )
+  #     )
+  #   )
+  # ),
+  # tabPanel("Taikinių spėjimas",
+  #   sidebarLayout(
+  #     sidebarPanel(
+  #       width = 4,
+  #       radioButtons(
+  #         inputId = "genome",
+  #         label = "Pasirinkite genomą:",
+  #         choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+  #                     "Danio rerio" = "dr")
+  #       )
+  #     ),
+  #     mainPanel(
+  #       width = 8,
+        
+  #     )
+  #   )
+  # )
 )
 
 # nolint end
