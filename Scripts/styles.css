@@ -35,7 +35,8 @@ a:hover, a:focus {
 p {
     margin: 18px;
     text-align: justify;
-    font-size: 22px;
+    font-size: 19px;
+    color: black;
 }
 
 table.dataTable.hover>tbody>tr.selected:hover>*,
