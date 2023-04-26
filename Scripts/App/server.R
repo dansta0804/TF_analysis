@@ -2,7 +2,8 @@
 
 library(pacman)
 p_load(dplyr, data.table, rtracklayer, randomcoloR, ggplot2, scales,
-       GenomicRanges, ggseqlogo, BSgenome.Mmusculus.UCSC.mm10)
+       GenomicRanges, ggseqlogo, BSgenome.Mmusculus.UCSC.mm10,
+       TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db, ChIPseeker, ggpubr)
 
 options(scipen = 100)
 options(shiny.maxRequestSize = 30 * 1024 ^ 2)
@@ -347,13 +348,21 @@ server <- function(input, output, session) {
     observe({
         req(input$samples_rows_selected)
         selRow <- input$bigbed[input$samples_rows_selected,]
-        print(selRow[[1]])
-        print(selRow[[4]])
         names <- selRow[[1]]
         samples <- selRow[[4]]
 
-        bigbed_files <- list()
+
+
+    if (input$sample_overlap == "no_join") {
+        selRow <- input$bigbed[input$samples_rows_selected, ]
+        names <- selRow[[1]]
+        samples <- selRow[[4]]
+    }
+
+        # GENOMIC DATA QUALITY - PEAK COUNT (PLOT 1):
         output$plot1 <- renderPlot({
+            bigbed_files <- list()
+
             for(sample in 1:length(samples)) {
                 bigbed_files[[sample]] <-
                     read.table(file = samples[sample])
@@ -402,6 +411,249 @@ server <- function(input, output, session) {
                     axis.title.y = element_text(size = 16),
                     plot.title = element_text(hjust = 0.5, face = "bold"))
             }
+        })
+
+        # GENOMIC DATA QUALITY - PEAK COUNT DISTRIBUTION BY CHROMOSOME (PLOT 2):
+        output$plot2 <- renderPlot({
+            bigbed_files <- list()
+            grl <- GRangesList()
+
+            for(sample in 1:length(samples)) {
+                bigbed_files[[sample]] <-
+                    read.table(file = samples[sample])
+            
+                colnames(bigbed_files[[sample]]) <-
+                    c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
+                grl[[sample]] <-
+                    makeGRangesFromDataFrame(bigbed_files[[sample]],
+                                            keep.extra.columns = TRUE)
+                names(grl)[sample] <-
+                    substring(names[sample], 1, 11)
+            }
+
+            peak_counts <-
+                lapply(names(grl), count_peaks, objects = grl) %>%
+                bind_rows()
+
+            # Calling factor() function in order to maintain certain Chromosome
+            # and Name order:
+            unique_chr <- unique(peak_counts$Chromosome)
+            peak_counts$Chromosome <-
+                factor(peak_counts$Chromosome, levels = c(unique_chr))
+            peak_counts$Name <-
+                factor(peak_counts$Name, levels = unique(peak_counts$Name))
+
+            # Creating barplots that visualize peak differences between
+            # different chromosomes:
+            ggplot(peak_counts, aes(x = Name, y = as.numeric(Peak_count))) +
+                geom_bar(stat = "identity", color = "black",
+                         fill = "#930d1f") +
+                ylab("Pikų skaičius") +
+                facet_wrap(~ Chromosome, ncol = 7) +
+                xlab("") +
+                scale_y_continuous(labels = label_number(suffix = " K",
+                                                         scale = 1e-3)) +
+                theme_linedraw() +
+                theme(axis.text.x = element_text(angle = 90, size = 12,
+                                                 vjust = 0.5),
+                    legend.position = "none",
+                    axis.text.y = element_text(size = 14, face = "bold"),
+                    axis.title.x = element_text(size = 14, colour = "black"),
+                    axis.title.y = element_text(size = 20, colour = "black"),
+                    strip.background = element_rect(fill = "white"),
+                    strip.text = element_text(colour = "black", face = "bold",
+                                              size = 16))
+        })
+
+        # GENOMIC DATA QUALITY - OVERLAPS BETWEEN SAMPLES (JACCARD) (PLOT 3):
+        output$plot3 <- renderPlot({
+            bigbed_files <- list()
+
+            for(sample in 1:length(samples)) {
+                bigbed_files[[sample]] <-
+                    read.table(file = samples[sample])
+                names(bigbed_files)[sample] <-
+                    substring(names[sample], 1, 11)
+                colnames(bigbed_files[[sample]]) <-
+                        c("chrom", "start", "end", "name",
+                          rep(paste0("Other", 1:7)))
+                bigbed_files[[sample]] <-
+                    makeGRangesFromDataFrame(bigbed_files[[sample]],
+                                             keep.extra.columns = TRUE)
+            }
+
+            coef_matrix <- matrix(nrow = length(bigbed_files),
+                                  ncol = length(bigbed_files))
+
+            # Calculating Jaccard coefficient for sample pair:
+            for (i in 1:length(bigbed_files)) {
+                for (y in 1:length(bigbed_files)) {
+                    coef_matrix[i, y] = jaccard(bigbed_files, i, y)
+                }
+            }
+
+            # Setting colnames and rownames for the matrix:
+            colnames(coef_matrix) <- names(bigbed_files)
+            rownames(coef_matrix) <- names(bigbed_files)
+
+            coef_mat1 <- coef_matrix
+            coef_mat2 <- coef_matrix
+
+            # Passing Jaccard coefficients to matrix except for the diagonal -
+            # it contains 'NA':
+            coef_mat1[lower.tri(coef_mat1, diag = TRUE)] <- NA
+            coef_mat2[upper.tri(coef_mat2, diag = TRUE)] <- NA
+
+            # Binding two matrixes:
+            coef_mat_bind <- rbind(data.matrix(coef_mat1),
+                                   data.matrix(coef_mat2))
+
+            # Translating matrix to dataframe using melt() function:
+            melt_coef_mat <- melt(coef_mat_bind, na.rm = TRUE)
+
+            # Creating a heatmap that shows similarity between samples:
+            ggplot(melt_coef_mat, aes(x = Var2, y = Var1, fill = value)) +
+                geom_tile(color = "black") +
+                geom_text(aes(label = round(value, digits = 3)), size = 4.5,
+                              color = "#030101", fontface = "bold") +
+                labs(x = "", y = "") +
+                scale_fill_gradient(low = "#ffee8e", high = "#ab1f1f") +
+                guides(fill = guide_colourbar(title = "Koeficientas",
+                                              face = "bold")) +
+                theme(axis.text = element_text(size = 12, colour = "black",
+                                               face = "bold"),
+                    axis.text.x = element_text(angle = 45, hjust = 1,
+                                               vjust = 1),
+                    axis.title.x = element_text(size = 14, colour = "black"),
+                    axis.title.y = element_text(size = 14, colour = "black"),
+                    panel.grid.major = element_line(color = "#eeeeee"),
+                    plot.title = element_text(hjust = 0.5, size = 16,
+                                              face = "bold"),
+                    legend.position = "bottom")
+        })
+
+        # bigbed_files <- list()
+        #     grl <- GRangesList()
+
+        #     for(sample in 1:length(samples)) {
+        #         bigbed_files[[sample]] <-
+        #             read.table(file = samples[sample])
+            
+        #         colnames(bigbed_files[[sample]]) <-
+        #             c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
+        #         grl[[sample]] <-
+        #             makeGRangesFromDataFrame(bigbed_files[[sample]],
+        #                                     keep.extra.columns = TRUE)
+        #         names(grl)[sample] <-
+        #             substring(names[sample], 1, 11)
+        #     }
+
+        #     mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
+
+        #     peak_annotations <- lapply(grl, annotatePeak,
+        #                                TxDb = mm_known_genes,
+        #                                tssRegion = c(-3000, 3000),
+        #                                verbose = FALSE)
+
+        # GENOMIC DATA QUALITY - GENOMIC DISTRIBUTION (PLOT 4):
+        output$plot4 <- renderPlot({
+            grl <- GRangesList()
+            bigbed_files <- list()
+
+
+            for(sample in 1:length(samples)) {
+                bigbed_files[[sample]] <-
+                    read.table(file = samples[sample])
+            
+                colnames(bigbed_files[[sample]]) <-
+                    c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
+                grl[[sample]] <-
+                    makeGRangesFromDataFrame(bigbed_files[[sample]],
+                                            keep.extra.columns = TRUE)
+                names(grl)[sample] <-
+                    substring(names[sample], 1, 11)
+            }
+
+            mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
+            peak_annotations <- lapply(grl, annotatePeak,
+                                       TxDb = mm_known_genes,
+                                       tssRegion = c(-3000, 3000),
+                                       verbose = FALSE)
+
+            plotAnnoBar(peak_annotations,
+                        ylab = "Procentinė dalis (%)", title = "")
+        })
+
+        # GENOMIC DATA QUALITY - DISTANCE TO TSS (PLOT 5):
+        output$plot5 <- renderPlot({
+            grl <- GRangesList()
+            bigbed_files <- list()
+
+            for(sample in 1:length(samples)) {
+                bigbed_files[[sample]] <-
+                    read.table(file = samples[sample])
+            
+                colnames(bigbed_files[[sample]]) <-
+                    c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
+                grl[[sample]] <-
+                    makeGRangesFromDataFrame(bigbed_files[[sample]],
+                                            keep.extra.columns = TRUE)
+                names(grl)[sample] <-
+                    substring(names[sample], 1, 11)
+            }
+
+            mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
+            peak_annotations <- lapply(grl, annotatePeak,
+                                       TxDb = mm_known_genes,
+                                       tssRegion = c(-3000, 3000),
+                                       verbose = FALSE)
+            plotDistToTSS(peak_annotations,
+                          ylab = "Atstumas", title = "")
+        })
+
+        output$plot6 <- renderPlot({
+            grl <- GRangesList()
+            plots <- list()
+            bigbed_files <- list()
+
+            for(sample in 1:length(samples)) {
+                bigbed_files[[sample]] <-
+                    read.table(file = samples[sample])
+            
+                colnames(bigbed_files[[sample]]) <-
+                    c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
+                grl[[sample]] <-
+                    makeGRangesFromDataFrame(bigbed_files[[sample]],
+                                            keep.extra.columns = TRUE)
+                names(grl)[sample] <-
+                    substring(names[sample], 1, 11)
+            }
+            
+            mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
+            promoter <- getPromoters(TxDb = mm_known_genes, upstream = 3000,
+                                     downstream = 3000)
+            
+            for (peak_file in 1:length(grl)) {
+                remove_y <- theme(
+                    axis.text.y = element_blank(),
+                    axis.ticks.y = element_blank(),
+                    axis.title.y = element_blank())
+
+                
+                peak <-
+                    makeGRangesFromDataFrame(grl[[peak_file]],
+                                            keep.extra.columns = TRUE)
+                    
+                tagMatrix <- getTagMatrix(peak, windows = promoter)
+                
+                plots[[peak_file]] <-
+                    plotAvgProf(tagMatrix, xlim = c(-3000, 3000),
+                                xlab = "Genomic Region (5'->3')",
+                                ylab = "Read Count Frequency") +
+                    remove_y
+            }
+            ggarrange(plotlist = plots, nrow = 1, common.legend = TRUE,
+                      widths = 5, legend = "bottom")
         })
     })
 }
