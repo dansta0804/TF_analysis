@@ -64,7 +64,7 @@
 
 \hskip 140pt {\large Autorė: Danielė Stasiūnaitė}
 
-\hskip 140pt{\large VU el. p.: daniele.stasiunaite@gmc.vu.lt}
+\hskip 140pt{\large VU el. p.: daniele.stasiunaite@mif.stud.vu.lt}
 \bigskip
 \vskip 20pt
 
@@ -281,8 +281,6 @@ pagrindinius etapus:
 
 \newpage
 
-\subsection{ChIP sekoskaitos privalumai ir trūkumai}
-
 \subsection{Pikų nustatymo algoritmai}
 Pikų nustatymas yra vienas iš svarbiausių etapų, atliekant DNR ir reguliatorinių
 baltymų - transkripcijos faktorių arba histonų - sąveikos tyrimų analizes.
@@ -434,29 +432,29 @@ detalių apie DNR.}.
           patikslinti baltymo - DNR sąveikos regionai.
 \end{enumerate}
 
-\subsubsection{CisGenome}
-Taikant šį pikų nustatymo įrankį DNR nuskaitymai yra kartografuojami. Baltymo -
-DNR sąveikos regionai yra identifikuojami kaip tos genomo sritys, kurioms
-būdingas itin didelis nuskaitymų skaičius. Priklausomai nuo to, ar kontroliniai
-mėginiai yra sekvenuojami, taikant šį įrankį pikai gali būti nustatomi dvejopai.
+% \subsubsection{CisGenome}
+% Taikant šį pikų nustatymo įrankį DNR nuskaitymai yra kartografuojami. Baltymo -
+% DNR sąveikos regionai yra identifikuojami kaip tos genomo sritys, kurioms
+% būdingas itin didelis nuskaitymų skaičius. Priklausomai nuo to, ar kontroliniai
+% mėginiai yra sekvenuojami, taikant šį įrankį pikai gali būti nustatomi dvejopai.
 
-Naudojant \emph{CisGenome} įrankį vykdomi šie etapai\cite{ARTICLE16}:
-\begin{enumerate}
-    \item \textbf{\emph{FDR} skaičiavimas.} Pasirinkto organizmo genomas yra
-          suskaidomas į nepersidegiančius pasirinkto dydžio fragmentus - langus
-          (angl. \emph{windows}). Atlikus genomo suskaidymą yra suskaičiuojama,
-          kiek kiekviename fragmente (lange) yra kartografuotų sekų nuskaitymų.
-          \emph{FDR} reikšmė gaunama spėjamą \(k\) nuskaitymų lange proporciją 
-          padalinus iš stebimos \(k\) nuskaitymų lange proporcijos, remiantis
-          neigiamu binominiu modeliu. Šiame etape nustatoma, kokiam
-          kartografuotų nuskaitymų skaičiui būdinga mažesnė nei 0.1 \emph{FDR}
-          reikšmė.
-    \item \textbf{Pikų nustatymas.} Jeigu du pikus skiria mažesnis bazių porų
-          skaičius nei maksimalus jų skaičius, šie du pikai yra sujungiami į
-          vieną piką. Taip pat pikai, kurie yra trumpesni nei nurodytas
-          minimalus piko ilgis, tada tokie pikai nėra įtraukiami į bendrą pikų
-          sąrašą.
-\end{enumerate}
+% Naudojant \emph{CisGenome} įrankį vykdomi šie etapai\cite{ARTICLE16}:
+% \begin{enumerate}
+%     \item \textbf{\emph{FDR} skaičiavimas.} Pasirinkto organizmo genomas yra
+%           suskaidomas į nepersidegiančius pasirinkto dydžio fragmentus - langus
+%           (angl. \emph{windows}). Atlikus genomo suskaidymą yra suskaičiuojama,
+%           kiek kiekviename fragmente (lange) yra kartografuotų sekų nuskaitymų.
+%           \emph{FDR} reikšmė gaunama spėjamą \(k\) nuskaitymų lange proporciją 
+%           padalinus iš stebimos \(k\) nuskaitymų lange proporcijos, remiantis
+%           neigiamu binominiu modeliu. Šiame etape nustatoma, kokiam
+%           kartografuotų nuskaitymų skaičiui būdinga mažesnė nei 0.1 \emph{FDR}
+%           reikšmė.
+%     \item \textbf{Pikų nustatymas.} Jeigu du pikus skiria mažesnis bazių porų
+%           skaičius nei maksimalus jų skaičius, šie du pikai yra sujungiami į
+%           vieną piką. Taip pat pikai, kurie yra trumpesni nei nurodytas
+%           minimalus piko ilgis, tada tokie pikai nėra įtraukiami į bendrą pikų
+%           sąrašą.
+% \end{enumerate}
 
 \newpage
 
@@ -580,36 +578,100 @@ ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
 Transkripcijos faktorių taikinių spėjimo pasirinktame organizme metodas
 įgyvendintas su R programavimo kalba\cite{R} (4.2.3 versija).
 
-Programa, apdorojanti naudotojo įvestus \emph{bed} formato failus ir atliekanti
-papildomas analizes, pagal naudotojo specifikuotus parametrus (nurodžius
-transkripcijos faktoriaus pavadinimą, pateikus pozicinę svorių matricą
-bei pasirinkus, kokiame genome norima atlikti taikinių spėjimą), sukurta
-naudojant R programavimo kalbos biblioteką \emph{Shiny}\cite{SHINY}. Pastarosios
-bibliotekos funkcijos leidžia sukurti interaktyvias internetines
-aplikacijas (angl. \emph{Interactive Web App}), naudojant R bei internetinių
-puslapių kūrimo kalbų - HTML, CSS, JavaScript - funkcijas.
-
 \subsection{Duomenų kokybės įvertinimas}
+Genominių duomenų kokybės įvertinimui panaudotos Kursinio darbo bei Kursinio
+projekto metu atliktos duomenų kokybės įvertinimo analizės. Taip pat
+duomenų kokybės įvertinimo analizių sąrašas papildytas 3 naujomis analizėmis.
 
-- Galutinai susidėlioti, kokie grafikai pateikiami šioje dalyje. Pateikti
-aprašymus iš Kursinio darbo ir Kursinio projekto (antradienį).
+\subsubsection*{Pikų skaičius mėginiuose}
+Pirmajame duomenų kokybės įvertinimo etape panaudota Kursiniame darbe
+įgyvendinta analizė, pikų skaičiaus nustatymui mėginiuose pritaikanti bazinę R
+programavimo kalbos funkciją \emph{length()}, apskaičiuojančią, kiek kiekviename
+mėginyje yra pikų regionų.
 
-Duomenų kokybei įvertinti panaudoti grafikai bei funkcijos, kurios buvo sukurtos
-Kursinio darbo metu. Duomenų kokybės vertinimo etapas papildytas TSS
-distribucija, genomine distribucija bei patikrinimu, ar transkripcijos
-faktoriaus motyvas yra išsidėstęs piko centre.
+\subsubsection*{Pikų skaičius chromosomose}
+Atliekant šį duomenų kokybės įvertinimo etapą Kursiniame darbe panaudota
+funkcija \emph{facet\_wrap()}, kuri nustato, kiek pikų yra nustatyta skirtingose
+chromosomose. Ankstesniame darbe buvo naudojamos tik naminės pelės
+(lot. \emph{Mus musculus}) chromosomos, šiame darbe organizmų, kurių genominiai
+duomenys gali būti analizuojami, sąrašas papildytas, todėl šiame duomenų
+įvertinimo etape analizuojamos tik tos chromosomos, kurios yra būdingos
+organizmams, iš kurių išgauti audinių mėginiai yra analizuojami.
+
+\subsubsection*{Mėginių panašumas}
+Mėginių tarpusavio panašumui įvertinti panaudota Kursinio darbo metu
+realizuota modifikuota \emph{Jaccard()} funkcija. Mėginių panašumas
+vizualizuotas, panaudojus spalvų intensyvumo grafiką - pritaikius \emph{ggplot2}
+bibliotekos funkciją \emph{geom\_tile()}.
+
+\subsubsection*{Genominė distribucija}
+Šio Kursinio projekto metu duomenų kokybės vertinimo rezultatas, pikams
+priskiriant artimiausio geno pavadinimą (anotuojant piką), pateiktas
+lentelės pavidalu. Šiame darbe pastarasis rezultato atvaizdavimas patobulintas:
+kiekvienam mėginiui sukurtas grafikas, vaizduojantis kiekvieno genominio
+elemento procentinę dalį. Pastaroji vizualizacija sukurta, pritaikius
+\emph{ChIPseeker}\cite{CHIPSEEKER}
+
+\subsubsection*{Atstumas iki TSS}
+Atstumo iki artimiausio transkripcijos pradžios taško
+(angl. \emph{Transcription Start Site}) nustatymas įgyvendintas, pritaikius
+\emph{ChIPseeker} bibliotekos funkciją \emph{annotatePeak()}, kuriai argumentų
+pavidalu perduoti pikus aprašantys \emph{GRanges} objektai bei visus žinomus
+konkretaus organizmo genus aprašantis \emph{TxDb} objektas. Atlikus pikų
+anotavimą gaunama genominių elementų procentines dalis apibendrinanti lentelė,
+kuri perduota funkcijai \emph{plotDistToTSS()}. Pastaroji funkcija šiame duomenų
+kokybės vertinimo etape sukūrė grafiką, atvaizduojantį kiekvieno mėginio pikų
+atstumą iki \emph{TSS} regiono.
+
+\subsubsection*{Pikų profilio atvaizdavimas}
+Prieš skaičiuojant pikų, kurie jungiasi prie \emph{TSS} regionų, profilį yra
+paruošiami tie \emph{TSS} regionai, kurie yra vadinami šalia \emph{TSS}
+einančiais regionais (angl. \emph{flanking sequences}). Šie regionai nustatyti
+pritaikius \emph{ChIPseeker} bibliotekos funkciją \emph{getPromoters()}.
+Pastarajai funkcijai perduotas konkretaus organizmo \emph{TxDb} objektas.
+Nustačius šalia \emph{TSS} regionų esančių sekų regionus panaudota
+\emph{getTagMatrix()} funkcija, kuri sukuria nuskaitymų, kurie patenka į šalia
+\emph{TSS} sričių esančius sekų regionus, matricą. Gautą matricą perdavus
+funkcijai \emph{plotAvgProf()} gautas pikų profilis.
 
 \subsection{Duomenų analizės atlikimas}
 
-- Galutinai susidėlioti, kokie grafikai pateikiami šioje dalyje. Pateikti
-aprašymus iš Kursinio darbo ir Kursinio projekto (antradienį).
-
 \subsection{Transkripcijos faktoriaus taikinių spėjimas}
-
-- Paleisti Blast, kai panašumas yra 80\% ir 70\%.
 
 \subsection{Interaktyvios aplikacijos kūrimas}
 
+Programa, apdorojanti naudotojo įvestus \emph{BED} formato failus ir atliekanti
+papildomas analizes, sukurta su R programavimo kalbos biblioteka
+\emph{Shiny}\cite{SHINY}. Pastarosios bibliotekos funkcijos leidžia sukurti
+interaktyvias internetines aplikacijas (angl. \emph{Interactive Web App}),
+naudojant R bei internetinių puslapių kūrimo kalbų - HTML, CSS, JavaScript -
+funkcijas.
+
+\subsubsection*{Duomenų įkėlimas}
+Naudotojas gali įkelti vieną arba daugiau \emph{BED} formato failų, saugančių
+genominę \emph{ChIP} sekoskaitos mėginių informaciją. Duomenų įkėlimo skiltyje
+specifikuojami papildomi parametrai, kurie panaudojami atliekant duomenų kokybės
+vertinimą, duomenų analizes bei konkretaus transkripcijos faktoriaus taikinių
+spėjimą pasirinktame organizme. Programos naudotojas gali nurodyti
+transkripcijos faktoriaus pavadinimą, pateikti nurodyto transkripcijos
+faktoriaus pozicinę svorių matricą bei pasirinkti, kokio organizmo genome
+norima atlikti transkripcijos faktoriaus taikinių spėjimą.
+
+\subsubsection*{Duomenų kokybė}
+Duomenų kokybės skiltyje pateikiama įkeltų \emph{ChIP} sekoskaitos duomenų
+lentelė, kurios elementus naudotojas gali pasirinkti bei vykdyti duomenų
+kokybės vertinimo etapus tik pasirinktiems mėginiams. Taip pat naudotojas
+gali apjungti pasirinktus arba visus įkeltus mėginius į vieną duomenų rinkinį
+(šis funkcionalumas įgyvendintas, pritaikius bazinę R funkciją \emph{union()})
+arba analizuoti tik pasirinktų arba pažymėtų mėginių persidengiančius pikus
+(įgyvendinta, panaudojus funkciją \emph{intersect()}).
+
+\subsubsection*{Analizės}
+
+Čia analizes apima: transkripcijos faktoriaus motyvo pavaizdavimas, PWM
+matricos atitikimų skaičiavimas, GO analizė, motyvų paieška De-novo.
+
+\subsubsection*{Taikinių spėjimas}
 
 \newpage
 
@@ -709,6 +771,10 @@ https://www.R-project.org/.
 \bibitem{SHINY} Chang W, Cheng J, Allaire J, Sievert C, Schloerke B, Xie Y,
 Allen J, McPherson J, Dipert A, Borges B (2023). shiny: Web Application
 Framework for R. R package version 1.7.4.9002, \url{https://shiny.rstudio.com/}.
+
+\bibitem{CHIPSEEKER} Wang Q, Li M, Wu T, Zhan L, Li L, Chen M, Xie W, Xie Z,
+Hu E, Xu S, Yu G (2022). “Exploring epigenomic datasets by ChIPseeker.”
+Current Protocols, 2(10), e585. doi: 10.1002/cpz1.585.
 
 \end{thebibliography}
 \newpage
