@@ -53,9 +53,10 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           kokybę vertinsite:", style = "font-weight:bold; font-size:17px;
           margin-left:0px"),
         DT::dataTableOutput("samples"),
+        p("Nurodykite, ar norite naudoti apjungtų mėginių duomenis:",
+          style = "font-weight:bold; font-size:17px; margin-left:0px; padding-top: 80px"),
         selectInput(
           inputId = "sample_overlap",
-          label = "Nurodykite, ar norite naudoti apjungtų mėginių duomenis:",
           choices = c(
             "Netaikyti mėginių apjungimo" = "no_join",
             "Apjungti pažymėtus mėginius" = "marked_samples",
@@ -153,7 +154,14 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
               withLoader(plotOutput("plot55"), type = "html", loader = "dnaspin")
             )
           ),
-          tabPanel("Genominis pasiskirstymas",
+          tabPanel("GO analizė",
+            p("Description goes here..."),
+            box(
+              width = 12,
+              withLoader(plotOutput("plot66"), type = "html", loader = "dnaspin")
+            )
+          ),
+          tabPanel("Motyvų paieška De-novo",
             p("Description goes here..."),
             box(
               width = 12,
