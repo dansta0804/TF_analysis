@@ -464,14 +464,18 @@ detalių apie DNR.}.
 
 \section{Pasirinktų mėginių charakteristika}
 Metodo patikimumui ir tikslumui įvertinti naudoti naminės pelės ir žmogaus
-\emph{ChiIP} sekoskaitos duomenys, gauti iš GTRD (Gene Transcription Regulation
-Database)\cite{GTRD} duomenų bazės, saugančios informaciją apie transkripcijos
-sekas bei atviro chromatino regionus.
+\emph{ChiIP} sekoskaitos duomenys, gauti iš ChIP-Atlas duomenų bazės.
+Kursiniame darbe bei Kursiniame projekte naudotas ChIP sekoskaitos duomenų
+šaltinis - GTRD (Gene Transcription Regulation Database)\cite{GTRD} duomenų
+bazė, sauganti informaciją apie transkripcijos sekas bei atviro chromatino
+regionus - pakeista ChIP-Altas duomenų baze. Pastaroji duomenų bazė turi
+didesnį kiekį ChIP sekoskaitos duomenų, kurie gali būti panaudoti atliekant
+tyrimus, nei GTRD duomenų bazėje, kuriai būdingas mažesnis duomenų rinkinys.
 
 Metodo testavimui naudoti 7 skirtingi naminių pelių (lot. \emph{Mus musculus})
-mėginiai bei išgauti iš 6 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai.
-Abiejų organizmų mėginiai išgauti iš vienodo tipo \emph{Th1}, \emph{Th2} ir
-širdies skilvelių ląstelių. 
+bei 6 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai, išgauti iš
+skirtingų tipų ląstelių: pliuripotentinių kamieninių ląstelių, gebančių
+diferencijuoti į visų tipų ląsteles, nervinių bei kraujo ląstelių..
 
 ChIP sekoskaitos mėginiai, išgauti iš naminės pelės, aprašyti pirmoje
 lentelėje.
@@ -483,55 +487,51 @@ lentelėje.
     \begin{tabular}{|c|c|c|c|c|}
         \hline
         \textbf{Ląstelių tipas} & \textbf{\thead{Kamienas}} &
-        \textbf{\thead{Poveikis}} & \textbf{Antikūnai} & \textbf{\thead{GTRD ID}} \\
+        \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
+        \textbf{\thead{ChIP-Atlas ID}} \\
         \hline
-        \thead{Th1} & C57BL/6 & - &
-        \thead{anti-Gata3} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP000787}{EXP000787}}\\ 
-        \hline
-        \thead{Th2} & C57BL/6 & - &
-        \thead{anti-Gata3} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP000798}{EXP000798}}\\ 
-        \hline
-        \thead{Th1} & C57BL/6J & \thead{Poliarizacija (2 d.)} &
-        \thead{T-bet\\(Tbx21 sinonimas)} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP000710}{EXP000710}}\\ 
-        \hline
-        \thead{Th1} & C57BL/6J & \thead{-} &
-        \thead{anti-T-bet} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP031557}{EXP031557}}\\ 
-        \hline
-        \thead{Th1} & ? & \thead{-} &
-        \thead{?} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP031709}{EXP031709}}\\ 
-        \hline
-        \thead{Širdies miocitai} & C57BL/6 & \thead{Kontrolė;\\kairysis prieširdis} &
+        \thead{Nervinės iš mESC} & - & ? &
         \thead{CTCF} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd\_current.experiments/Details/ID=EXP052222}{EXP052222}}\\ 
+        \thead{\href{https://chip-atlas.org/view?id=SRX13476140}{SRX13476140}}\\ 
         \hline
-        \thead{Širdies miocitai} & C57BL/6 & \thead{Pašalintas CTCF genas;\\kairysis prieširdis} &
+        \thead{Nervinės iš mESC} & - & ? &
         \thead{CTCF} &
-        \thead{\href{https://gtrd.biouml.org/\#!table/gtrd\_current.experiments/Details/ID=EXP052223}{EXP052223}}\\ 
+        \thead{\href{https://chip-atlas.org/view?id=SRX13476141}{SRX13476141}}\\ 
         \hline
+        \thead{Endoderminės\\iš mESC} & - & ? &
+        \thead{anti-Foxa2} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX4298469}{SRX4298469}}\\ 
+        \hline
+        \thead{Endoderminės\\iš mESC} & - & ? &
+        \thead{anti-Foxa2} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX4298470}{SRX4298470}}\\ 
+        \hline
+        \thead{Endoderminės\\iš mESC} & ? & - &
+        \thead{anti-Gata4} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX4298473}{SRX4298473}}\\ 
+        \hline
+        \thead{Endoderminės\\iš mESC} & ? & - &
+        \thead{anti-Gata4} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX4298474}{SRX4298474}}\\ 
+        \hline
+        \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA  &
+        \thead{Tiesioginis\\ląstelių\\išgavimas} & \thead{anti-Sox2} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX2378798}{SRX2378798}}\\ 
+        \hline
+        \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA &
+        \thead{Ląstelių\\išgavimas\\po disociacijos} & \thead{anti-Sox2} &
+        \thead{\href{https://chip-atlas.org/view?id=SRX2749159}{SRX2749159}}\\ 
+        \hline
+        
     \end{tabular}
 \end{table}
 
 \begin{itemize}
-    \item \textbf{TRE}: tetraciklino atsako elementas (angl. \emph{Tetracycline
-        Response Element}). Tai yra 7 DNR sekos fragmentai,
-        sudaryti iš 19 nukleotidų ir atskirti trumpesniais sekų fragmentais.
-    \item \textbf{sb431542}: stipriai veikianti, selektyvi cheminė medžiaga;
-        augimo faktoriaus inhibitorius.
-    \item \textbf{xav939}: stipriai veikianti cheminė medžiaga; tankirazės,
-        slopinančios specialaus baltymo, stabdančio telomerazės veiklą,
-        jungimąsi prie telomerinių DNR sekų, inhibitorius.
-    \item \textbf{AGHMT}: Transkripcijos faktorių, A - Akt1 kinazė, G - GATA4,
-        H - HAND2, M - MEF2C, T - Tbx5, komplektas.
-    \item \textbf{GHMT, GMT}: sumažintas transkripcijos faktorių
-        komplektas.
-    \item \textbf{sc-17866x/sc-17866}: žmonių, pelių ir žiurkių Tbx5 antigeną
-        atpažįstantys antikūnai (išskirti iš ožkų).
+    \item \textbf{mESC} - naminių pelių embrioninės kamieninės ląstelės
+          (angl. \emph{Mouse Embryonic Stem Cells});
+    \item \textbf{C57BL/6 x DBA} - 
 \end{itemize}
+
 \newpage
 
 ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
@@ -543,30 +543,49 @@ ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
     \begin{tabular}{|c|c|c|c|c|}
     \hline
     \textbf{Ląstelių tipas} & \textbf{\thead{Kamienas}} &
-    \textbf{\thead{Poveikis}} & \textbf{Antikūnai} & \textbf{\thead{GTRD ID}} \\
+    \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
+    \textbf{\thead{ChIP-Atlas ID}} \\
     \hline
-    \thead{Th1} & - & - &
-    \thead{GATA-3} &
-    \thead{\href{https://gtrd.biouml.org/\#!table/gtrd\_current.experiments/Details/ID=EXP031083}{EXP031083}}\\ 
+    \thead{Nervinės iš hESC} & - & ? &
+    \thead{CTCF} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX4417526}{SRX4417526}}\\ 
     \hline
-    \thead{Th2} & - & - &
-    \thead{GATA-3} &
-    \thead{\href{https://gtrd.biouml.org/\#!table/gtrd\_current.experiments/Details/ID=EXP031084}{EXP031084}}\\ 
+    \thead{Nervinės iš hESC} & - & ? &
+    \thead{CTCF} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX4417527}{SRX4417527}}\\ 
     \hline
-    \thead{Th1} & - & \thead{anti-CD3/CD28} &
-    \thead{anti-T-bet} &
-    \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP037440}{EXP037440}}\\ 
+    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{FOXA2} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX11080722}{SRX11080722}}\\ 
     \hline
-    \thead{Th1} & - & \thead{-} &
-    \thead{T-bet} &
-    \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP031082}{EXP031082}}\\ 
+    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{FOXA2} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX11080727}{SRX11080727}}\\ 
     \hline
-    \thead{Th1} & ? & \thead{-} &
-    \thead{?} &
-    \thead{\href{https://gtrd.biouml.org/\#!table/gtrd_current.experiments/Details/ID=EXP031709}{EXP031709}}\\
+    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{GATA4} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX701989}{SRX701989}}\\ 
+    \hline
+    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{GATA4} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX701990}{SRX701990}}\\ 
+    \hline
+    \thead{Nervinės\\progenitorinės} & - & Laukinis tipas &
+    \thead{anti-SOX2} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX5716451}{SRX5716451}}\\ 
+    \hline
+    \thead{Nervinės\\progenitorinės} & - & K755R/+ &
+    \thead{anti-SOX2} &
+    \thead{\href{https://chip-atlas.org/view?id=SRX5716452}{SRX5716452}}\\ 
     \hline
     \end{tabular}
 \end{table}
+
+\begin{itemize}
+    \item \textbf{hESC} - žmogaus embrioninės kamieninės ląstelės
+          (angl. \emph{Human Embryonic Stem Cells});
+    \item \textbf{K755R/+} - 
+\end{itemize}
 
 \newpage
 
