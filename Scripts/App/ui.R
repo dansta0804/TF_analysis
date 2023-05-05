@@ -57,6 +57,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           style = "font-weight:bold; font-size:17px; margin-left:0px; padding-top: 80px"),
         selectInput(
           inputId = "sample_overlap",
+          label = "",
           choices = c(
             "Netaikyti mėginių apjungimo" = "no_join",
             "Apjungti pažymėtus mėginius" = "marked_samples",
@@ -141,17 +142,22 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         width = 8,
         tabsetPanel(
           tabPanel("Transkripcijos faktoriaus motyvas", 
-            p("Description goes here..."),
+            p("Pateiktame paveiksle pavaizduotas įkeltą pozicinę svorių matricą
+               atitinkančio transkripcijos faktoriaus motyvo sekos logotipas:"),
             box(
               width = 12, 
-              withLoader(plotOutput("plot44"), type = "html", loader = "dnaspin")
+              withLoader(plotOutput("plot7", width = "70%"), type = "html",
+                         loader = "dnaspin")
             )
           ),
           tabPanel("PWM matricos atitikimai",
-            p("Description goes here..."),
+            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kokią procentinę
+               dalį sudaro įkeltą transkripcijos faktoriaus pozicinę svorių
+               matricą atitinkantys sekų fragmentai, palyginus su bendru pikų
+               skaičiumi:"),
             box(
               width = 12,
-              withLoader(plotOutput("plot55"), type = "html", loader = "dnaspin")
+              withLoader(plotOutput("plot8"), type = "html", loader = "dnaspin")
             )
           ),
           tabPanel("GO analizė",
@@ -161,15 +167,17 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
               withLoader(plotOutput("plot66"), type = "html", loader = "dnaspin")
             )
           ),
-          tabPanel("Motyvų paieška De-novo",
-            p("Description goes here..."),
+          tabPanel("Motyvų paieška De novo",
+            p("Pateiktoje lentelėje pateikti identifikuoti pasirinkto mėginio
+               motyvai, atlikus De novo motyvų paiešką."),
+            p("Pastaba: priklausomai nuo pasirinkto mėginio dydžio De novo
+               motyvų paieška gali trukti ilgiau nei 10 minučių.",
+               style = "font-weight:bold; color:red"),
             box(
               width = 12,
               withLoader(DT::dataTableOutput(outputId = "table1"),
                          type = "html", loader = "dnaspin"),
-              downloadButton("downloadData", "Download"),
-            #   DT::dataTableOutput('x3'),
-            # verbatimTextOutput('x4')
+              downloadButton("downloadData", "Download")
             )
           )
         )
