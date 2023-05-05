@@ -468,16 +468,17 @@ Metodo patikimumui ir tikslumui įvertinti naudoti naminės pelės ir žmogaus
 Kursiniame darbe bei Kursiniame projekte naudotas ChIP sekoskaitos duomenų
 šaltinis - GTRD (Gene Transcription Regulation Database)\cite{GTRD} duomenų
 bazė, sauganti informaciją apie transkripcijos sekas bei atviro chromatino
-regionus - pakeista ChIP-Altas duomenų baze. Pastaroji duomenų bazė turi
-didesnį kiekį ChIP sekoskaitos duomenų, kurie gali būti panaudoti atliekant
-tyrimus, nei GTRD duomenų bazėje, kuriai būdingas mažesnis duomenų rinkinys.
+regionus - pakeista ChIP-Altas\cite{CHIPATLAS} duomenų baze. Pastaroji duomenų
+bazė turi didesnį kiekį ChIP sekoskaitos duomenų, kurie gali būti panaudoti
+atliekant tyrimus, nei GTRD duomenų bazėje, kuriai būdingas mažesnis duomenų
+rinkinys.
 
-Metodo testavimui naudoti 7 skirtingi naminių pelių (lot. \emph{Mus musculus})
-bei 6 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai, išgauti iš
+Metodo testavimui naudoti 8 skirtingi naminių pelių (lot. \emph{Mus musculus})
+bei 8 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai, išgauti iš
 skirtingų tipų ląstelių: pliuripotentinių kamieninių ląstelių, gebančių
-diferencijuoti į visų tipų ląsteles, nervinių bei kraujo ląstelių..
+diferencijuoti į visų tipų ląsteles, nervinių bei kraujo ląstelių.
 
-ChIP sekoskaitos mėginiai, išgauti iš naminės pelės, aprašyti pirmoje
+ChIP sekoskaitos mėginiai, išgauti iš naminės pelės ląstelių, aprašyti pirmoje
 lentelėje.
 
 \begin{table}[htb]
@@ -490,51 +491,70 @@ lentelėje.
         \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
         \textbf{\thead{ChIP-Atlas ID}} \\
         \hline
-        \thead{Nervinės iš mESC} & - & ? &
+        \thead{Nervinės iš mESC} & - & Laukinis tipas (\emph{wt}) &
         \thead{CTCF} &
         \thead{\href{https://chip-atlas.org/view?id=SRX13476140}{SRX13476140}}\\ 
         \hline
-        \thead{Nervinės iš mESC} & - & ? &
+        \thead{Nervinės iš mESC} & - & Maz -/- &
         \thead{CTCF} &
         \thead{\href{https://chip-atlas.org/view?id=SRX13476141}{SRX13476141}}\\ 
         \hline
-        \thead{Endoderminės\\iš mESC} & - & ? &
+        \thead{Endoderminės\\iš mESC} & DKI &
+        \thead{Išgavimas po 3 dienų;\\r1} &
         \thead{anti-Foxa2} &
         \thead{\href{https://chip-atlas.org/view?id=SRX4298469}{SRX4298469}}\\ 
         \hline
-        \thead{Endoderminės\\iš mESC} & - & ? &
+        \thead{Endoderminės\\iš mESC} & DKI &
+        \thead{Išgavimas po 3 dienų;\\r2} &
         \thead{anti-Foxa2} &
         \thead{\href{https://chip-atlas.org/view?id=SRX4298470}{SRX4298470}}\\ 
         \hline
-        \thead{Endoderminės\\iš mESC} & ? & - &
+        \thead{Endoderminės\\iš mESC} & DKI & 
+        \thead{Išgavimas po 3 dienų;\\mezendoderminės ląstelės} &
         \thead{anti-Gata4} &
         \thead{\href{https://chip-atlas.org/view?id=SRX4298473}{SRX4298473}}\\ 
         \hline
-        \thead{Endoderminės\\iš mESC} & ? & - &
+        \thead{Endoderminės\\iš mESC} & DKI &
+        \thead{Išgavimas po 5 dienų;\\endoderminės ląstelės} &
         \thead{anti-Gata4} &
         \thead{\href{https://chip-atlas.org/view?id=SRX4298474}{SRX4298474}}\\ 
         \hline
         \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA  &
-        \thead{Tiesioginis\\ląstelių\\išgavimas} & \thead{anti-Sox2} &
+        \thead{Tiesioginis ląstelių\\išgavimas} & \thead{anti-Sox2} &
         \thead{\href{https://chip-atlas.org/view?id=SRX2378798}{SRX2378798}}\\ 
         \hline
         \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA &
-        \thead{Ląstelių\\išgavimas\\po disociacijos} & \thead{anti-Sox2} &
+        \thead{Ląstelių išgavimas\\po disociacijos} & \thead{anti-Sox2} &
         \thead{\href{https://chip-atlas.org/view?id=SRX2749159}{SRX2749159}}\\ 
         \hline
-        
     \end{tabular}
 \end{table}
 
 \begin{itemize}
-    \item \textbf{mESC} - naminių pelių embrioninės kamieninės ląstelės
-          (angl. \emph{Mouse Embryonic Stem Cells});
-    \item \textbf{C57BL/6 x DBA} - 
+    \item \textbf{mESC} - pelių embrioninės kamieninės ląstelės
+          (angl. \emph{\textbf{M}ouse \textbf{E}mbryonic \textbf{S}tem
+          \textbf{C}ells}).
+    \item \textbf{Maz -/-} - specialus baltymą koduojantis genas, kuris
+          nustatomas kartu su CTCF transkripcijos faktoriumi, kotroliuojant
+          kohezino poziciją ir genomo organizaciją. -/- nurodo, kad šio geno
+          kopijos nėra organizme.
+    \item \textbf{Mezendoderminės ląstelės} - embrionų ląstelės, kurios
+          diferencijuoja į mezodermos ir galutines endodermines ląsteles.
+    \item \textbf{Endoderminės ląstelės} - ląstelių tipas, iš kurių 
+          susiformuoja įvairių organų epitelinis audinys.
+    \item \textbf{DKI} - pelių kamienas, kuriam būdingas dvigubas
+          pasirinktų genų sekų įterpimas arba specifinių genų sekų pakeitimas
+          kitų genų sekomis.
+    \item \textbf{Progenitorinės ląstelės} - ląstelės, gebančios diferencijuoti
+          į tam tikro tipo ląsteles (tuo jos panašios į kamienines ląsteles),
+          tačiau jų specifiškumo lygis yra didesnis nei mažo specifiškumo
+          kamieninių ląstelių.
+    \item \textbf{C57BL/6 x DBA} - sukryžminti dažniausiai naudojami inbrydingo
+          būdu gauti pelių kamienai.
 \end{itemize}
 
-\newpage
-
-ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
+ChIP sekoskaitos mėginiai, išgauti iš žmogaus ląstelių, aprašyti antroje
+lentelėje.
 
 \begin{table}[htb]
     \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
@@ -546,35 +566,36 @@ ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
     \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
     \textbf{\thead{ChIP-Atlas ID}} \\
     \hline
-    \thead{Nervinės iš hESC} & - & ? &
+    \thead{Nervinės iš hESC} & Laukinis tipas (\emph{wt}) & KCl- &
     \thead{CTCF} &
     \thead{\href{https://chip-atlas.org/view?id=SRX4417526}{SRX4417526}}\\ 
     \hline
-    \thead{Nervinės iš hESC} & - & ? &
+    \thead{Nervinės iš hESC} & Laukinis tipas (\emph{wt}) & KCl+ &
     \thead{CTCF} &
     \thead{\href{https://chip-atlas.org/view?id=SRX4417527}{SRX4417527}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{Endoderminės\\iš hESC} & - &
+    \thead{DE} &
     \thead{FOXA2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX11080722}{SRX11080722}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{Endoderminės\\iš hESC} & - & TKO &
     \thead{FOXA2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX11080727}{SRX11080727}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{Endoderminės\\iš hESC} & ? & - &
     \thead{GATA4} &
     \thead{\href{https://chip-atlas.org/view?id=SRX701989}{SRX701989}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - & ? &
+    \thead{Endoderminės\\iš hESC} & ? & - &
     \thead{GATA4} &
     \thead{\href{https://chip-atlas.org/view?id=SRX701990}{SRX701990}}\\ 
     \hline
-    \thead{Nervinės\\progenitorinės} & - & Laukinis tipas &
+    \thead{Nervinės\\progenitorinės} & Laukinis tipas (\emph{wt}) & ? &
     \thead{anti-SOX2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX5716451}{SRX5716451}}\\ 
     \hline
-    \thead{Nervinės\\progenitorinės} & - & K755R/+ &
+    \thead{Nervinės\\progenitorinės} & K755R/+ & ? &
     \thead{anti-SOX2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX5716452}{SRX5716452}}\\ 
     \hline
@@ -583,8 +604,16 @@ ChIP sekoskaitos mėginiai, išgauti iš žmogaus, aprašyti antroje lentelėje.
 
 \begin{itemize}
     \item \textbf{hESC} - žmogaus embrioninės kamieninės ląstelės
-          (angl. \emph{Human Embryonic Stem Cells});
-    \item \textbf{K755R/+} - 
+          (angl. \emph{\textbf{H}uman \textbf{E}mbryonic \textbf{S}tem
+          \textbf{C}ells}).
+    \item \textbf{KCl (+/-)} - ląstelių stimuliavimas arba nestimuliavimas kalio
+          chlorido tirpalu.
+    \item \textbf{DE} - galutinė endoderma (angl. \emph{\textbf{d}efinitive
+          \textbf{e}ndoderm});
+    \item \textbf{TKO} - trijų genų panaikinimas arba jų išaktyvinimas
+          (angl. \emph{\textbf{t}riple \textbf{k}nock-\textbf{o}ut}).
+    \item \textbf{K755R} - mutacijos nomenklatūra. 755 geno pozicijoje esanti
+          lizino (K) aminorūgštis pakeista argininu (R).
 \end{itemize}
 
 \newpage
@@ -719,6 +748,11 @@ matricos atitikimų skaičiavimas, GO analizė, motyvų paieška De-novo.
 Kolmykov S, Yevshin I, Kulyashov M, Sharipov R, Kondrakhin Y, Makeev VJ,
 Kulakovskiy IV, Kel A, Kolpakov F Nucleic Acids Res. 2021 Jan
 8;49(D1):D104-D111.
+
+\bibitem{CHIPATLAS} Zou, Z., Ohta, T., Miura, F., Oki, S. ChIP-Atlas 2021
+update: a data-mining suite for exploring epigenomic landscapes by fully
+integrating ChIP-seq, ATAC-seq and Bisulfite-seq data. Nucleic Acids Res.
+50(W1), W175-W182, 2022. http://dx.doi.org/10.1093/nar/gkac199.
 
 \bibitem{ARTICLE1} Nakato R, Sakata T. Methods for ChIP-seq analysis: A
 practical workflow and advanced applications. Methods. 2021 Mar;187:44-53.
