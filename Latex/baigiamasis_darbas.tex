@@ -560,43 +560,38 @@ lentelėje.
     \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
     \small
     \caption*{\small\textbf{2 lentelė. Žmogaus mėginių charakteristikos}}
-    \begin{tabular}{|c|c|c|c|c|}
+    \begin{tabular}{|c|c|c|c|}
     \hline
-    \textbf{Ląstelių tipas} & \textbf{\thead{Kamienas}} &
+    \textbf{Ląstelių tipas} &
     \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
     \textbf{\thead{ChIP-Atlas ID}} \\
     \hline
-    \thead{Nervinės iš hESC} & Laukinis tipas (\emph{wt}) & KCl- &
+    \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl-} &
     \thead{CTCF} &
     \thead{\href{https://chip-atlas.org/view?id=SRX4417526}{SRX4417526}}\\ 
     \hline
-    \thead{Nervinės iš hESC} & Laukinis tipas (\emph{wt}) & KCl+ &
+    \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl+} &
     \thead{CTCF} &
     \thead{\href{https://chip-atlas.org/view?id=SRX4417527}{SRX4417527}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - &
-    \thead{DE} &
+    \thead{Endoderminės\\iš hESC} & \thead{DE} &
     \thead{FOXA2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX11080722}{SRX11080722}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & - & TKO &
-    \thead{FOXA2} &
+    \thead{Endoderminės\\iš hESC} & TKO & \thead{FOXA2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX11080727}{SRX11080727}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & ? & - &
-    \thead{GATA4} &
+    \thead{Endoderminės\\iš hESC} & Replika 1 & \thead{GATA4} &
     \thead{\href{https://chip-atlas.org/view?id=SRX701989}{SRX701989}}\\ 
     \hline
-    \thead{Endoderminės\\iš hESC} & ? & - &
-    \thead{GATA4} &
+    \thead{Endoderminės\\iš hESC} & Replika 2 & \thead{GATA4} &
     \thead{\href{https://chip-atlas.org/view?id=SRX701990}{SRX701990}}\\ 
     \hline
-    \thead{Nervinės\\progenitorinės} & Laukinis tipas (\emph{wt}) & ? &
+    \thead{Nervinės\\progenitorinės} & Laukinis tipas (\emph{wt}) &
     \thead{anti-SOX2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX5716451}{SRX5716451}}\\ 
     \hline
-    \thead{Nervinės\\progenitorinės} & K755R/+ & ? &
-    \thead{anti-SOX2} &
+    \thead{Nervinės\\progenitorinės} & K755R/+ & \thead{anti-SOX2} &
     \thead{\href{https://chip-atlas.org/view?id=SRX5716452}{SRX5716452}}\\ 
     \hline
     \end{tabular}
@@ -683,6 +678,41 @@ Nustačius šalia \emph{TSS} regionų esančių sekų regionus panaudota
 funkcijai \emph{plotAvgProf()} gautas pikų profilis.
 
 \subsection{Duomenų analizės atlikimas}
+Šiame etape buvo panaudotos patobulintos Kursinio darbo metu įgyvendintos
+analizės, kurias galima atlikti su pasirinktais genominiais duomenimis.
+
+\subsubsection*{Transkripcijos faktoriaus motyvo logotipas}
+Transkripcijos faktoriaus motyvo sekos logotipas sukurtas su R bibliotekos
+\emph{ggseqlogo}\cite{GGSEQLOGO} funkcija \emph{ggseqlogo()}, kuriai perduota
+transponuota konkretaus transkripcijos faktoriaus pozicinė svorių matrica.
+
+\subsubsection*{PWM matricos atitikimų skaičiavimas}
+Kursinio darbo metu įgyvendintas pozicinės matricos atitikimų skaičiavimo
+metodas patobulintas ir automatizuotas. ChIP sekoskaitos duomenys išsaugoti
+\emph{GRanges} objektų pavidalu. Pastarieji objektai, saugantys genomines
+sekoskaitos duomenų pozicijas, panaudoti šias pozicijas atitinkančių nukleotidų
+sekų išgavimui. Nukleotidai, patenkantys į tam tikrus regionus, išgauti
+panaudojus bibliotekos \emph{BSgenome}\cite{BSGENOME} funkciją \emph{getSeq()}.
+Pastarajai funkcijai perduotas organizmo genomo (metodas testuotas su naminės
+pėlės genomu) anotacijos objektas
+\emph{BSgenome.Mmusculus.UCSC.mm10}\cite{BSMUSMUSCULUS} bei pasirinktų mėginių
+\emph{GRanges} objektas. Išgautų nukleotidų sekų \emph{DNAStringSet} objektas
+perduotas \emph{Biostrings}\cite{BIOSTRINGS} bibliotekos funkcijai
+\emph{countPWM()} kartu su tiriamo transkripcijos faktoriaus pozicine svorių
+matrica. Pastaroji funkcija suskaičiavo, kiek išgautose nukleotidų sekose yra
+transkripcijos faktoriaus motyvo atitikimų. Šis skaičius padalintas iš bendro
+pikų skaičiaus - gauta transkripcijos faktoriaus motyvų procentinė dalis,
+kuri vizualizuota, pritaikius pagrindinę \emph{ggplot2} bibliotekos funkciją
+\emph{ggplot()} bei \emph{geom\_bar()}
+
+\subsubsection*{Praturtintų sekų biologinių funkcijų nustatymas}
+
+\subsubsection*{Motyvų paieška \emph{De novo}}
+Praturtintos sekos nustatytos, pritaikius komandinės eilutės įrankio
+HOMER\cite{HOMER} \emph{Perl} programą \emph{findMotifsGenome}, analizuojančiai
+ChIP sekoskaitos mėginius, konvertuotus į BED formato failus. Taip pat taikant
+šią programą nurodytas organizmo, iš kurio išgauti mėginiai, referentinio genomo
+trumpinys (pavyzdžiui, naminės pelės referentinis genomas \emph{mm10}).
 
 \subsection{Transkripcijos faktoriaus taikinių spėjimas}
 
@@ -819,7 +849,7 @@ PMCID: PMC3072298.
 
 \bibitem{R} R Core Team (2022). R: A language and environment for statistical
 computing. R Foundation for Statistical Computing, Vienna, Austria. URL
-https://www.R-project.org/.
+\url{https://www.R-project.org/}.
 
 \bibitem{SHINY} Chang W, Cheng J, Allaire J, Sievert C, Schloerke B, Xie Y,
 Allen J, McPherson J, Dipert A, Borges B (2023). shiny: Web Application
@@ -828,6 +858,27 @@ Framework for R. R package version 1.7.4.9002, \url{https://shiny.rstudio.com/}.
 \bibitem{CHIPSEEKER} Wang Q, Li M, Wu T, Zhan L, Li L, Chen M, Xie W, Xie Z,
 Hu E, Xu S, Yu G (2022). “Exploring epigenomic datasets by ChIPseeker.”
 Current Protocols, 2(10), e585. doi: 10.1002/cpz1.585.
+
+\bibitem{GGSEQLOGO} Wagih O (2017). \_ggseqlogo: A 'ggplot2' Extension for
+Drawing Publication-Ready Sequence Logos\_. R package version 0.1,
+\url{https://CRAN.R-project.org/package=ggseqlogo}.
+
+\bibitem{BSGENOME} Pagès H (2023). \_BSgenome: Software infrastructure for
+efficient representation of full genomes and their SNPs\_. R package version
+1.66.3, \url{https://bioconductor.org/packages/BSgenome}.
+
+\bibitem{BSMUSMUSCULUS} Team TBD (2021). \_BSgenome.Mmusculus.UCSC.mm10: Full
+genome sequences for Mus musculus (UCSC version mm10, based on GRCm38.p6)\_. R
+package version 1.4.3.
+
+\bibitem{BIOSTRINGS} Pagès H, Aboyoun P, Gentleman R, DebRoy S (2022).
+\_Biostrings: Efficient manipulation of biological strings\_. R package version
+2.66.0, \url{https://bioconductor.org/packages/Biostrings}.
+
+\bibitem{HOMER} Heinz S, Benner C, Spann N, Bertolino E et al. Simple
+Combinations of Lineage-Determining Transcription Factors Prime cis-Regulatory
+Elements Required for Macrophage and B Cell Identities. Mol Cell 2010 May
+28;38(4):576-589. PMID: 20513432.
 
 \end{thebibliography}
 \newpage
