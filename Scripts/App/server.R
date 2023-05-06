@@ -777,45 +777,45 @@ server <- function(input, output, session) {
         })
 
         # GENOMIC DATA ANALYSIS - DE NOVO MOTIFS (TABLE 1):
-        output$table1 <- DT::renderDataTable({
-            req(input$bigbed)
-            bigbed_files <- list()
-            names <- c()
-            INPUTS <-
-                "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Inputs/BED/"
+        # output$table1 <- DT::renderDataTable({
+        #     req(input$bigbed)
+        #     bigbed_files <- list()
+        #     names <- c()
+        #     INPUTS <-
+        #         "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Inputs/BED/"
 
-            for(sample in 1:length(input$bigbed[, 1])) {
-                names <- c(names, input$bigbed[[sample, 'name']])
-                bigbed_files[[sample]] <-
-                    read.table(file = input$bigbed[[sample, 'datapath']])
-                names(bigbed_files)[sample] <-
-                    substring(input$bigbed[[sample, 'name']], 1, 11)
-            }
+        #     for(sample in 1:length(input$bigbed[, 1])) {
+        #         names <- c(names, input$bigbed[[sample, 'name']])
+        #         bigbed_files[[sample]] <-
+        #             read.table(file = input$bigbed[[sample, 'datapath']])
+        #         names(bigbed_files)[sample] <-
+        #             substring(input$bigbed[[sample, 'name']], 1, 11)
+        #     }
 
-            # Čia reikia irgi lentelės, kurioje galima pažymėti, su kuriuo
-            # mėginiu bus atliekamos analizės. Priklausomai nuo to, koks mėginių
-            # apjungimo variantas pasirinktas, apjungti mėginii pateikiami
-            # paskutinėje eilutėje.
+        #     # Čia reikia irgi lentelės, kurioje galima pažymėti, su kuriuo
+        #     # mėginiu bus atliekamos analizės. Priklausomai nuo to, koks mėginių
+        #     # apjungimo variantas pasirinktas, apjungti mėginii pateikiami
+        #     # paskutinėje eilutėje.
 
-            system(paste("findMotifsGenome.pl", paste0(INPUTS, names), "mm10",
-                paste0(PROJECT, names, "/"), "-size 200 -mask"), intern = FALSE)
+        #     system(paste("findMotifsGenome.pl", paste0(INPUTS, names), "mm10",
+        #         paste0(PROJECT, names, "/"), "-size 200 -mask"), intern = FALSE)
 
-            homer_motifs <- read.table(paste0(PROJECT, names, "/knownResults.txt"),
-                                    sep = "\t", header = FALSE, skip = 1)
+        #     homer_motifs <- read.table(paste0(PROJECT, names, "/knownResults.txt"),
+        #                             sep = "\t", header = FALSE, skip = 1)
 
-            colnames(homer_motifs) <-
-                c("Motif Name", "Consensus", "P value", "Log P value",
-                  "q value (Benjamini)", "Target Sequences with Motif (#)",
-                  "Target Sequences with Motif (%)",
-                  "Background Sequences with Motif (#)",
-                  "Background Sequences with Motif (%)")
+        #     colnames(homer_motifs) <-
+        #         c("Motif Name", "Consensus", "P value", "Log P value",
+        #           "q value (Benjamini)", "Target Sequences with Motif (#)",
+        #           "Target Sequences with Motif (%)",
+        #           "Background Sequences with Motif (#)",
+        #           "Background Sequences with Motif (%)")
 
-            for (motif in 1:nrow(homer_motifs)) {
-                homer_motifs$`Motif Name`[motif] <-
-                    strsplit(homer_motifs$`Motif Name`, "/")[[motif]][1]
-            }
-            homer_motifs
-        })
+        #     for (motif in 1:nrow(homer_motifs)) {
+        #         homer_motifs$`Motif Name`[motif] <-
+        #             strsplit(homer_motifs$`Motif Name`, "/")[[motif]][1]
+        #     }
+        #     homer_motifs
+        # })
 
 
 

@@ -2,7 +2,7 @@
 library(shinydashboard)
 
 PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
-source(paste0(PROJECT, "Scripts/App/data_quality.R"))
+# source(paste0(PROJECT, "Scripts/App/data_quality.R"))
 source(paste0(PROJECT, "Scripts/App/server.R"))
 
 
@@ -125,6 +125,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
     sidebarLayout(
       sidebarPanel(
         width = 4,
+        # DT::dataTableOutput("samples"),
         selectInput(
           inputId = "tf_options",
           label = "Pasirinkite transkripcijos faktorių:",
@@ -166,20 +167,20 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
               width = 12,
               withLoader(plotOutput("plot66"), type = "html", loader = "dnaspin")
             )
-          ),
-          tabPanel("Motyvų paieška De novo",
-            p("Pateiktoje lentelėje pateikti identifikuoti pasirinkto mėginio
-               motyvai, atlikus De novo motyvų paiešką."),
-            p("Pastaba: priklausomai nuo pasirinkto mėginio dydžio De novo
-               motyvų paieška gali trukti ilgiau nei 10 minučių.",
-               style = "font-weight:bold; color:red"),
-            box(
-              width = 12,
-              withLoader(DT::dataTableOutput(outputId = "table1"),
-                         type = "html", loader = "dnaspin"),
-              downloadButton("downloadData", "Download")
-            )
           )
+          # tabPanel("Motyvų paieška De novo",
+          #   p("Pateiktoje lentelėje pateikti identifikuoti pasirinkto mėginio
+          #      motyvai, atlikus De novo motyvų paiešką."),
+          #   p("Pastaba: priklausomai nuo pasirinkto mėginio dydžio De novo
+          #      motyvų paieška gali trukti ilgiau nei 10 minučių.",
+          #      style = "font-weight:bold; color:red"),
+          #   box(
+          #     width = 12,
+          #     withLoader(DT::dataTableOutput(outputId = "table1"),
+          #                type = "html", loader = "dnaspin"),
+          #     downloadButton("downloadData", "Download")
+          #   )
+          # )
         )
       )
     )
