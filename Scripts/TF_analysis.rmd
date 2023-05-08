@@ -4,7 +4,7 @@ library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables, rBLAST, rentrez)
+org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler)
 # nolint end
 ```
 
@@ -48,7 +48,7 @@ len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
 for (i in 1:len_mm) {
     grl_mm[[i]] <-
         import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
-        filter(seqnames %in% chr_abr)
+        dplyr::filter(seqnames %in% chr_abr)
     names(grl_mm)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_mm[i]]
 }
 
@@ -58,7 +58,7 @@ for (i in 1:len_mm) {
 for (i in 1:len_hg) {
     grl_hg[[i]] <-
         import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
-        filter(seqnames %in% chr_abr)
+        dplyr::filter(seqnames %in% chr_abr)
     names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
 }
 # nolint end
@@ -83,7 +83,23 @@ write.table(mm_annotated_peaks,
 # nolint end
 ```
 
-```{r}
+```{r HS_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
+# nolint start
+# Getting the peaks that are significant. q value must be lower than 2
+# (-log10(0.01) = 2):
+significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ] %>% list(.)
+
+hg_annotated_peaks <-
+    annotate_peaks(significant_peaks, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
+                   "org.Hs.eg.db")
+
+write.table(hg_annotated_peaks,
+            file = paste0(RESULTS, "/hg_annotated_peaks.txt"), sep = "\t",
+            quote = FALSE, row.names = FALSE)
+# nolint end
+```
+
+```{r NUCLEOTIDE_TO_AMINOACIDS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
 mmgene_ranges <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
 
@@ -103,325 +119,154 @@ for (sample in seq_along(mm_annotated_peaks)) {
     mm_genes[[sample]] <- genes 
 }
 
+# Čia išgaunamos nukleotidų sekos konkretiems genams:
 gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
 
-# REIKIA PASPARTINTI?
-for (sample in 1:length(gene_sequences)) {
-    if (is.na(as.character(mm_genes[[1]][sample]$gene_symbol))) {
-        names(gene_sequences)[sample] <- "Unknown"
+library(ensembldb)
+library(EnsDb.Mmusculus.v79)
+library(deepredeff)
+
+edb <- EnsDb.Mmusculus.v79
+
+all_proteins <- character()
+gprotein_sequences <- data.frame(matrix(ncol = 2, nrow = 0))
+
+for (gene_name in 1:length(mm_genes[[1]]$gene_symbol)) {
+    gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
+
+    if (is.na(gene)) {
+        next
     } else {
-        names(gene_sequences)[sample] <-
-        as.character(mm_genes[[1]][sample]$gene_symbol)
+        proteins <- proteins(edb, filter = GeneNameFilter(gene),
+                     return.type = "AAStringSet")
+    }
+
+    if (length(proteins) == 0) {
+        next
+    } else {
+        print(paste("Getting sequence for", gene, "..."))
+        proteins_df <- aas_to_df(proteins)
+        proteins_df$name <- gene
+
+        genes_in_sample <- length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
+        row <- c(gene, proteins_df$seq[1]) # Galbūt čia reikėtų pataisyti, kad
+                                           # imtų viską, o ne tik pirmą seką
+        gprotein_sequences[nrow(gprotein_sequences) + 1, ] <- row
+
+        all_proteins <- append(all_proteins, proteins[1])
     }
 }
 
-# as.character(mm_genes[[1]][1]$gene_symbol)
-# endoapply(names(gene_sequences), function(x) (names(gene_sequences)[x] <-
-#             as.character(mm_genes[[1]][x]$gene_symbol)))
+sink(paste0(PROJECT, "aa_sequences_80.txt"))
+print(gprotein_sequences)
+sink()
 
 # nolint end
 ```
+
+
 
 
 ```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
-human_db <- blast(db = paste0(DATABASES,
-                  "Human_genome_DB/GCF_000001405.39_top_level.00"))
+# Loading downloaded Homo sapiens protein database:
+human_db <-
+    blast(db = paste0(DATABASES,
+          "Homo_sapiens_protein/GCF_000001405.38_GRCh38.p12_protein.fna"),
+          type = "blastp")
 
-gene_sequencess <- gene_sequences
+# Performing blastp search using defined Homo sapiens protein database and
+# 'AAStringSet' object that contains protein sequences of annotated genes:
 predictions <-
-    predict(human_db, gene_sequencess, BLAST_args = "-perc_identity 90",
-            custom_format = "qseqid sacc sstart send bitscore length stitle")
+    predict(human_db, all_proteins, BLAST_args = "-num_threads 10")
 
-
-# KAI -perc_identity 99, tada jokių atitikimų nesuranda.
-
-
-sink(paste0(PROJECT, "predictions3.txt"))
+# Saving blastp result into a file so that it can be used for further analysis:
+# FIND BETTER WAY TO SAVE THE RESULT!
+sink(paste0(PROJECT, "predictions_protein.txt"))
 print(predictions)
 sink()
-# write(predictions, paste0(PROJECT, "predictions3.txt"))
 
+# Reading a file that stores blastp result:
+predictions <- read.table(paste0(PROJECT, "predictions_p.txt"))
+predictions <- predictions[predictions$`Perc.Ident` > 60, ]
 
-# colnames(predictions)[8] <- "Assembly"
-# predictions <- predictions %>%
-#     group_by(qseqid) %>%
-#     filter(row_number() == 1) %>%
-#     as.data.frame
+grouped_predictions <-
+    predictions %>%
+    group_by(QueryID) %>%
+    dplyr::filter(`Perc.Ident` == max(`Perc.Ident`)) %>%
+    as.data.frame()
 
-predictions <- read.table(paste0(PROJECT, "predictions_3.txt"))
-colnames(predictions)
+proteins_symbols <-
+    ensembldb::select(EnsDb.Mmusculus.v79, keys = grouped_predictions$`QueryID`,
+                      keytype = "PROTEINID", columns = c("ENTREZID", "SYMBOL"))
 
-head(predictions)
+merged_data <-
+    merge(proteins_symbols, grouped_predictions,
+          by.x = "PROTEINID", by.y = "QueryID") %>%
+    dplyr::select(c("PROTEINID", "ENTREZID", "SYMBOL",
+                    "SubjectID", "Perc.Ident"))
 
-a <- 
-predictions %>%
-as.data.frame() %>%
-dplyr::select(c(sacc, sstart, send))
+# Removing '.[1-9]' from accession numbers (if the step is skipped the
+# following function 'bitr()' does not return any results):
+merged_data$SubjectID <-
+    merged_data$SubjectID %>%
+    gsub("\\.[1-9]+", "", .)
 
+# Accessing Entrez identification numbers and gene symbols for every
+# accession number (some accession numbers do not have Entrez id, therefore
+# they are not matched):
+entrezs_symbols <-
+    bitr(merged_data$SubjectID, fromType = "ACCNUM",
+         toType = c("ENTREZID", "SYMBOL"), OrgDb = org.Hs.eg.db)
 
- %>%
-makeGRangesFromDataFrame()
-
-
-colnames(a) <- c("seqnames", "start", "end")
-a <- makeGRangesFromDataFrame(a)
-
-a <- 
-a %>%
-  add_column(strand = NA)
-
-for (i in 1:length(rownames(a))) {
-    if (a$start[i] > a$end[i]) {
-        a$strand <- "-"
-        start <- a$end[i]
-        end <- a$start[i] 
-        a$start[i] <- start
-        a$end[i] <- end
-    } else {
-        a$strand <- "+"
-    }
-}
-
-head(a)
-
-library(GenomicRanges)
-
-subsetByOverlaps(a, significant_peaks)
-
-ranges(a)
-ranges(significant_peaks)
-
-library(dplyr)
-library(tibble)
-
-# KODĖL NESURANDA JOKIŲ POZICIJŲ?
-
-# Nuo šios dalies pratęsti!
-for (acc in 1:length(predictions$qseqid)) {
-    # if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks))$start &&
-    #     predictions$send[acc] <= as.data.frame(ranges(significant_peaks))$end ||
-    #     predictions$sstart[acc] <= as.data.frame(ranges(significant_peaks))$start &&
-    #     predictions$send[acc] >= as.data.frame(ranges(significant_peaks))$end) {
-    #         print("OOOK")
-    #     }
-    #     else {print("BAAAAD")}
-    # sequence <-
-    #     rentrez::entrez_fetch(db = "nucleotide", id = predictions$sacc[acc], 
-    #                           rettype = "fasta")
-    # write(sequence, paste0(FASTA, predictions$sacc[acc]))
-    # IMPROVE ABOVE LINE OF CODE!!! (DO NOT WRITE INTO A FILE!)
-
-    for (i in 1:length(ranges(significant_peaks))) {
-        if (predictions$sstart[acc] >= as.data.frame(ranges(significant_peaks)[i])$start &&
-        predictions$send[acc] <= as.data.frame(ranges(significant_peaks)[i])$end) {
-            print("OOOK")
-        }
-    }
-}
-
-as.data.frame(ranges(significant_peaks)[1])$start
-
-predictions$sacc[1]
-length(predictions$qseqid)
-
-sequence_list <- list()
-
-for (seq in 1:length(predictions$sacc)) {
-    sequence_list[[seq]] <-
-        readDNAStringSet(paste0(PROJECT, predictions$sacc[seq]),
-                         format = "fasta")
-    names(sequence_list[[seq]]) <- predictions$sacc[seq]
-    names(sequence_list)[seq] <- predictions$sacc[seq]
-}
-
-# NAUDOTI ŠĮ REZULTATĄ!
-pwm_hit_predicted <- count_pwm_hits(sequence_list, pwm, "predicted")
+# Creating a final dataframe that matches all subject and query data:
+matched_data <-
+    merge(merged_data, entrezs_symbols, by.x = "SubjectID", by.y = "ACCNUM") %>%
+    rename("QueryID" = "PROTEINID", "EntrezQuery" = "ENTREZID.x",
+           "QuerySymbol" = "SYMBOL.x", "EntrezSubject" = "ENTREZID.y",
+           "SubjectSymbol" = "SYMBOL.y", "PercentIdentity" = "Perc.Ident") %>%
+    dplyr::select(c("SubjectID", "QueryID", "SubjectSymbol", "QuerySymbol",
+                    "EntrezSubject", "EntrezQuery", "PercentIdentity"))
 
 # nolint end
 ```
-
-
-
-```{r SIGNIFICANT_PEAKS}
-# nolint start
-# q value must be lower than 2 (-log10(0.01) = 2). These peaks are
-# significant peaks:
-significant_peaks <- grl_hg[[2]][grl_hg[[2]]$q_value < 2, ]
-
-significant_peaks <- list(significant_peaks)
-hg_annotated_peaks <-
-    annotate_peaks(significant_peaks, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
-                   "org.Hs.eg.db")
-
-hg_annotated_peaks <- as.data.frame(hg_annotated_peaks)
-b <- toupper(unique(hg_annotated_peaks$gene_symbol))
-
-c <- toupper(unique(predictions$qseqid))
-
-write.csv(as.data.frame(b), paste0(PROJECT, "b2.txt"), row.names = FALSE, quote = FALSE)
-write.csv(as.data.frame(c), paste0(PROJECT, "c2.txt"), row.names = FALSE, quote = FALSE)
-intersect(b, c)
-# nolint end
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r HG_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-# Getting positions of Homo sapiens genes:
-gene_ranges <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
-
-# Adding 'gene_symbol' column to gene_ranges GRange:
-gene_ranges$gene_symbol <-
-    mapIds(org.Hs.eg.db, keys = gene_ranges$gene_id, column = "SYMBOL",
-           keytype = "ENTREZID", multiVals = "first")
-
-write.table(gene_ranges,
-            file = paste0(RESULTS, "/hg_annotation_genes.txt"), sep = "\t",
-            quote = FALSE, row.names = FALSE)
-
-hg_genes <- GRangesList()
-
-for (sample in seq_along(mm_annotated_peaks)) {
-    selected_genes <-
-        tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
-        tolower(gene_ranges$gene_symbol)
-                            
-    genes <- gene_ranges[selected_genes]
-
-    # These are the Homo sapiens genes that overlap with annotated Mus musculus
-    # peak genes. This information will be used to compare the results with
-    # control Homo sapiens samples:
-    hg_genes[[sample]] <- genes 
-}
-# nolint end
-```
-
-
-```{r GENE_COUNTS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-genes_samples <- data.frame(matrix(ncol = 3, nrow = 0))
-colnames(genes_samples) <- c("Sample", "Gene_count", "Percentage")
-
-for (sample in 1:length(mm_annotated_peaks)) {
-    genes_in_sample <- length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
-    row <-
-        c(names(mm_annotated_peaks[sample]), genes_in_sample,
-          (genes_in_sample / length(unique(gene_ranges$gene_symbol))) * 100)
-    genes_samples[nrow(genes_samples) + 1, ] <- row
-}
-
-plot1 <- show_gene_counts(genes_samples)
-png(file = paste0(FIGURES, "MM_gene_counts.png"), width = 700)
-plot1
-dev.off()
-# nolint end
-```
-
-```{r SEQUENCE_RETRIEVAL_PREDICTED, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-# Making a data frame that stores data of how many PWM hits were found in
-# Homo sapiens genome:
-seq_dataset_predicted <- get_sequences(BSgenome.Hsapiens.UCSC.hg38, hg_genes)
-# nolint end
-```
-
-```{r PWM_COUNTS_PREDICTED, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-pwm_hit_predicted <- count_pwm_hits(seq_dataset_predicted, pwm, "predicted")
-# nolint end
-```
-
-
-
-NUO ŠIOS VIETOS YRA NEVISAI GERAI! REIKIA IMTI GENŲ SEKAS, O NE PAVADINIMUS!
-PRATĘSTI TAISYTI NUO ČIA!
-
-```{r HG_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-hg_annotated_peaks <-
-    annotate_peaks(grl_hg, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
-                   "org.Hs.eg.db")
-
-write.table(hg_annotated_peaks,
-            file = paste0(RESULTS, "/hg_annotated_peaks.txt"), sep = "\t",
-            quote = FALSE, row.names = FALSE)
-
-hg_genes2 <- GRangesList()
-
-for (sample in seq_along(hg_annotated_peaks)) {
-    for (sample2 in 1:length(hg_genes)) {
-        selected_genes <-
-            tolower(unique(hg_annotated_peaks[[sample]]$gene_symbol)) %in%
-            tolower(hg_genes[[sample2]]$gene_symbol)
-                                
-        genes <- gene_ranges[selected_genes]        
-    }
-    hg_genes2[[sample]] <- genes
-}
-
-```
-
-```{r SEQUENCE_RETRIEVAL_CONTROL, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-# Making a data frame that stores data of how many PWM hits were found in
-# Homo sapiens samples:
-seq_dataset_control <- get_sequences(BSgenome.Hsapiens.UCSC.hg38, hg_genes2)
-# nolint end
-```
-
-```{r PWM_COUNTS_CONTROL, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-pwm_hit_control <- count_pwm_hits(seq_dataset_control, pwm, "control")
-# nolint end
-```
-
-PRATĘSTI NUO ČIA!!!
 
 ```{r}
+# nolint start
+matched_data <- matched_data[!(is.na(matched_data$EntrezQuery)), ]
+hggene_ranges <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
+mm_sequences <- character()
+hg_sequences <- character()
+
+for (id in 1:length(matched_data$EntrezQuery)) {
+    seq_m <- getSeq(BSgenome.Mmusculus.UCSC.mm10,
+                       mmgene_ranges[mmgene_ranges$gene_id == matched_data$EntrezQuery[id], ])
+    names(seq_m) <- matched_data[id, "QuerySymbol"]
+    mm_sequences <- append(mm_sequences, seq_m)
+
+    seq_h <- getSeq(BSgenome.Hsapiens.UCSC.hg38, hggene_ranges[hggene_ranges$gene_id == matched_data$EntrezSubject[id], ])
+    names(seq_h) <- matched_data[id, "SubjectSymbol"]
+
+    hg_sequences <- append(hg_sequences, seq_h)
+}
 
 
-a <- as.data.frame(pwm_hit_predicted[1])
-b <- as.data.frame(pwm_hit_control[1])
-
-length(rownames(a))
-(length(rownames(b)) / length(rownames(a))) *100
-# length(rownames(a[aa, ]))
-# length(rownames(b[bb, ]))
-intersecting_genes <- intersect(a[, "Gene"],b[, "Gene"])
-length(intersecting_genes)
-
-
-# length(rownames(a[a$"Gene" %in% intersecting_genes, ]))
-
-
-aa <- a[a$"Gene" %in% unique(intersecting_genes), ]
-bb <- b[b$"Gene" %in% unique(intersecting_genes), ]
-head(bb)
-
-total <- merge(aa, bb, by=c("Gene"))
-total
-length(rownames(aa))
-length(rownames(bb))
-
+countPWM(as.matrix(pwm), as.character(mm_sequences[[14]]), min.score = "65%")
+countPWM(as.matrix(pwm), as.character(hg_sequences[[14]]), min.score = "65%")
 # nolint end
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
