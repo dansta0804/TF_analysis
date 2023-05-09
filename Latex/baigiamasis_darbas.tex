@@ -113,8 +113,25 @@
 
 \section{Įvadas}
 \subsection*{Darbo temos aktualumas}
+
 \subsection*{Darbo tikslas}
+Pritaikius pozicines transkripcijos faktorių svorių matricas realizuoti
+transkripcijos faktorių taikinių spėjimo metodą tarp dviejų skirtingų organizmų.
+
 \subsection*{Uždaviniai}
+\begin{itemize}
+    \item Išsiaiškinti ChIP sekoskaitos vykdymo etapus;
+    \item Išanalizuoti metodus, taikomus praturtintų nuskaitymų - pikų -
+          nustatymui;
+    \item Įgyvendinti \emph{Mus musculus} transkripcijos faktorių taikinių
+          spėjimo metodą \emph{Homo sapiens} organizme;
+    \item Pritaikyti programas, kad jos galėtų analizuoti mėginius, išgautus
+          iš įvairių organizmų audinių;          
+    \item Sukurti internetinę aplikaciją, leidžiančią įvertinti pateiktų
+          ChIP sekoskaitos duomenų kokybę bei atlikti analizes.
+
+\end{itemize}
+
 \newpage
 
 %%%%%%%%%%%%%%%%%%
@@ -134,7 +151,7 @@ metodai:
 \end{itemize}
 
 Šiuolaikiniuose tyrimuose labai dažnai taikomos modernios DNR sekos - naujos 
-kartos sekoskaitos - technologijos, kurios leidžia nuskaityti didelį kiekį
+kartos se\-kos\-kai\-tos - technologijos, kurios leidžia nuskaityti didelį kiekį
 DNR arba RNR sekų daug sparčiau ir pigiau nei klasikinė \emph{Sendžerio} 
 sekoskaita. Pastaroji sekoskaita dažniau naudojama, tiriant mažus duomenų
 rinkinius.
@@ -149,18 +166,20 @@ baltymų sąveika su DNR įtakoja daug biologiškai svarbių procesų: ląsteli�
 diferenciaciją, ląstelės ciklo eigą, genų transkripciją, DNR replikaciją,
 imuninio atsako valdymą ir daugelį kitų procesų\cite{ARTICLE10, ARTICLE11}.
 
-Nepaisant to, transkipcijos faktoriai bei sekos, prie kurių jie jungiasi, gali
+Nepaisant to, transkripcijos faktoriai bei sekos, prie kurių jie jungiasi, gali
 mutuoti. Šios pastarųjų baltymų mutacijos nulemia įvairių ligų išsivystymą.
 Pavyzdžiui, atsiradusios mutacijos AIRE (autoimuniniame reguliatoriuje)
 transkripcijos faktoriuje sukelia I tipo autoimuninį poliendokrinopatijos
 sindromą\cite{ARTICLE9} (angl. \emph{APS1 - \textbf{A}utoimmune
 \textbf{P}olyendocrinopathy \textbf{S}yndrome type \textbf{I}}). Pasireiškus
 šiam sindromui organizmo imuninės ląstelės naikina sveikas, hormonus
-išskiriančių liaukų ląsteles\cite{ASP1}.
+išskiriančių liaukų ląsteles\cite{ASP1}, todėl transkripcijos faktorių veikimo
+mechanizmų supratimas yra itin svarbus, siekiant diagnozuoti bei išgydyti ligas,
+kurios gali būti susijusios su transkripcijos faktorių baltymų mutacijomis.
 
 \subsection{ChIP sekoskaitos apibūdinimas}
 \textbf{ChIP sekoskaita} - chromatino imunoprecipitacijos sekoskaita (angl.
-\emph{chromatin immunoprecipiration sequencing}). Tai yra viena iš svarbiausių
+\emph{chromatin immunoprecipitation sequencing}). Tai yra viena iš svarbiausių
 technologijų, atliekant epigenetikos tyrimus\cite{ARTICLE1}. Šiam metodui
 būdingas klasikinio eksperimentinio chromatino precipitacijos metodo derinimas
 su naujos kartos (angl. \emph{next generation (NGS) sequencing}) sekoskaita,
@@ -168,17 +187,9 @@ siekiant išsiaiškinti baltymų sąveikas su DNR ir nustatyti, kaip transkripci
 faktoriai ir kiti, su chromatinu susiję baltymai, gali įtakoti įvairius fenotipo
 pokyčių mechanizmus\cite{ARTICLE2}.
 
-\newpage
-
-Pagrindinės ChIP sekoskaitos taikymo sritys\cite{ARTICLE2}:
-\begin{itemize}
-    \item Histonų modifikavimas;
-    \item Genų reguliacijos tyrimai;
-    \item Transkripcijos komplekso surinkimas;
-    \item DNR pažaidų taisymas;
-    \item Vystymosi mechanizmų tyrimai;
-    \item Ligų progresavimo tyrimai.
-\end{itemize}
+ChIP sekoskaita neretai taikoma, atliekant: histonų modifikavimo, genų
+reguliacijos, transkripcijos komplekso surinkimo, DNR pažaidų taisymo,
+vystymosi mechanizmų bei ligų progresavimo tyrimus.
 
 % KABUTĖS: „ “
 
@@ -192,7 +203,6 @@ paveiksle:
         \includegraphics[width=0.7\linewidth]{../Figures/ChIP-seq_workflow.jpg}
         \vspace{-1\baselineskip}
         \caption*{\small\textbf{1 pav. ChIP sekoskaitos vykdymo etapai}}
-        \label{fig:birds}
     \end{center}
 \end{figure}
 
@@ -203,8 +213,6 @@ pagrindinius etapus:
     \item Mėginių paruošimas ir sekvenavimas;
     \item Kompiuterinė analizė.
 \end{enumerate}
-
-\newpage
 
 \subsubsection{Mėginių paruošimas ir sekvenavimas}
 \begin{itemize}
@@ -236,7 +244,7 @@ pagrindinius etapus:
         reikalingi trumpų adapterių prijungimo prie gautų DNR fragmentų ir PGR
         amplifikacijos etapai - reikalingas bibliotekos sukonstravimas, kuris
         gali skirtis, priklausomai nuo pasirinktos sekvenavimo platformos
-        ir joms specifinių bibliotekos paruošimo protokolo\cite{ARTICLE5}.
+        ir jai specifinės bibliotekos paruošimo protokolo\cite{ARTICLE5}.
         Įvykdžius šiuos etapus gali būti gautas „triukšmas“\cite{ARTICLE4}
         (angl. \emph{bias}), kuris gali būti mažesnis, atliekant mažiau DNR
         amplifikacijos (padauginimo) ciklų. Sukonstravus biblioteką atliekamas
@@ -251,19 +259,23 @@ pagrindinius etapus:
         nuskaitymai (angl. \emph{reads} arba \emph{tags}) perkeliami ant genomo,
         naudojant kartografavimo (angl. \emph{mapping}) įrankius, pavyzdžiui,
         \emph{Bowtie}\cite{ARTICLE6}, \emph{Burrows-Wheeler}, kurie leidžia
-        nustatyti nuskaityto DNR fragmentp poziciją genome, esant kelių
+        nustatyti nuskaityto DNR fragmento poziciją genome, esant kelių
         nukleotidų neatitikimui\cite{ARTICLE7} (angl. \emph{mismatch}). Atlikus
         DNR nuskaitymų priskyrimą gaunami \emph{SAM}, \emph{BAM} (dažniausiai
         naudojamas formatas), \emph{CRAM} arba \emph{tagAlign} formato failai.
-    \item \textbf{Normalizavimas.} 
+    \item \textbf{Normalizavimas.} Normalizavimas reikalingas, siekiant
+        sumažinti techninį nuskaitymų variabilumą - sumažinti „triukšmą“,
+        atsiradusį dėl sekvenavimo gylio skirtumų tarp mėginių. Normalizavimas
+        atliekamas konkrečiose genomo pozicijose esančių nuskaitymų skaičių
+        padalinus iš bendro nuskaitymų skaičiaus\cite{ARTICLE17}.
     \item \textbf{Pikų nustatymas (angl. \emph{peak calling}).} Šiame etape
         nustatomi reikšmingai praturtinti genomo lokusai - pikai
         (angl. \emph{peaks}). Įgyvendinus šį etapą dažniausiai sugeneruojami
-        \emph{BED} formato failai\cite{ARTICLE8}, kuriuose pateikiamos genominės
+        \emph{BED} formato failai\cite{ARTICLE1}, kuriuose pateikiamos genominės
         pikų pozicijos, įvairūs statistiniai įverčiai bei identifikacijos kodai,
         kuriuos naudojant galima vykdyti įvairias analizes.
     \item \textbf{Analizių atlikimas.} Dažniausiai atliekamos analizės yra
-        motyvų analizė bei genų ontologijos analizė\cite{ARTICLE8}
+        motyvų analizė bei genų ontologijos analizė\cite{ARTICLE1}
         (angl. \emph{GO - \textbf{G}ene \textbf{O}ntology enrichment analysis}),
         pateikianti biologinių procesų, ląstelinių komponentų ir molekulinių
         funkcijų, kuriose dalyvauja genas, sąrašą.
@@ -297,7 +309,6 @@ raudona ir žalia spalvomis.
         \includegraphics[width=0.6\linewidth]{../Figures/Read_mapping.png}
         \vspace{-1\baselineskip}
         \caption*{\small\textbf{2 pav. DNR nuskaitymų kartografavimas}}
-        \label{fig:birds}
     \end{center}
 \end{figure}
 
@@ -310,7 +321,7 @@ svarbu, jog algoritmas gebėtų įvertinti, ar pikas yra biologiškai reikšming
 ar tai tėra „triukšmas“.
 
 Yra sukurta daugiau nei 30 skirtingų pikų nustatymo algoritmų (angl.
-\emph{peak caller}), kurie sprendžia anksčiau paminėtas problemas,
+\emph{peak caller}), kurie sprendžia anksčiau minėtas problemas,
 tačiau šių problemų sprendimo būdai yra skirtingi. Konkretaus algoritmo
 pasirinkimas labai priklauso nuo atliekamo eksperimento tipo ir specialisto,
 atliekančio analizę, patirties\cite{ARTICLE13}.
@@ -324,21 +335,20 @@ nuskaitymų pozicijas bei kryptį. Neretai konkrečioje genomo pozicijoje gali
 būti priskirti keli nuskaitymai. MACS2 metode yra numatyta palikti tik po
 vieną nuskaitymą konkrečioje pozicijoje (pašalinti duplikatus). Duplikatai
 nėra šalinami, jeigu tikimasi, kad transkripcijos faktorius jungsis keliose
-skirtingose genomo pozicijose. Tose genomo pozicijose, kurioje, tikėtina,
-jungiasi transkripcijos faktorius turi būti pastebimas \emph{Watsono} ir
+skirtingose genomo pozicijose. Tose genomo pozicijose, kuriose, tikėtina,
+jungiasi transkripcijos faktorius, turi būti pastebimas \emph{Watsono} ir
 \emph{Kriko} nuskaitymų išsidėstymas arba \textbf{bimodalinis pasiskirtymas},
 kurio grafikas pavaizduotas paveiksle:
 
 \begin{figure}[ht]
     \begin{center}
-        \includegraphics[width=0.4\linewidth]{../Figures/Bimodal_pattern.png}
+        \includegraphics[width=0.5\linewidth]{../Figures/Bimodal_pattern.png}
         \vspace{-1\baselineskip}
         \caption*{\small\textbf{3 pav. Bimodalinis pasiskirstymas}}
-        \label{fig:birds}
     \end{center}
 \end{figure}
 
-Tam, jog panaši pikų struktūra būtų surasta, MACS algoritmas skanuoja visą
+Tam, jog panaši pikų struktūra būtų surasta, MACS2 algoritmas skanuoja visą
 kartografuotų nuskaitymų duomenų rinkinį. Algoritmas naudoja dydį, kuris nurodo,
 į kokio ilgio nukleotidų fragmentus buvo skaidoma DNR sonifikacijos proceso
 metu (angl. \emph{bandwidth}), bei \emph{mfold} vertę. Vykdant algoritmą
@@ -347,29 +357,29 @@ pozicijų, kuriose nuskaitymų yra daugiau nei naudojant atsitiktinį nuskaitym�
 rinkinį (daugiau už \emph{mfold} vertę).
 
 Nustačius aukštos kokybės pikus yra atsitiktinai parenkama 1000 pikų. Turint
-šiuos pikus yra atskiriami jų \emph{Watsono ir Kriko} (teigiamos ir neigiamos
-grandinės) nuskaitymai.
+šiuos pikus yra atskiriami jų \emph{Watsono} ir \emph{Kriko} (teigiamos ir
+neigiamos grandinės) nuskaitymai.
 Šių teigiamų ir neigiamų grandinių pikų grupės yra išlyginamos pagal jų
 centrus, kaip pavaizduota 4 paveiksle. Atstumas tarp išlygintų nuskaitymų
 modų (\emph{d}) nurodo, kokio ilgio yra piko fragmentas.
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \begin{center}
-        \includegraphics[width=0.4\linewidth]{../Figures/Tag_alignment.png}
-        \vspace{-1\baselineskip}
+        \includegraphics[width=0.5\linewidth]{../Figures/Tag_alignment.png}
+        % \vspace{-1\baselineskip}
         \caption*{\small\textbf{4 pav. Nuskaitymų išlyginimas}}
         \label{fig:birds}
     \end{center}
 \end{figure}
 
-Algoritmas visiems nuskaitymams atlieka \emph{d/2} 3' DNR galo link link
-tikėtiniausio DNR ir transkripcijos faktoriaus sąveikos regiono. Atlikus šį
-poslinkį atliekamas \emph{2 * d} poslinkis, jog būtų surastas statistiškai
-reikšmingas nuskaitymų praturtinimas, naudojant \emph{Puasono} skirstinį, kurio
-parametras \(\lambda_{BG}\) yra tikėtinas nuskaitymų skaičius atlikus poslinkį.
-Nepaisant to, \(\lambda_{BG}\) parametras naudojamas,
+Algoritmas visiems nuskaitymams atlieka \emph{d/2} 3' DNR galo link
+tikėtiniausio DNR ir transk\-rip\-ci\-jos faktoriaus sąveikos regiono poslinkį.
+Atlikus šį poslinkį atliekamas \emph{2 * d} poslinkis, jog būtų surastas
+statistiškai reikšmingas nuskaitymų praturtinimas, naudojant \emph{Puasono}
+skirstinį, kurio parametras \(\lambda_{BG}\) yra tikėtinas nuskaitymų skaičius
+atlikus poslinkį. Nepaisant to, \(\lambda_{BG}\) parametras naudojamas,
 neatsižvelgus į galimą „triukšmą“, kuris galėjo kilti dėl chromatino struktūros,
-DNR aplifikacijos arba sekvenavimo, todėl yra naudojamas parametras
+DNR amplifikacijos arba sekvenavimo, todėl yra naudojamas parametras
 \(\lambda_{local}\), kuris skaičiuojamas kiekvienam tikėtinam
 pikui:
 
@@ -382,18 +392,16 @@ pikui:
 Parametro \(\lambda_{local}\) naudojimas leidžia aptikti \emph{false positive},
 pikus (pikus, kurie atsirado dėl „triukšmo“) ir nustatyti tik tuos pikus,
 kurie indikuoja svarbų DNR ir baltymo sąveikos regioną\cite{ARTICLE12}.
-
-\textbf{Metodo privalumai} \newline
   
 \subsubsection{GEM}
 \textbf{GEM} - \textbf{G}enome wide \textbf{E}vent finding and \textbf{M}otif
 discovery. Tai yra vienas iš naujesnių (sukurtas 2012 metais) algoritmų, kuris
 išsiskiria tuo, jog jame yra kombinuojama pikų paieška bei motyvų analizė, jog
-būtų pagerinta finalinių pikų rezoliucija\footnote{\textbf{Rezoliucija - }
+būtų pagerinta galutinių pikų rezoliucija\footnote{\textbf{Rezoliucija - }
 genetikoje aukšta rezoliucija reiškia, jog yra žinoma itin daug molekulinių
-detalių apie DNR.}.
+detalių apie DNR.}.\\
 
-\emph{GEM} algoritmas sudarytas iš šešių skirtingų etapų\cite{ARTICLE15}:
+GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 \begin{enumerate}
     \item \textbf{Baltymo ir DNR sąveikos regionų nustatymas.} Pradiniai
           regionai nustatomi, taikant \emph{GPS} algoritmą\cite{ARTICLE14},
@@ -424,10 +432,11 @@ detalių apie DNR.}.
           porų turintys tarpai bei DNR regionai, kuriems buvo priskirta mažiau
           nei 6 DNR nuskaitymai (angl. \emph{reads}). Šie regionai yra
           skanuojami su DNR sekų fragmentais, kurie priklauso atrinktai
-          \emph{k - merų} ekvivalentiškumo klasei. Šie \emph{k - merų}
+          \emph{k - merų} ekvivalentiškumo klasei, \emph{k - merų}
           atitikimai yra skaičiuojami.
     \item \textbf{Tikslesnių baltymo - DNR sąveikos regionų spėjimas.} Tam yra
           panaudojamas 4 etape gautas išankstinis pozicijų pasiskirstymas.
+          \colorbox{green}{PAPILDYTI...}
     \item \textbf{2 - 3 etapų kartojimas.} Tam yra panaudojami 5 etape gauti
           patikslinti baltymo - DNR sąveikos regionai.
 \end{enumerate}
@@ -464,13 +473,13 @@ detalių apie DNR.}.
 
 \section{Pasirinktų mėginių charakteristika}
 Metodo patikimumui ir tikslumui įvertinti naudoti naminės pelės ir žmogaus
-\emph{ChiIP} sekoskaitos duomenys, gauti iš ChIP-Atlas duomenų bazės.
+ChIP sekoskaitos duomenys, gauti iš ChIP-Atlas\cite{CHIPATLAS} duomenų bazės.
 Kursiniame darbe bei Kursiniame projekte naudotas ChIP sekoskaitos duomenų
 šaltinis - GTRD (Gene Transcription Regulation Database)\cite{GTRD} duomenų
 bazė, sauganti informaciją apie transkripcijos sekas bei atviro chromatino
-regionus - pakeista ChIP-Altas\cite{CHIPATLAS} duomenų baze. Pastaroji duomenų
+regionus - buvo pakeistas ChIP-Altas duomenų baze, nes pastaroji duomenų
 bazė turi didesnį kiekį ChIP sekoskaitos duomenų, kurie gali būti panaudoti
-atliekant tyrimus, nei GTRD duomenų bazėje, kuriai būdingas mažesnis duomenų
+atliekant tyrimus, nei GTRD duomenų bazė, kuriai būdingas mažesnis duomenų
 rinkinys.
 
 Metodo testavimui naudoti 8 skirtingi naminių pelių (lot. \emph{Mus musculus})
@@ -535,9 +544,9 @@ lentelėje.
           (angl. \emph{\textbf{M}ouse \textbf{E}mbryonic \textbf{S}tem
           \textbf{C}ells}).
     \item \textbf{Maz -/-} - specialus baltymą koduojantis genas, kuris
-          nustatomas kartu su CTCF transkripcijos faktoriumi, kotroliuojant
-          kohezino poziciją ir genomo organizaciją. -/- nurodo, kad šio geno
-          kopijos nėra organizme.
+          nustatomas kartu su CTCF transk\-rip\-ci\-jos faktoriumi,
+          kontroliuojant kohezino poziciją ir genomo organizaciją. -/- nurodo,
+          kad šio geno kopijos nėra organizme.
     \item \textbf{Mezendoderminės ląstelės} - embrionų ląstelės, kurios
           diferencijuoja į mezodermos ir galutines endodermines ląsteles.
     \item \textbf{Endoderminės ląstelės} - ląstelių tipas, iš kurių 
@@ -628,15 +637,15 @@ duomenų kokybės įvertinimo analizių sąrašas papildytas 3 naujomis analizė
 
 \subsubsection*{Pikų skaičius mėginiuose}
 Pirmajame duomenų kokybės įvertinimo etape panaudota Kursiniame darbe
-įgyvendinta analizė, pikų skaičiaus nustatymui mėginiuose pritaikanti bazinę R
-programavimo kalbos funkciją \emph{length()}, apskaičiuojančią, kiek kiekviename
-mėginyje yra pikų regionų.
+įgyvendinta analizė pikų skaičiaus nustatymui mėginiuose pritaikanti bazinę R
+programavimo kalbos funkciją \emph{length()}. Pastaroji funkcija leidžia
+apskaičiuoti, kiek kiekviename mėginyje yra pikų regionų.
 
 \subsubsection*{Pikų skaičius chromosomose}
 Atliekant šį duomenų kokybės įvertinimo etapą Kursiniame darbe panaudota
 funkcija \emph{facet\_wrap()}, kuri nustato, kiek pikų yra nustatyta skirtingose
-chromosomose. Ankstesniame darbe buvo naudojamos tik naminės pelės
-(lot. \emph{Mus musculus}) chromosomos, šiame darbe organizmų, kurių genominiai
+chromosomose. Kursiniame darbe buvo naudojamos tik naminės pelės
+(lot. \emph{Mus musculus}) chromosomos. Šiame darbe organizmų, kurių genominiai
 duomenys gali būti analizuojami, sąrašas papildytas, todėl šiame duomenų
 įvertinimo etape analizuojamos tik tos chromosomos, kurios yra būdingos
 organizmams, iš kurių išgauti audinių mėginiai yra analizuojami.
@@ -644,38 +653,41 @@ organizmams, iš kurių išgauti audinių mėginiai yra analizuojami.
 \subsubsection*{Mėginių panašumas}
 Mėginių tarpusavio panašumui įvertinti panaudota Kursinio darbo metu
 realizuota modifikuota \emph{Jaccard()} funkcija. Mėginių panašumas
-vizualizuotas, panaudojus spalvų intensyvumo grafiką - pritaikius \emph{ggplot2}
-bibliotekos funkciją \emph{geom\_tile()}.
+vizualizuotas, panaudojus spalvų intensyvumo grafiką - pritaikius
+\emph{ggplot2}\cite{GGPLOT2} bibliotekos funkciją \emph{geom\_tile()}.
 
 \subsubsection*{Genominė distribucija}
-Šio Kursinio projekto metu duomenų kokybės vertinimo rezultatas, pikams
-priskiriant artimiausio geno pavadinimą (anotuojant piką), pateiktas
+Šio Kursinio projekto metu realizuoto duomenų kokybės vertinimo rezultatas,
+pikams priskiriant artimiausio geno pavadinimą (anotuojant piką), pateiktas
 lentelės pavidalu. Šiame darbe pastarasis rezultato atvaizdavimas patobulintas:
 kiekvienam mėginiui sukurtas grafikas, vaizduojantis kiekvieno genominio
 elemento procentinę dalį. Pastaroji vizualizacija sukurta, pritaikius
-\emph{ChIPseeker}\cite{CHIPSEEKER}
+\emph{ChIPseeker}\cite{CHIPSEEKER} bibliotekos funkciją \emph{plotAnnoBar()}.
 
 \subsubsection*{Atstumas iki TSS}
 Atstumo iki artimiausio transkripcijos pradžios taško
 (angl. \emph{Transcription Start Site}) nustatymas įgyvendintas, pritaikius
 \emph{ChIPseeker} bibliotekos funkciją \emph{annotatePeak()}, kuriai argumentų
-pavidalu perduoti pikus aprašantys \emph{GRanges} objektai bei visus žinomus
-konkretaus organizmo genus aprašantis \emph{TxDb} objektas. Atlikus pikų
-anotavimą gaunama genominių elementų procentines dalis apibendrinanti lentelė,
-kuri perduota funkcijai \emph{plotDistToTSS()}. Pastaroji funkcija šiame duomenų
-kokybės vertinimo etape sukūrė grafiką, atvaizduojantį kiekvieno mėginio pikų
-atstumą iki \emph{TSS} regiono.
+pavidalu perduoti pikus aprašantys \emph{GRanges}\cite{GRANGES} objektai bei
+visus žinomus konkretaus organizmo genus aprašantis \emph{TxDb}\cite{TXDB_MM}
+objektas. Atlikus pikų anotavimą gauta genominių elementų procentines dalis
+apibendrinanti lentelė, kuri perduota \emph{ChIPseeker} funkcijai
+\emph{plotDistToTSS()}. Pastaroji funkcija šiame duomenų kokybės vertinimo
+etape sukūrė grafiką, atvaizduojantį kiekvieno mėginio pikų atstumą iki
+artimiausio \emph{TSS} regiono.
 
 \subsubsection*{Pikų profilio atvaizdavimas}
 Prieš skaičiuojant pikų, kurie jungiasi prie \emph{TSS} regionų, profilį yra
-paruošiami tie \emph{TSS} regionai, kurie yra vadinami šalia \emph{TSS}
-einančiais regionais (angl. \emph{flanking sequences}). Šie regionai nustatyti
+paruošiami tie \emph{TSS} regionai, kurie yra vadinami „šalia \emph{TSS}
+einančiais regionais“ (angl. \emph{flanking sequences}). Šie regionai nustatyti
 pritaikius \emph{ChIPseeker} bibliotekos funkciją \emph{getPromoters()}.
 Pastarajai funkcijai perduotas konkretaus organizmo \emph{TxDb} objektas.
 Nustačius šalia \emph{TSS} regionų esančių sekų regionus panaudota
 \emph{getTagMatrix()} funkcija, kuri sukuria nuskaitymų, kurie patenka į šalia
 \emph{TSS} sričių esančius sekų regionus, matricą. Gautą matricą perdavus
-funkcijai \emph{plotAvgProf()} gautas pikų profilis.
+\emph{ChIPseeker} funkcijai \emph{plotAvgProf()} gautas pikų profilis.
+
+\newpage
 
 \subsection{Duomenų analizės atlikimas}
 Šiame etape buvo panaudotos patobulintos Kursinio darbo metu įgyvendintos
@@ -685,6 +697,9 @@ analizės, kurias galima atlikti su pasirinktais genominiais duomenimis.
 Transkripcijos faktoriaus motyvo sekos logotipas sukurtas su R bibliotekos
 \emph{ggseqlogo}\cite{GGSEQLOGO} funkcija \emph{ggseqlogo()}, kuriai perduota
 transponuota konkretaus transkripcijos faktoriaus pozicinė svorių matrica.
+Šios matricos atsisiųstos iš HOCOMOCO\cite{HOCOMOCO} duomenų bazės (11.0
+versija), saugančios 680 žmogaus bei 453 naminės pelės transkripcijos faktorių
+pozicines svorių matricas.
 
 \subsubsection*{PWM matricos atitikimų skaičiavimas}
 Kursinio darbo metu įgyvendintas pozicinės matricos atitikimų skaičiavimo
@@ -694,7 +709,7 @@ sekoskaitos duomenų pozicijas, panaudoti šias pozicijas atitinkančių nukleot
 sekų išgavimui. Nukleotidai, patenkantys į tam tikrus regionus, išgauti
 panaudojus bibliotekos \emph{BSgenome}\cite{BSGENOME} funkciją \emph{getSeq()}.
 Pastarajai funkcijai perduotas organizmo genomo (metodas testuotas su naminės
-pėlės genomu) anotacijos objektas
+pelės genomu) anotacijos objektas
 \emph{BSgenome.Mmusculus.UCSC.mm10}\cite{BSMUSMUSCULUS} bei pasirinktų mėginių
 \emph{GRanges} objektas. Išgautų nukleotidų sekų \emph{DNAStringSet} objektas
 perduotas \emph{Biostrings}\cite{BIOSTRINGS} bibliotekos funkcijai
@@ -703,21 +718,26 @@ matrica. Pastaroji funkcija suskaičiavo, kiek išgautose nukleotidų sekose yra
 transkripcijos faktoriaus motyvo atitikimų. Šis skaičius padalintas iš bendro
 pikų skaičiaus - gauta transkripcijos faktoriaus motyvų procentinė dalis,
 kuri vizualizuota, pritaikius pagrindinę \emph{ggplot2} bibliotekos funkciją
-\emph{ggplot()} bei \emph{geom\_bar()}
+\emph{ggplot()} bei \emph{geom\_bar()}.
 
 \subsubsection*{Praturtintų sekų biologinių funkcijų nustatymas}
+\colorbox{green}{PILDOMA...}
 
 \subsubsection*{Motyvų paieška \emph{De novo}}
 Praturtintos sekos nustatytos, pritaikius komandinės eilutės įrankio
-HOMER\cite{HOMER} \emph{Perl} programą \emph{findMotifsGenome}, analizuojančiai
+HOMER\cite{HOMER} \emph{Perl} programą \emph{findMotifsGenome}, analizuojančią
 ChIP sekoskaitos mėginius, konvertuotus į BED formato failus. Taip pat taikant
 šią programą nurodytas organizmo, iš kurio išgauti mėginiai, referentinio genomo
 trumpinys (pavyzdžiui, naminės pelės referentinis genomas \emph{mm10}).
 
+\newpage
+
 \subsection{Transkripcijos faktoriaus taikinių spėjimas}
+\colorbox{green}{PILDOMA...}
+
+\newpage
 
 \subsection{Interaktyvios aplikacijos kūrimas}
-
 Programa, apdorojanti naudotojo įvestus \emph{BED} formato failus ir atliekanti
 papildomas analizes, sukurta su R programavimo kalbos biblioteka
 \emph{Shiny}\cite{SHINY}. Pastarosios bibliotekos funkcijos leidžia sukurti
@@ -727,7 +747,7 @@ funkcijas.
 
 \subsubsection*{Duomenų įkėlimas}
 Naudotojas gali įkelti vieną arba daugiau \emph{BED} formato failų, saugančių
-genominę \emph{ChIP} sekoskaitos mėginių informaciją. Duomenų įkėlimo skiltyje
+genominę ChIP sekoskaitos mėginių informaciją. Duomenų įkėlimo skiltyje
 specifikuojami papildomi parametrai, kurie panaudojami atliekant duomenų kokybės
 vertinimą, duomenų analizes bei konkretaus transkripcijos faktoriaus taikinių
 spėjimą pasirinktame organizme. Programos naudotojas gali nurodyti
@@ -736,7 +756,7 @@ faktoriaus pozicinę svorių matricą bei pasirinkti, kokio organizmo genome
 norima atlikti transkripcijos faktoriaus taikinių spėjimą.
 
 \subsubsection*{Duomenų kokybė}
-Duomenų kokybės skiltyje pateikiama įkeltų \emph{ChIP} sekoskaitos duomenų
+Duomenų kokybės skiltyje pateikiama įkeltų ChIP sekoskaitos mėginių duomenų
 lentelė, kurios elementus naudotojas gali pasirinkti bei vykdyti duomenų
 kokybės vertinimo etapus tik pasirinktiems mėginiams. Taip pat naudotojas
 gali apjungti pasirinktus arba visus įkeltus mėginius į vieną duomenų rinkinį
@@ -745,11 +765,23 @@ arba analizuoti tik pasirinktų arba pažymėtų mėginių persidengiančius pik
 (įgyvendinta, panaudojus funkciją \emph{intersect()}).
 
 \subsubsection*{Analizės}
-
-Čia analizes apima: transkripcijos faktoriaus motyvo pavaizdavimas, PWM
-matricos atitikimų skaičiavimas, GO analizė, motyvų paieška De-novo.
+Analizių atlikimo lange naudotojas gali pasirinkti, su kokiais įkeltais
+mėginiais nori atlikti transkripcijos faktorių apibūdinančios pozicinės
+svorių matricos atitikimų skaičiavimą, atlikti motyvų paiešką \emph{De novo}
+bei nustatyti, kokios biologinės funkcijos būdingos identifikuotiems motyvams
+(GO analizė). \emph{De novo} motyvų paieškos įrankio - \emph{HOMER} -
+pritaikymui, panaudota bazinė R funkcija \emph{system()}, kuri leidžia
+R programose įterpti komandas, kurios nepriklauso R bazinių ir įvairių
+bibliotekų funkcijų rinkiniui, tačiau yra naudojamos komandinėje eilutėje
+(taikant bioinformatinius komandinės eilutės įrankius). Gauti identifikuoti
+\emph{De novo} motyvai pateikti lentelės pavidalu, kurią naudotojas gali
+atsisiųsti ir naudoti. Komandinės eilutės įrankio \emph{HOMER} veikimas yra
+vienas iš ilgiau trunkančių šiame darbe aprašytų etapų, todėl galutinių
+rezultatų pateikimas naudotojui, pateikusiam ir pasirinkusiam mėginius, gali
+užtrukti dėl įrankio atliekamų motyvų paieškos skaičiavimų. 
 
 \subsubsection*{Taikinių spėjimas}
+\colorbox{green}{PILDOMA...}
 
 \newpage
 
@@ -758,6 +790,8 @@ matricos atitikimų skaičiavimas, GO analizė, motyvų paieška De-novo.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Rezultatai ir jų aptarimas}
+\colorbox{green}{PILDOMA...}
+
 \newpage
 
 %%%%%%%%%%%%
@@ -782,42 +816,51 @@ Kulakovskiy IV, Kel A, Kolpakov F Nucleic Acids Res. 2021 Jan
 \bibitem{CHIPATLAS} Zou, Z., Ohta, T., Miura, F., Oki, S. ChIP-Atlas 2021
 update: a data-mining suite for exploring epigenomic landscapes by fully
 integrating ChIP-seq, ATAC-seq and Bisulfite-seq data. Nucleic Acids Res.
-50(W1), W175-W182, 2022. http://dx.doi.org/10.1093/nar/gkac199.
+50(W1), W175-W182, 2022, \newline
+\url{http://dx.doi.org/10.1093/nar/gkac199}.
 
 \bibitem{ARTICLE1} Nakato R, Sakata T. Methods for ChIP-seq analysis: A
 practical workflow and advanced applications. Methods. 2021 Mar;187:44-53.
 doi: 10.1016/j.ymeth.2020.03.005. Epub 2020 Mar 30. PMID: 32240773.
 
 \bibitem{ARTICLE2} \url{https://www.cd-genomics.com/chip-seq.html}
+\colorbox{green}{PERTVARKOMA...}
 
 \bibitem{SONICATION}
 \url{https://goldbio.com/articles/article/how-to-fragment-DNA-for-NGS}
+\colorbox{green}{PERTVARKOMA...}
 
-\bibitem{ARTICLE3} This is article
-\url{https://www.nature.com/articles/nmeth.f.247}
+\bibitem{ARTICLE3} Shah, A. Chromatin immunoprecipitation sequencing (ChIP-Seq)
+on the SOLiD™ system. Nat Methods 6, ii–iii (2009).
+\url{https://doi.org/10.1038/nmeth.f.247}.
 
-\bibitem{ARTICLE4} ARTICLE
-\url{https://bmcbiol.biomedcentral.com/articles/10.1186/1741-7007-8-56}
+\bibitem{ARTICLE4} Liu, E.T., Pott, S. \& Huss, M. Q\&A: ChIP-seq technologies
+and the study of gene regulation. BMC Biol 8, 56 (2010).
+\url{https://doi.org/10.1186/1741-7007-8-56}.
 
 \bibitem{ARTICLE5} \url{https://www.cd-genomics.com/the-advantages-and-workflow-of-chip-seq.html}
+\colorbox{green}{PERTVARKOMA...}
 
 \bibitem{ARTICLE6} Langmead, B., Trapnell, C., Pop, M. et al. Ultrafast and
 memory-efficient alignment of short DNA sequences to the human genome. Genome
-Biol 10, R25 (2009). https://doi.org/10.1186/gb-2009-10-3-r25
+Biol 10, R25 (2009), \newline
+\url{https://doi.org/10.1186/gb-2009-10-3-r25}.
 
 \bibitem{ARTICLE7} Li H, Durbin R. Fast and accurate short read alignment with
 Burrows-Wheeler transform. Bioinformatics. 2009 Jul 15;25(14):1754-60. doi: 10.
 1093/bioinformatics/btp324. Epub 2009 May 18. PMID: 19451168; PMCID: PMC2705234.
-
-\bibitem{ARTICLE8} \url{https://www.sciencedirect.com/science/article/pii/S1046202320300591#b0080}
 
 \bibitem{ARTICLE9} Lee TI, Young RA. Transcriptional regulation and its
 misregulation in disease. Cell. 2013 Mar 14;152(6):1237-51.
 doi: 10.1016/j.cell.2013.02.014. PMID: 23498934; PMCID: PMC3640494.
 
 \bibitem{ASP1} \url{https://myriad.com/womens-health/diseases/autoimmune-polyglandular-syndrome-type-1/}
+\colorbox{green}{PERTVARKOMA...}
 
-\bibitem{ARTICLE10} \url{https://www.sciencedirect.com/science/article/pii/S0092867418301065}
+\bibitem{ARTICLE10} Lambert SA, Jolma A, Campitelli LF, Das PK, Yin Y, Albu M,
+Chen X, Taipale J, Hughes TR, Weirauch MT. The Human Transcription Factors.
+Cell. 2018 Feb 8;172(4):650-665. doi: 10.1016/j.cell.2018.01.029.
+Erratum in: Cell. 2018 Oct 4;175(2):598-599. PMID: 29425488.
 
 \bibitem{ARTICLE11} Mundade R, Ozer HG, Wei H, Prabhu L, Lu T. Role of ChIP-seq
 in the discovery of transcription factor binding sites, differential gene
@@ -827,9 +870,10 @@ PMCID: PMC4614920.
 
 \bibitem{ARTICLE12} Zhang, Y., Liu, T., Meyer, C.A. et al. Model-based Analysis
 of ChIP-Seq (MACS). Genome Biol 9, R137 (2008).
-https://doi.org/10.1186/gb-2008-9-9-r137
+\url{https://doi.org/10.1186/gb-2008-9-9-r137}.
 
 \bibitem{ARTICLE13} \url{https://epigenie.com/wp-content/uploads/2013/02/Peak-Calling-for-ChIP-Seq.pdf}
+\colorbox{green}{PERTVARKOMA...}
 
 \bibitem{ARTICLE14} Guo Y, Papachristoudis G, Altshuler RC, Gerber GK, Jaakkola
 TS, Gifford DK, Mahony S. Discovering homotypic binding events at high spatial
@@ -847,9 +891,17 @@ ChIP-chip and ChIP-seq data. Curr Protoc Bioinformatics. 2011 Mar;
 Chapter 2:Unit2.13. doi: 10.1002/0471250953.bi0213s33. PMID: 21400695;
 PMCID: PMC3072298.
 
+\bibitem{ARTICLE17} Enrique Blanco, Luciano Di Croce, Sergi Aranda. Comparative
+ChIP-seq (Comp-ChIP-seq): a novel computational methodology for genome-wide
+analysis. bioRxiv. 2019 January 29. doi: 10.1101/532622. \newline
+\url{https://www.biorxiv.org/content/early/2019/03/26/532622}.
+
 \bibitem{R} R Core Team (2022). R: A language and environment for statistical
 computing. R Foundation for Statistical Computing, Vienna, Austria. URL
 \url{https://www.R-project.org/}.
+
+\bibitem{GGPLOT2} H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
+Springer-Verlag New York, 2016.
 
 \bibitem{SHINY} Chang W, Cheng J, Allaire J, Sievert C, Schloerke B, Xie Y,
 Allen J, McPherson J, Dipert A, Borges B (2023). shiny: Web Application
@@ -859,26 +911,42 @@ Framework for R. R package version 1.7.4.9002, \url{https://shiny.rstudio.com/}.
 Hu E, Xu S, Yu G (2022). “Exploring epigenomic datasets by ChIPseeker.”
 Current Protocols, 2(10), e585. doi: 10.1002/cpz1.585.
 
-\bibitem{GGSEQLOGO} Wagih O (2017). \_ggseqlogo: A 'ggplot2' Extension for
-Drawing Publication-Ready Sequence Logos\_. R package version 0.1,
+\bibitem{GRANGES} Lawrence M, Huber W, Pag\`es H, Aboyoun P, Carlson M,
+et al. (2013) Software for Computing and Annotating Genomic Ranges. PLoS Comput
+Biol 9(8): e1003118. doi:10.1371/journal.pcbi.1003118.
+
+\bibitem{TXDB_MM} Team BC, Maintainer BP (2019). 
+TxDb.Mmusculus.UCSC.mm10.knownGene: Annotation package for TxDb object(s).
+R package version 3.10.0.
+
+\bibitem{GGSEQLOGO} Wagih O (2017). ggseqlogo: A 'ggplot2' Extension for
+Drawing Publication-Ready Sequence Logos. R package version 0.1, \newline
 \url{https://CRAN.R-project.org/package=ggseqlogo}.
 
-\bibitem{BSGENOME} Pagès H (2023). \_BSgenome: Software infrastructure for
-efficient representation of full genomes and their SNPs\_. R package version
-1.66.3, \url{https://bioconductor.org/packages/BSgenome}.
+\bibitem{BSGENOME} Pagès H (2023). BSgenome: Software infrastructure for
+efficient representation of full genomes and their SNPs. R package version
+1.66.3, \newline
+\url{https://bioconductor.org/packages/BSgenome}.
 
-\bibitem{BSMUSMUSCULUS} Team TBD (2021). \_BSgenome.Mmusculus.UCSC.mm10: Full
-genome sequences for Mus musculus (UCSC version mm10, based on GRCm38.p6)\_. R
+\bibitem{BSMUSMUSCULUS} Team TBD (2021). BSgenome.Mmusculus.UCSC.mm10: Full
+genome sequences for Mus musculus (UCSC version mm10, based on GRCm38.p6). R
 package version 1.4.3.
 
 \bibitem{BIOSTRINGS} Pagès H, Aboyoun P, Gentleman R, DebRoy S (2022).
-\_Biostrings: Efficient manipulation of biological strings\_. R package version
-2.66.0, \url{https://bioconductor.org/packages/Biostrings}.
+Biostrings: Efficient manipulation of biological strings. R package version
+2.66.0, \newline
+\url{https://bioconductor.org/packages/Biostrings}.
 
 \bibitem{HOMER} Heinz S, Benner C, Spann N, Bertolino E et al. Simple
 Combinations of Lineage-Determining Transcription Factors Prime cis-Regulatory
 Elements Required for Macrophage and B Cell Identities. Mol Cell 2010 May
 28;38(4):576-589. PMID: 20513432.
+
+\bibitem{HOCOMOCO} Ivan V. Kulakovskiy; Ilya E. Vorontsov; Ivan S. Yevshin;
+Ruslan N. Sharipov; Alla D. Fedorova; Eugene I. Rumynskiy; Yulia A. Medvedeva;
+Arturo Magana-Mora; Vladimir B. Bajic; Dmitry A. Papatsenko; Fedor A. Kolpakov;
+Vsevolod J. Makeev. Nucl. Acids Res., Database issue, gkx1106
+(11 November 2017), doi: 10.1093/nar/gkx1106.
 
 \end{thebibliography}
 \newpage
@@ -888,16 +956,16 @@ Elements Required for Macrophage and B Cell Identities. Mol Cell 2010 May
 %%%%%%%%%%%%
 
 \section{Priedas} \label{Priedas}
-
-Priedų sąraše pateikiamos tarpinių rezultatų puslapio, sugeneruoto su Scikick,
-bei Git repozitorijos, kurioje saugomi analizei naudoti duomenų failai,
-parašyti skriptai bei pagrindinė R programa, nuorodos.
+Priedų sąraše pateikiamos Baigiamojo darbo, Kursinio darbo bei Kursinio projekto
+Git repozitorijų nuorodos nuorodos. Taip pat pateiktos OneDrive nuorodos į
+darbo metu analizuotus pavyzdinius ChIP sekoskaitos mėginius bei atrinktų
+transkripcijos faktorių pozicines svorių matricas.
 
 \begin{itemize}
+    \item \textbf{Baigiamojo darbo Git repozitorija:}\\
+        \url{https://github.com/dansta0804/TF\_analysis}
     \item \textbf{Kursinio projekto analizės Git repozitorija:}\\
         \url{https://github.com/dansta0804/Tbx5\_analysis\_II.git}
-    \item \textbf{Kursinio darbo Scikick ataskaita:}\\
-        \url{https://karklas.mif.vu.lt/\string~dast6577/KursinisDarbas/v2.0/peaks\_MM.html}
     \item \textbf{Kursinio darbo analizės Git repozitorija:}\\
         \url{https://github.com/dansta0804/Tbx5\_analysis.git}
 \end{itemize}
