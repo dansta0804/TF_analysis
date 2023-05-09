@@ -164,6 +164,12 @@ sink()
 # nolint end
 ```
 
+Su Blast surandame Homo sapiens genus, kurie yra panašūs į Mus musculus
+genus (sekų indentiškumas = 60).
+
+Sudarome lentelę, kurioje nurodytas Mus musculus genas ir jo ID bei jo
+Blast atitikmuo - genas ir jo ID.
+
 
 
 
@@ -188,7 +194,7 @@ sink()
 
 # Reading a file that stores blastp result:
 predictions <- read.table(paste0(PROJECT, "predictions_p.txt"))
-predictions <- predictions[predictions$`Perc.Ident` > 60, ]
+predictions <- predictions[predictions$`Perc.Ident` > 50, ]
 
 grouped_predictions <-
     predictions %>%
@@ -241,19 +247,59 @@ hg_sequences <- character()
 
 for (id in 1:length(matched_data$EntrezQuery)) {
     seq_m <- getSeq(BSgenome.Mmusculus.UCSC.mm10,
-                       mmgene_ranges[mmgene_ranges$gene_id == matched_data$EntrezQuery[id], ])
-    names(seq_m) <- matched_data[id, "QuerySymbol"]
-    mm_sequences <- append(mm_sequences, seq_m)
+                    mmgene_ranges[mmgene_ranges$gene_id ==
+                                  matched_data$EntrezQuery[id], ])
 
-    seq_h <- getSeq(BSgenome.Hsapiens.UCSC.hg38, hggene_ranges[hggene_ranges$gene_id == matched_data$EntrezSubject[id], ])
-    names(seq_h) <- matched_data[id, "SubjectSymbol"]
+    if (length(seq_m) == 0) { next }
+    else {
+        names(seq_m) <- matched_data[id, "QuerySymbol"]
+        mm_sequences <- append(mm_sequences, seq_m)
+    }
 
-    hg_sequences <- append(hg_sequences, seq_h)
+    seq_h <- getSeq(BSgenome.Hsapiens.UCSC.hg38,
+                    hggene_ranges[hggene_ranges$gene_id ==
+                                  matched_data$EntrezSubject[id], ])
+
+    if (length(seq_h) == 0) { next }
+    else {
+        names(seq_h) <- matched_data[id, "SubjectSymbol"]
+        hg_sequences <- append(hg_sequences, seq_h)
+    }
 }
 
 
-countPWM(as.matrix(pwm), as.character(mm_sequences[[14]]), min.score = "65%")
-countPWM(as.matrix(pwm), as.character(hg_sequences[[14]]), min.score = "65%")
+
+countPWM(as.matrix(pwm), as.character(hg_sequences[[8]]), min.score = "60%")
+# nolint end
+```
+
+
+```{r}
+# nolint start
+percentages <- data.frame(matrix(ncol = 5, nrow = 0))
+colnames(percentages) <- c("QueryGene", "SubjectGene", "QueryPWMHits",
+                           "SubjectPWMHits", "Percent")
+
+
+for (gene in 1:length(mm_sequences)) {
+    mm_hits <-
+        as.numeric(countPWM(as.matrix(pwm), as.character(mm_sequences[[gene]]),
+                            min.score = "60%"))
+
+    hg_hits <-
+        as.numeric(countPWM(as.matrix(pwm), as.character(hg_sequences[[gene]]),
+                            min.score = "60%"))
+
+    row <- c(names(mm_sequences[gene]), names(hg_sequences[gene]),
+             mm_hits, hg_hits, (mm_hits / hg_hits) * 100)
+
+    percentages[nrow(percentages) + 1, ] <- row            
+}
+
+percentages$SubjectGene %in% hg_annotated_peaks[[1]]$gene_symbol
+
+
+
 # nolint end
 ```
 
