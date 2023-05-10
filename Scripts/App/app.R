@@ -561,7 +561,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         p("Pasirinkite vieną arba kelis pateiktus mėginius, kurių duomenų
           kokybę vertinsite:", style = "font-weight:bold; font-size:17px;
           margin-left:0px"),
-        DT::dataTableOutput("samples"),
+        # DT::dataTableOutput("samples"),
         p("Nurodykite, ar norite naudoti apjungtų mėginių duomenis:",
           style = "font-weight:bold; font-size:17px; margin-left:0px;
                    padding-top: 80px"),
