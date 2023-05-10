@@ -3,7 +3,8 @@ library(pacman)
 p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
-       TxDb.Mmusculus.UCSC.mm10.knownGene)
+       TxDb.Mmusculus.UCSC.mm10.knownGene, ggseqlogo, ChIPseeker,
+       BSgenome.Mmusculus.UCSC.mm10, tools)
 
 PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 # setwd("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Scripts/App/") 
@@ -13,83 +14,52 @@ PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 options(scipen = 100)
 options(shiny.maxRequestSize = 300 * 1024 ^ 2)
 
-FUNCTIONS   <- paste0(PROJECT, "Scripts/functions.R")
-INPUTS      <- paste0(PROJECT, "Analyses/Tbx5_analysis_I/Inputs/BED/")
-INPUT       <- paste0(PROJECT, "Input/")
-RESULTS     <- paste0(PROJECT, "Results/")
+FUNCTIONS     <- paste0(PROJECT, "Scripts/functions.R")
+INPUTS        <- paste0(PROJECT, "Analyses/Tbx5_analysis_I/Inputs/BED/")
+INPUT         <- paste0(PROJECT, "Input/")
+RESULTS       <- paste0(PROJECT, "Results/")
+HOMER_RESULTS <- paste0(RESULTS, "HOMER/")
 source(FUNCTIONS)
 
 server <- function(input, output, session) {
-  # Klaida yra tame, kad vienodi pavadinimai 'output$samples', todėl
-  # išsiaiškinti, kaip padaryti, kad būtų galima naudoti tuos pačius
-  # pavadinimus.
+  converted_table <- data.frame(matrix(ncol = 3, nrow = 0))
   observe({
-    req(input$file_format)
-    if (input$file_format == "bed") {
-      output$samples <-
-        DT::renderDataTable({input$bigbed[, c("name", "size")]}, server = TRUE)
-    } else if (input$file_format == "bw") {
-      output$samples <- DT::renderDataTable({
-        converted_table <- data.frame(matrix(ncol = 3, nrow = 0))
-        colnames(converted_table) <-
-          c("Old file name", "New file name", "Graph name")
-        
-        for(sample in 1:length(input$bigbed[, c("name")])) {
-          names <- input$bigbed[sample, 'name']
-          system(paste("/home/daniele/Tools/bigWigToBedGraph",
-                 paste0(INPUT, "Mus_musculus/", names),
-                 paste0(INPUT, "Mus_musculus/", names, ".bedGraph")))
-          row <- c(names, paste0(names, ".bedGraph"),
-                   paste0("Sample", sample, "_", input$organism))
-
-          converted_table[nrow(converted_table) + 1, ] <- row
-        }
-        converted_table
-      })
-    }
-  })
-
-  observe({
-    req(input$samples_rows_selected)
-    selRow <- input$bigbed[input$samples_rows_selected,]
-    names <- selRow[[1]]
-    samples <- selRow[[4]]
-
+    req(input$bigbed)
     
-    # if (input$sample_overlap == "no_join") {
-    #     selRow <- input$bigbed[input$samples_rows_selected, ]
-    #     names <- selRow[[1]]
-    #     samples <- selRow[[4]]
-    # }
-
+    colnames(converted_table) <-
+      c("Old file name", "Graph name", "File size (Mb)")
+    
+    for(sample in 1:length(input$bigbed[, c("name")])) {
+      names <- input$bigbed[sample, 'name']
+      size <- as.numeric(input$bigbed[sample, 'size']) / 1000000
+      row <- c(names, paste0("Sample", sample, "_", input$organism), size)
+      converted_table[nrow(converted_table) + 1, ] <- row
+    }
+      
+    output$samples <- DT::renderDataTable({converted_table}, server = TRUE)
+    output$samples2 <-
+      DT::renderDataTable({
+        converted_table[, c("Graph name", "File size (Mb)")]}, server = TRUE)
+    output$samples3 <-
+      DT::renderDataTable({
+        converted_table[, c("Graph name", "File size (Mb)")]}, server = TRUE)
+  
     ########################### GENOMIC DATA QUALITY #######################
     # GENOMIC DATA QUALITY - PEAK COUNT (PLOT 1):
     output$plot1 <- renderPlot({
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
+      row_index <- input$samples2_rows_selected
 
-      
-
-
-      # for(sample in 1:length(samples)) {
-      #   names <- input$bigbed[[sample, 'name']]
-      #   system(paste("/home/daniele/Tools/bigWigToBedGraph",
-      #                paste0(INPUTS, "Homo_sapiens/", names),
-      #                paste0(INPUTS, "Homo_sapiens/", names, ".bedGraph")))
-      #   bigbed_files[[sample]] <-
-      #     read.table(file = paste0(INPUTS, "Homo_sapiens/", names, ".bedGraph"))
-      #       #  names(bigbed_files)[sample] <-
-      #       #  substring(names[sample], 1, 11)
-      # }
-
-
-
-
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
-        names(bigbed_files)[sample] <- substring(names[sample], 1, 11)
+      for (rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                           "Old file name"]))
+        names(bigbed_files)[rows] <-
+          converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+      if (length(row_index) == 0) {
         return()
       } else {
         peaks <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -134,20 +104,30 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA QUALITY - PEAK COUNT DISTRIBUTION BY CHROMOSOME (PLOT 2):
     output$plot2 <- renderPlot({
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
       grl <- GRangesList()
+      row_index <- input$samples2_rows_selected
 
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "other")
+        }
 
-        colnames(bigbed_files[[sample]]) <-
-          c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        grl[[sample]] <- makeGRangesFromDataFrame(bigbed_files[[sample]],
-                                                  keep.extra.columns = TRUE)
-        names(grl)[sample] <- substring(names[sample], 1, 11)
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+      if (length(row_index) == 0) {
         return()
       } else {
         peak_counts <-
@@ -186,19 +166,31 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA QUALITY - OVERLAPS BETWEEN SAMPLES (JACCARD) (PLOT 3):
     output$plot3 <- renderPlot({
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
+      grl <- list()
+      row_index <- input$samples2_rows_selected
 
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
-        names(bigbed_files)[sample] <- substring(names[sample], 1, 11)
-        colnames(bigbed_files[[sample]]) <-
-              c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        bigbed_files[[sample]] <-
-          makeGRangesFromDataFrame(bigbed_files[[sample]],
-                                   keep.extra.columns = TRUE)
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "other")
+        }
+
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+
+      if (length(row_index) == 0) {
         return()
       } else {
         coef_matrix <- matrix(nrow = length(bigbed_files),
@@ -251,22 +243,31 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA QUALITY - GENOMIC DISTRIBUTION (PLOT 4):
     output$plot4 <- renderPlot({
-      grl <- GRangesList()
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
+      grl <- GRangesList()
+      row_index <- input$samples2_rows_selected
 
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "other")
+        }
 
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
-
-        colnames(bigbed_files[[sample]]) <-
-          c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        grl[[sample]] <-
-          makeGRangesFromDataFrame(bigbed_files[[sample]],
-                                    keep.extra.columns = TRUE)
-        names(grl)[sample] <- substring(names[sample], 1, 11)
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+
+      if (length(row_index) == 0) {
         return()
       } else {
         mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
@@ -279,21 +280,30 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA QUALITY - DISTANCE TO TSS (PLOT 5):
     output$plot5 <- renderPlot({
-      grl <- GRangesList()
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
+      grl <- GRangesList()
+      row_index <- input$samples2_rows_selected
 
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "other")
+        }
 
-        colnames(bigbed_files[[sample]]) <-
-          c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        grl[[sample]] <-
-          makeGRangesFromDataFrame(bigbed_files[[sample]],
-                                   keep.extra.columns = TRUE)
-        names(grl)[sample] <- substring(names[sample], 1, 11)
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+      if (length(row_index) == 0) {
         return()
       } else {
         mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
@@ -305,22 +315,31 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA QUALITY - PEAK PROFILE (PLOT 6):
     output$plot6 <- renderPlot({
-      grl <- GRangesList()
-      plots <- list()
+      req(input$samples2_rows_selected)
       bigbed_files <- list()
+      plots <- list()
+      grl <- GRangesList()
+      row_index <- input$samples2_rows_selected
 
-      for(sample in 1:length(samples)) {
-        bigbed_files[[sample]] <- read.table(file = samples[sample])
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "other")
+        }
 
-        colnames(bigbed_files[[sample]]) <-
-          c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        grl[[sample]] <-
-          makeGRangesFromDataFrame(bigbed_files[[sample]],
-                                   keep.extra.columns = TRUE)
-        names(grl)[sample] <- substring(names[sample], 1, 11)
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
       }
 
-      if (length(input$samples_rows_selected) == 0) {
+      if (length(row_index) == 0) {
         return()
       } else {
         mm_known_genes <- TxDb.Mmusculus.UCSC.mm10.knownGene
@@ -331,7 +350,8 @@ server <- function(input, output, session) {
           remove_y <- theme(
             axis.text.y = element_blank(),
             axis.ticks.y = element_blank(),
-            axis.title.y = element_blank()
+            axis.title.y = element_blank(),
+            plot.title = element_text(face = "bold")
           )
 
           peak <- makeGRangesFromDataFrame(grl[[peak_file]],
@@ -342,19 +362,22 @@ server <- function(input, output, session) {
           plots[[peak_file]] <- plotAvgProf(tagMatrix, xlim = c(-3000, 3000),
                                             xlab = "Genomic Region (5'->3')",
                                             ylab = "Read Count Frequency") +
-          remove_y
+          remove_y +
+          ggtitle(names(grl)[peak_file])
         }
         ggarrange(plotlist = plots, nrow = 1, common.legend = TRUE,
                   widths = 5, legend = "bottom")
       }
     })
-  })
 
-  output$samples2 <- DT::renderDataTable({input$bigbed[, c("name", "size")]},
-                                         server = TRUE)
 
   ########################## GENOMIC DATA ANALYSIS #######################
-  observe({       
+  
+    output$text <- renderText({
+      req(input$tf_options)
+      paste0(input$tf_options)
+    })
+
     # GENOMIC DATA ANALYSIS - TF MOTIF (PLOT 7):
     output$plot7 <- renderPlot({
       req(input$pwm)
@@ -365,31 +388,35 @@ server <- function(input, output, session) {
       rownames(mpwm) <- c("A", "C", "G", "T")
       ggseqlogo(mpwm)
     })
-                     
-    req(input$samples2_rows_selected)
-    selRow <- input$bigbed[input$samples2_rows_selected, ]
-    names <- selRow[[1]]
-    samples2 <- selRow[[4]]
 
     # GENOMIC DATA ANALYSIS - PWM MATRIX MATCHES (PLOT 8):
     output$plot8 <- renderPlot({
-      req(input$bigbed)
+      req(input$samples3_rows_selected)
       req(input$pwm)
       bigbed_files <- list()
+      row_index <- input$samples3_rows_selected
 
-      for(sample in 1:length(samples2)) {
-        bigbed_files[[sample]] <-
-          read.table(file = input$bigbed[[sample, 'datapath']])
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Old file name"]))
         
-        colnames(bigbed_files[[sample]]) <-
-          c("chrom", "start", "end", "name", rep(paste0("Other", 1:7)))
-        bigbed_files[[sample]] <-
-          makeGRangesFromDataFrame(bigbed_files[[sample]],
+        if (length(colnames) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <- c("chrom", "start", "end", "other")
+        }
+
+        bigbed_files[[rows]] <-
+          makeGRangesFromDataFrame(bigbed_files[[rows]],
                                    keep.extra.columns = TRUE)
-        names(bigbed_files)[sample] <- input$bigbed[[sample, 'name']]
+        names(bigbed_files)[rows] <- converted_table[row_index[rows],
+                                                     "Graph name"]
       }
 
-      if (length(input$samples2_rows_selected) == 0) {
+      if (length(input$samples3_rows_selected) == 0) {
         return()
       } else {
         # Čia turės būti naudojama nebūtinai šita matrica. Reikia pateikti visų
@@ -474,44 +501,75 @@ server <- function(input, output, session) {
 
     # GENOMIC DATA ANALYSIS - DE NOVO MOTIFS (TABLE 1):
     output$table1 <- DT::renderDataTable({
-      req(input$bigbed)
+      req(input$samples3_rows_selected)
       bigbed_files <- list()
       names <- c()
+      row_index <- input$samples3_rows_selected
 
-      for(sample in 1:length(input$bigbed[, 1])) {
-        names <- c(names, input$bigbed[[sample, 'name']])
-        bigbed_files[[sample]] <-
-          read.table(file = input$bigbed[[sample, 'datapath']])
-        names(bigbed_files)[sample] <-
-          substring(input$bigbed[[sample, 'name']], 1, 11)
+      for (rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                           "Old file name"]))
+        names(bigbed_files)[rows] <-
+          converted_table[row_index[rows], "Graph name"]
       }
 
-      system(paste("findMotifsGenome.pl", paste0(INPUTS, names), "mm10",
-             paste0(PROJECT, RESULTS, names, "/"), "-size 200 -mask"),
-             intern = FALSE)
+      if (length(input$samples3_rows_selected) == 0) {
+        return()
+      } else {
+        homer_motifs <- c()
+        for (file in 1:length(bigbed_files)) {
+          folder_name <-
+            file_path_sans_ext(basename(converted_table[row_index[file],
+                                                        "Old file name"]))
+          filename <- converted_table[row_index[file], "Old file name"]
+          output_path <- paste0(HOMER_RESULTS, folder_name)
+          
+          
+          if (!file.exists(output_path)) {
+            dir.create(output_path)
+          }
+          
+          if (!file.exists(paste0(output_path, "/knownResults.txt"))) {
+            system(paste("findMotifsGenome.pl",
+                       paste0(INPUTS, filename), "mm10",
+                       paste0(output_path, "/"),
+                 "-size 200 -mask"), intern = FALSE)
+          } else {
+            homer_motifs <- read.table(paste0(output_path, "/knownResults.txt"),
+                                       sep = "\t", header = FALSE, skip = 1)
+          }
 
-      homer_motifs <-
-        read.table(paste0(PROJECT, RESULTS, names, "/knownResults.txt"),
-                   sep = "\t", header = FALSE, skip = 1)
+          colnames(homer_motifs) <-
+            c("Motif Name", "Consensus", "P value", "Log P value",
+              "q value (Benjamini)", "Target Sequences with Motif (#)",
+              "Target Sequences with Motif (%)",
+              "Background Sequences with Motif (#)",
+              "Background Sequences with Motif (%)")
 
-      colnames(homer_motifs) <-
-        c("Motif Name", "Consensus", "P value", "Log P value",
-          "q value (Benjamini)", "Target Sequences with Motif (#)",
-          "Target Sequences with Motif (%)",
-          "Background Sequences with Motif (#)",
-          "Background Sequences with Motif (%)")
-
-      for (motif in 1:nrow(homer_motifs)) {
-        homer_motifs$`Motif Name`[motif] <-
-            strsplit(homer_motifs$`Motif Name`, "/")[[motif]][1]
+          for (motif in 1:nrow(homer_motifs)) {
+            homer_motifs$`Motif Name`[motif] <-
+                strsplit(homer_motifs$`Motif Name`, "/")[[motif]][1]
+          }
+        }
+        homer_motifs
       }
-      homer_motifs
     })
   })
 }
 
 ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
   includeCSS(paste0(PROJECT, "Scripts/styles.css")),
+  tabPanel("Formatų konversija",
+    sidebarLayout(
+      sidebarPanel(
+        width = 4
+      ),
+      mainPanel(
+        width = 8
+      )
+    )
+  ),
   tabPanel("Duomenų įkėlimas",
     sidebarLayout(
       sidebarPanel(
@@ -561,7 +619,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         p("Pasirinkite vieną arba kelis pateiktus mėginius, kurių duomenų
           kokybę vertinsite:", style = "font-weight:bold; font-size:17px;
           margin-left:0px"),
-        # DT::dataTableOutput("samples"),
+        DT::dataTableOutput("samples2"),
         p("Nurodykite, ar norite naudoti apjungtų mėginių duomenis:",
           style = "font-weight:bold; font-size:17px; margin-left:0px;
                    padding-top: 80px"),
@@ -638,7 +696,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         p("Pasirinkite vieną arba kelis pateiktus mėginius, kuriems atliksite
           analizes:", style = "font-weight:bold; font-size:17px;
           margin-left:0px"),
-        DT::dataTableOutput("samples2"),
+        DT::dataTableOutput("samples3"),
         selectInput(
           inputId = "tf_options",
           label = "Pasirinkite transkripcijos faktorių:",
@@ -657,7 +715,8 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         tabsetPanel(
           tabPanel("Transkripcijos faktoriaus motyvas", 
             p("Pateiktame paveiksle pavaizduotas įkeltą pozicinę svorių matricą
-               atitinkančio transkripcijos faktoriaus motyvo sekos logotipas:"),
+               atitinkančio transkripcijos faktoriaus motyvo sekos logotipas."),
+            h4(strong("Transkripcijos faktorius: "), textOutput("text")),
             shinydashboard::box(
               width = 12, 
               withLoader(plotOutput("plot7", width = "70%"), type = "html",
