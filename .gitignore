@@ -2314,6 +2314,9 @@ knownResults.txt
 motifFindingParameters.txt
 Results/
 Input/BigBed
-Input/BED
+Input/BedGraph
 Input/BigWig
 Input/PWM
+Figures/
+Articles/
+*.tmp
