@@ -1,0 +1,12 @@
+{ 
+   "Homo sapiens":["BSgenome.Hsapiens.UCSC.hg38", "TxDb.Hsapiens.UCSC.hg38.knownGene", "org.Hs.eg.db"],
+   "Mus musculus":["BSgenome.Mmusculus.UCSC.mm10", "TxDb.Mmusculus.UCSC.mm10.knownGene", "org.Mm.eg.db"],
+   "Rattus norvegicus":["BSgenome.Rnorvegicus.UCSC.rn6", "TxDb.Rnorvegicus.UCSC.rn6.refGene", "org.Rn.eg.db"],
+   "Danio rerio":["BSgenome.Drerio.UCSC.danRer10", "TxDb.Drerio.UCSC.danRer10.refGene", "org.Dr.eg.db"],
+   "Bos taurus":["BSgenome.Btaurus.UCSC.bosTau8", "TxDb.Btaurus.UCSC.bosTau8.refGene", "org.Bt.eg.db"],
+   "Drosophila melanogaster":["BSgenome.Dmelanogaster.UCSC.dm6", "TxDb.Dmelanogaster.UCSC.dm6.ensGene", "org.Dm.eg.db"],
+   "Gallus gallus":["BSgenome.Ggallus.UCSC.galGal4", "TxDb.Ggallus.UCSC.galGal4.refGene", "org.Gg.eg.db"],
+   "Macaca mulatta":["BSgenome.Mmulatta.UCSC.rheMac8", "TxDb.Mmulatta.UCSC.rheMac8.refGene", "org.Mmu.eg.db"],
+   "Pan troglodytes":["BSgenome.Ptroglodytes.UCSC.panTro4", "TxDb.Ptroglodytes.UCSC.panTro4.refGene", "org.Pt.eg.db"],
+   "Sus scrofa":["BSgenome.Sscrofa.UCSC.susScr3", "TxDb.Sscrofa.UCSC.susScr3.refGene", "org.Ss.eg.db"]
+}
