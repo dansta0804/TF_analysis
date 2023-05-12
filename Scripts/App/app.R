@@ -22,6 +22,48 @@ HOMER_RESULTS <- paste0(RESULTS, "HOMER/")
 source(FUNCTIONS)
 
 server <- function(input, output, session) {
+  ############################# FORMAT CONVERSION #############################
+  observe({
+    req(input$provided_file)
+    input_files <- input$provided_file[, c("name")]
+    print(input_files)
+
+    # test_path <- system.file("tests", package = "rtracklayer")
+  test_bb <- file.path("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Inputs/BED/", input_files)
+
+
+  library(rtracklayer)
+  ## Returns ranges with all fields
+  gr <- import(test_bb, format = "narrowPeak")
+  print(gr)
+
+    # if (input$file_format == "bed") {
+    #   colnames(converted_table) <-
+    #     c("Old file name", "New file name", "Graph name")
+        
+    #   for(sample in 1:length(input$bigbed[, c("name")])) {
+    #     names <- input$bigbed[sample, 'name']
+    #     row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
+    #     converted_table[nrow(converted_table) + 1, ] <- row
+    #   }
+    #   output$samples <- DT::renderDataTable({converted_table})
+    # } else if (input$file_format == "bw") {
+    #     colnames(converted_table) <-
+    #       c("Old file name", "New file name", "Graph name")
+        
+    #     for(sample in 1:length(input$bigbed[, c("name")])) {
+    #       names <- input$bigbed[sample, 'name']
+    #       system(paste("/home/daniele/Tools/bigWigToBedGraph",
+    #              paste0(BIGWIG, "Mus_musculus/", names),
+    #              paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
+    #       row <- c(names, paste0(names, ".bedGraph"),
+    #                paste0("Sample", sample, "_", input$organism))
+    #       converted_table[nrow(converted_table) + 1, ] <- row
+    #     }
+    #     output$samples <- DT::renderDataTable({converted_table})
+    # }
+  })
+
   converted_table <- data.frame(matrix(ncol = 3, nrow = 0))
   observe({
     req(input$bigbed)
@@ -563,7 +605,19 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
   tabPanel("Formatų konversija",
     sidebarLayout(
       sidebarPanel(
-        width = 4
+        width = 4,
+        fileInput(
+          inputId = "provided_file",
+          label = "Įkelkite ChIP sekoskaitos duomenų failą (-us)*:",
+          multiple = TRUE,
+          buttonLabel = "Ieškoti failo",
+          placeholder = "Failas nepasirinktas"
+        ),
+        radioButtons(
+          inputId = "file_format",
+          label = "Nurodykite įvestų duomenų formatą:",
+          choices = c("BED" = "bed", "BigWig" = "bw", "BigBed" = "bb")
+        ),
       ),
       mainPanel(
         width = 8
@@ -587,11 +641,6 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           multiple = FALSE,
           buttonLabel = "Ieškoti failo",
           placeholder = "Failas nepasirinktas"
-        ),
-        radioButtons(
-          inputId = "file_format",
-          label = "Nurodykite įvestų duomenų formatą:",
-          choices = c("BED" = "bed", "BigWig" = "bw", "BigBed" = "bb")
         ),
         selectInput(
           inputId = "organism",
@@ -734,10 +783,10 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
             )
           ),
           tabPanel("GO analizė",
-            p("Description goes here..."),
-            shinydashboard::box(
-              width = 12,
-              withLoader(plotOutput("plot66"), type = "html", loader = "dnaspin")
+            tabsetPanel(
+              tabPanel("Motyvų paieška De novo"),
+              tabPanel("Motyvų paieška De novo2"),
+              tabPanel("Motyvų paieška De novo3")
             )
           ),
           tabPanel("Motyvų paieška De novo",
