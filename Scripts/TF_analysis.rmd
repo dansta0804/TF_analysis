@@ -11,7 +11,7 @@ org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler)
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 PROJECT     <- paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/")
-BIGBEDS     <- paste0(PROJECT, "Input/")
+BIGBEDS     <- paste0(PROJECT, "Input/BigBed/")
 MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
 HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
@@ -308,7 +308,183 @@ percentages$SubjectGene %in% hg_annotated_peaks[[1]]$gene_symbol
 
 
 
+Čia yra tikrinama, kaip veikia GO analizės:
+```{R}
+library(DOSE)
 
+
+barplot(ego, showCategory=50)
+library(enrichplot)
+
+grl_mm[[1]]$fold_enrichment
+
+
+data(geneList)
+# de <- names(geneList)[abs(geneList) > 2]
+
+
+# PRATĘSTI NUO ČIA... REIKIA PERDARYTI GRanges OBJEKTUS, KAD
+# BŪTŲ `Fold Enrichment`, `Gene Symbol` ir `Gene ID`.
+##########################################################################
+de <- mm_annotated_peaks
+de <- grl_mm[[1]]$fold_enrichment[abs(grl_mm[[1]]$fold_enrichment) > 2]
+
+
+# The following piece of code is OK and can the used:
+###################################################################
+merged_expanded <- list()
+
+for (l in 1:length(grl_mm)) {
+    merged_data <- merge(mm_annotated_peaks[[l]], grl_mm[[l]])
+    expanded_merged <-
+        bitr(merged_data$gene_symbol, fromType = "SYMBOL",
+             toType = c("ENTREZID"), OrgDb = org.Mm.eg.db)
+    merged_expanded[[l]] <-
+        merge(merged_data, expanded_merged, by.x = "gene_symbol",
+              by.y = "SYMBOL", all.x = TRUE) %>%
+        as.data.frame() %>%
+        makeGRangesFromDataFrame(., keep.extra.columns = TRUE)
+}
+###################################################################
+
+
+library(DOSE)
+data(geneList)
+de <- names(geneList)[abs(geneList) > 2]
+
+
+
+
+
+row1 <- as.numeric(merged_expanded[[1]]$ENTREZID)
+data.frame(matrix(ncol = 2, nrow = 0))
+row2 <- as.numeric(merged_expanded[[1]]$fold_enrichment)
+
+mat <- t(as.matrix(data.frame(row1, row2)))
+
+rownames(mat) <- NULL            # Delete row names
+colnames(mat) <- NULL
+
+write.table(mat, paste0(PROJECT, "mat.csv"), col.names=FALSE, row.names=FALSE, sep = ",")
+
+
+
+ego <- enrichGO(gene = as.numeric(merged_expanded[[1]]$ENTREZID), 
+                    keyType = "ENTREZID", 
+                    OrgDb = org.Mm.eg.db, 
+                    ont = "BP", 
+                    pAdjustMethod = "BH", 
+                    qvalueCutoff = 0.05, 
+                    readable = TRUE)
+
+
+dotplot(ego, showCategory=50)
+
+head(ego$Count)
+
+colnames(ego)
+
+class(ego)
+
+ego <- as.data.frame(ego)
+
+colnames(as.data.frame(ego))
+
+barplot(ego, showCategory=50)
+
+# barplot(ego[order(ego[,9],decreasing=TRUE),][,9], showCategory=50)
+
+
+
+
+
+
+
+
+head(mat)
+
+library("pathview")
+
+barplot(mat, showCategory=10)
+
+hsa04110 <- pathview(gene.data  = mat,
+                     pathway.id = "mmu05022",
+                     species    = "mmu",
+                     limit      = list(gene=max(abs(mat), na.rm = TRUE), cpd=1))
+
+
+kk <- enrichKEGG(gene         = mat,
+                 organism     = 'mmu',
+                 pvalueCutoff = 0.05)
+
+geneList
+
+browseKEGG(kk, 'mmu04010')
+
+head(kk)
+
+kk2 <- gseKEGG(geneList     = merged_expanded[[1]]$ENTREZID,
+               organism     = 'mmu',
+               minGSSize    = 120,
+               pvalueCutoff = 0.05,
+               verbose      = FALSE)
+##########################################################################
+
+edo <- enrichDGN(merged_expanded[[1]]$ENTREZID)
+edox <- setReadable(edo, 'org.Hs.eg.db', 'ENTREZID')
+p1 <- cnetplot(edox, foldChange=geneList)
+
+p1 <- heatplot(edox, showCategory=5)
+p2 <- heatplot(edox, foldChange=geneList, showCategory=5)
+cowplot::plot_grid(p1, p2, ncol=1, labels=LETTERS[1:2])
+
+edox2 <- pairwise_termsim(edox)
+p1 <- treeplot(edox2)
+p2 <- treeplot(edox2, hclust_method = "average")
+aplot::plot_list(p1, p2, tag_levels='A')
+
+library(ggridges)
+edo2 <- gseDO(geneList)
+ridgeplot(edo2)
+
+#########################################
+
+library(DOSE)
+data(geneList)
+gene <- names(geneList)[abs(geneList) > 1.5]
+
+length(genes)
+
+search_kegg_organism('Mus musculus', by='scientific_name')
+
+kegg <- enrichKEGG(gene = genes,
+                 organism = 'mmu',
+                 pvalueCutoff = 0.05)
+
+head(kegg)
+
+enrichDO(gene          = gene,
+              ont           = "DO",
+              pvalueCutoff  = 0.05,
+              pAdjustMethod = "BH",
+              universe      = names(geneList),
+              minGSSize     = 5,
+              maxGSSize     = 500,
+              qvalueCutoff  = 0.05,
+              readable      = FALSE)
+
+
+enrichDO(gene          = genes,
+              ont           = "DO",
+              pvalueCutoff  = 0.05,
+              pAdjustMethod = "BH",
+              qvalueCutoff  = 0.05,
+              readable      = FALSE)
+
+sink(paste0(PROJECT, "rez.txt"))
+print(head(as.data.frame(ggo)))
+sink()
+```
 
 
 
