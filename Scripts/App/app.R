@@ -3,8 +3,8 @@ library(pacman)
 p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
-       TxDb.Mmusculus.UCSC.mm10.knownGene, ggseqlogo, ChIPseeker,
-       BSgenome.Mmusculus.UCSC.mm10, tools)
+       ggseqlogo, ChIPseeker, tools, reactable, annotables, enrichplot,
+       clusterProfiler, shinyalert, rjson)
 
 PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 # setwd("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Scripts/App/") 
@@ -22,6 +22,55 @@ HOMER_RESULTS <- paste0(RESULTS, "HOMER/")
 source(FUNCTIONS)
 
 server <- function(input, output, session) {
+  observe({
+    result <- fromJSON(file = paste0(INPUT, "genome_data.json"))
+    print(input$organism)
+    print(result[[1]][5])
+    for (genome in 1:length(result)) {
+      if (input$organism == "Nenurodyta") {
+        # shinyalert("Nurodykite organizmą!", type = "error",
+        #            confirmButtonText = "Rinktis organizmą")
+        return()
+      } else if (input$organism == result[[genome]][5]) {
+        if (system.file(package = result[[genome]][1]) != 0 &&
+            system.file(package = result[[genome]][2]) != 0 &&
+            system.file(package = result[[genome]][3]) != 0) {
+
+              library(pacman)
+          p_load(result[[genome]][1], result[[genome]][2], result[[genome]][3])
+            } else {
+              BiocManager::install(result[[genome]][1], update = FALSE)
+              BiocManager::install(result[[genome]][2], update = FALSE)
+              BiocManager::install(result[[genome]][3], update = FALSE)
+            }
+      } else { next }
+    }
+  })
+
+  observe({
+    output$table0 <- renderTable({
+      input_data <- data.frame(matrix(ncol = 2, nrow = 0), row.names = NULL)
+      colnames(input_data) <- c("Reikalinga informacija", "Reikšmė")
+
+      checkable_values <-
+        c(input$tf_options, input$organism, input$pwm)
+      col1_text <-
+        c("Transkripcijos faktorius:", "Organizmas, iš kurio išgauti duomenys:",
+          "PWM motyvo logotipas:")
+
+      for (value in 1:length(checkable_values)) {
+        if (checkable_values[value] != "Nenurodyta") {
+          input_data[nrow(input_data) + 1, ] <-
+            c(col1_text[value], checkable_values[value])
+        } else {
+          input_data[nrow(input_data) + 1, ] <-
+            c(col1_text[value], "Trūksta informacijos!")
+        }
+      }
+      input_data
+    })
+  })
+
   ############################# FORMAT CONVERSION #############################
   observe({
     req(input$provided_file)
@@ -29,13 +78,13 @@ server <- function(input, output, session) {
     print(input_files)
 
     # test_path <- system.file("tests", package = "rtracklayer")
-  test_bb <- file.path("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Inputs/BED/", input_files)
+  # format_detection(input_files)
 
-
-  library(rtracklayer)
   ## Returns ranges with all fields
-  gr <- import(test_bb, format = "narrowPeak")
-  print(gr)
+  
+
+
+  
 
     # if (input$file_format == "bed") {
     #   colnames(converted_table) <-
@@ -69,7 +118,7 @@ server <- function(input, output, session) {
     req(input$bigbed)
     
     colnames(converted_table) <-
-      c("Old file name", "Graph name", "File size (Mb)")
+      c("Originalus pavadinimas", "Grafikų pavadinimas", "Mėginio dydis (Mb)")
     
     for(sample in 1:length(input$bigbed[, c("name")])) {
       names <- input$bigbed[sample, 'name']
@@ -81,10 +130,10 @@ server <- function(input, output, session) {
     output$samples <- DT::renderDataTable({converted_table}, server = TRUE)
     output$samples2 <-
       DT::renderDataTable({
-        converted_table[, c("Graph name", "File size (Mb)")]}, server = TRUE)
+        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (Mb)")]}, server = TRUE)
     output$samples3 <-
       DT::renderDataTable({
-        converted_table[, c("Graph name", "File size (Mb)")]}, server = TRUE)
+        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (Mb)")]}, server = TRUE)
   
     ########################### GENOMIC DATA QUALITY #######################
     # GENOMIC DATA QUALITY - PEAK COUNT (PLOT 1):
@@ -96,9 +145,9 @@ server <- function(input, output, session) {
       for (rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                           "Old file name"]))
+                                                           "Originalus pavadinimas"]))
         names(bigbed_files)[rows] <-
-          converted_table[row_index[rows], "Graph name"]
+          converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
       if (length(row_index) == 0) {
@@ -117,7 +166,9 @@ server <- function(input, output, session) {
           geom_bar(stat = "identity", position = "dodge", width = 0.5,
                    color = "black", fill = "#930d1f") +
           labs(x = "", y = "Pikų skaičius", size = 5) +
-          ylim(0, 200000) +
+          coord_cartesian(ylim = c(0, as.numeric(max(peaks$Peak_count)) + 10000)) +
+          geom_text(aes(label = as.numeric(Peak_count)),
+              color = "#030101", size = 5, vjust = -1, fontface = 2) +
           scale_y_continuous(labels = label_number(suffix = " K", scale = 1e-3)) +
           theme(panel.background = element_rect(fill = "#eeeef1",
                                                 colour = "#4c0001"),
@@ -154,7 +205,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
             c("chrom", "start", "end", "name",
@@ -166,7 +217,7 @@ server <- function(input, output, session) {
 
         grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
                                                 keep.extra.columns = TRUE)
-        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
+        names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
       if (length(row_index) == 0) {
@@ -216,7 +267,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
             c("chrom", "start", "end", "name",
@@ -228,7 +279,7 @@ server <- function(input, output, session) {
 
         grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
                                                 keep.extra.columns = TRUE)
-        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
+        names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
 
@@ -293,7 +344,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
             c("chrom", "start", "end", "name",
@@ -305,7 +356,7 @@ server <- function(input, output, session) {
 
         grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
                                                 keep.extra.columns = TRUE)
-        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
+        names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
 
@@ -330,7 +381,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
             c("chrom", "start", "end", "name",
@@ -342,7 +393,7 @@ server <- function(input, output, session) {
 
         grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
                                                 keep.extra.columns = TRUE)
-        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
+        names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
       if (length(row_index) == 0) {
@@ -366,7 +417,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
             c("chrom", "start", "end", "name",
@@ -378,7 +429,7 @@ server <- function(input, output, session) {
 
         grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
                                                 keep.extra.columns = TRUE)
-        names(grl)[rows] <- converted_table[row_index[rows], "Graph name"]
+        names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
       if (length(row_index) == 0) {
@@ -413,8 +464,16 @@ server <- function(input, output, session) {
     })
 
 
+    # if (length(row_index) > 1) {
+    #     shinyalert("Pasirinkite tik vieną mėginį!", type = "error")
+    #     return()
+    #   } else if (length(row_index) == 0) {
+        
+    #   }
+
+    
+
   ########################## GENOMIC DATA ANALYSIS #######################
-  
     output$text <- renderText({
       req(input$tf_options)
       paste0(input$tf_options)
@@ -441,7 +500,7 @@ server <- function(input, output, session) {
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                            "Old file name"]))
+                                                            "Originalus pavadinimas"]))
         
         if (length(colnames) > 4) {
           colnames(bigbed_files[[rows]]) <-
@@ -455,7 +514,7 @@ server <- function(input, output, session) {
           makeGRangesFromDataFrame(bigbed_files[[rows]],
                                    keep.extra.columns = TRUE)
         names(bigbed_files)[rows] <- converted_table[row_index[rows],
-                                                     "Graph name"]
+                                                     "Grafikų pavadinimas"]
       }
 
       if (length(input$samples3_rows_selected) == 0) {
@@ -540,20 +599,179 @@ server <- function(input, output, session) {
             legend.text = element_text(size = 11))
       }
     })
+    
+    go_data <- reactive({
+      options(scipen = 0)
+      req(input$samples3_rows_selected)
+      row_index <- input$samples3_rows_selected
+      bigbed_files <- list()
+
+      if (length(row_index) > 1) {
+        shinyalert("Pasirinkite tik vieną mėginį!", type = "error",
+                   confirmButtonText = "Rinktis mėginį")
+        return()
+      }
+
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(INPUTS, converted_table[row_index[rows],
+                                                            "Originalus pavadinimas"]))
+        
+        if (length(colnames(bigbed_files[[rows]])) > 4) {
+          colnames(bigbed_files[[rows]]) <-
+          c("seqnames", "start", "end", "name", "uniprot_id", "abs_summit", "pileup",
+              "p_value", "fold_enrichment", "q_value", "ID")
+            # c("chrom", "start", "end", "name",
+            #   rep(paste0("other", 1:length(colnames) - 4)))
+        } else {
+          colnames(bigbed_files[[rows]]) <- c("seqnames", "start", "end", "other")
+        }
+
+        bigbed_files[[rows]] <-
+          makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                   keep.extra.columns = TRUE)
+        names(bigbed_files)[rows] <- converted_table[row_index[rows],
+                                                     "Grafikų pavadinimas"]
+      }
+
+      if (length(input$samples3_rows_selected) == 0) {
+        return()
+      } else {
+        annotated_peaks <-
+          annotate_peaks(bigbed_files, grcm38,
+                         TxDb.Mmusculus.UCSC.mm10.knownGene, "org.Mm.eg.db")
+
+        mmgene_ranges <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+
+        # Adding 'gene_symbol' column to gene_ranges GRange:
+        mmgene_ranges$gene_symbol <-
+            mapIds(org.Mm.eg.db, keys = mmgene_ranges$gene_id, column = "SYMBOL",
+                  keytype = "ENTREZID", multiVals = "first")
+
+        mm_genes <- GRangesList()
+
+        for (sample in seq_along(annotated_peaks)) {
+            selected_genes <-
+                tolower(unique(annotated_peaks[[sample]]$gene_symbol)) %in%
+                tolower(mmgene_ranges$gene_symbol)
+                                    
+            genes <- mmgene_ranges[selected_genes]
+            mm_genes[[sample]] <- genes 
+        }
+
+        merged_expanded <- list()
+        plots <- list()
+
+        for (l in 1:length(bigbed_files)) {
+            merged_data <- merge(annotated_peaks[[l]], bigbed_files[[l]])
+            expanded_merged <-
+                bitr(merged_data$gene_symbol, fromType = "SYMBOL",
+                    toType = c("ENTREZID"), OrgDb = org.Mm.eg.db)
+            merged_expanded[[l]] <-
+                merge(merged_data, expanded_merged, by.x = "gene_symbol",
+                      by.y = "SYMBOL", all.x = TRUE) %>%
+                as.data.frame() %>%
+                makeGRangesFromDataFrame(., keep.extra.columns = TRUE)
+        }
+        merged_expanded
+      }
+    })
+
+    # GENOMIC DATA ANALYSIS - GO ANALYSIS (TABLE 1):
+    output$table1 <- renderReactable({
+        pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
+                                OrgDb = org.Mm.eg.db, ont = "CC",
+                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                                qvalueCutoff  = 0.05, readable = TRUE)
+
+        pl <- as.data.frame(pl)
+        pl$Status <- "Peržiūrėti genų sąrašą"
+        pl <-
+          pl %>%
+          dplyr::select(c("ID", "Description", "GeneRatio", "Count",
+                          "Status", "geneID")) %>%
+          rename("GO ID" = "ID", "Apibūdinimas" = "Description",
+                 "Genų santykis" = "GeneRatio", "Genų skaičius" = "Count",
+                 "Peržiūra" = "Status")
+        
+        reactable(
+          pl, searchable = FALSE, showSortable = TRUE, rownames = FALSE,
+          pagination = FALSE, highlight = TRUE, height = 750,
+          defaultColDef = colDef(
+            align = "center",
+            minWidth = 70
+            # headerStyle = list(background = "#f7f7f8")
+          ),
+          columns = list(
+            `Peržiūra` = colDef(
+              style = function(value) {
+                list(color = "#500909", fontWeight = "bold")
+              },
+              details = function(value) {
+                genes <- unlist(strsplit(pl$geneID, split = "/")[value])
+                add_NA <- 8 - (length(genes) - 8 * (length(genes) %/% 8))
+                genes <- c(genes, rep(" ", add_NA))
+                tb <- data.frame(matrix(genes, ncol = 8), ncol = 8)
+                colnames(tb) <- c(rep(paste0("Genai ", 1:8)))
+
+                htmltools::div(
+                  style = "padding: 1rem",
+                  reactable(tb[, 1:8], outlined = TRUE, fullWidth = TRUE,
+                    defaultColDef = colDef(
+                      align = "center",
+                      minWidth = 70
+                      # headerStyle = list(background = "#f7f7f8")
+                    )
+                  )
+                )
+              }
+            ),
+            geneID = colDef(show = FALSE)
+          )
+        )   
+    })
+
+    # GENOMIC DATA ANALYSIS - GO ANALYSIS (ACYCLIC GRAPH) (PLOT 9):
+    output$plot9 <- renderPlot({
+      pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
+                                OrgDb = org.Mm.eg.db, ont = "CC",
+                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                                qvalueCutoff  = 0.05, readable = TRUE)
+      goplot(pl)
+    })
+
+    # GENOMIC DATA ANALYSIS - GO ANALYSIS (TREE POT) (PLOT 10):
+    output$plot10 <- renderPlot({
+      pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
+                                OrgDb = org.Mm.eg.db, ont = "CC",
+                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                                qvalueCutoff  = 0.05, readable = TRUE)
+      pl_modified <- setReadable(pl, 'org.Mm.eg.db', 'ENTREZID')
+      pl_modified <- pairwise_termsim(pl_modified)
+      p <- treeplot(pl_modified, cluster.params = list(method = "average"),
+                    xlim = c(0, 30))
+      p
+    })
 
     # GENOMIC DATA ANALYSIS - DE NOVO MOTIFS (TABLE 1):
-    output$table1 <- DT::renderDataTable({
+    output$table2 <- DT::renderDataTable({
       req(input$samples3_rows_selected)
       bigbed_files <- list()
       names <- c()
       row_index <- input$samples3_rows_selected
 
+      if (length(row_index) > 1) {
+        shinyalert("Pasirinkite tik vieną mėginį!", type = "error",
+                   confirmButtonText = "Rinktis mėginį")
+        return()
+      }
+
       for (rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
           read.table(file = paste0(INPUTS, converted_table[row_index[rows],
-                                                           "Old file name"]))
+                                                           "Originalus pavadinimas"]))
         names(bigbed_files)[rows] <-
-          converted_table[row_index[rows], "Graph name"]
+          converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
       if (length(input$samples3_rows_selected) == 0) {
@@ -563,8 +781,8 @@ server <- function(input, output, session) {
         for (file in 1:length(bigbed_files)) {
           folder_name <-
             file_path_sans_ext(basename(converted_table[row_index[file],
-                                                        "Old file name"]))
-          filename <- converted_table[row_index[file], "Old file name"]
+                                                        "Originalus pavadinimas"]))
+          filename <- converted_table[row_index[file], "Originalus pavadinimas"]
           output_path <- paste0(HOMER_RESULTS, folder_name)
           
           
@@ -597,10 +815,21 @@ server <- function(input, output, session) {
         homer_motifs
       }
     })
+
+  #   url <- a("Google Homepage", href="https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG")
+  #   output$link <- renderUI({
+  #     tagList("URL link:", url)
+  #   })
+
+  #   observeEvent(input$do, {
+  #   session$sendCustomMessage(type = 'testmessage',
+  #     message = 'Thank you for clicking')
+  # })
   })
 }
 
 ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
+  useShinyalert(),
   includeCSS(paste0(PROJECT, "Scripts/styles.css")),
   tabPanel("Formatų konversija",
     sidebarLayout(
@@ -643,20 +872,38 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           placeholder = "Failas nepasirinktas"
         ),
         selectInput(
+          inputId = "tf_options",
+          label = "Pasirinkite transkripcijos faktorių:",
+          choices = c("Tbx5", "GATA3", "Tcf21", "Nenurodyta"),
+          selected = "Nenurodyta"
+        ),
+        selectInput(
           inputId = "organism",
           label = "Nurodykite, iš kokio organizmo išgauti mėginiai:",
           choices = c(
-            "Mus musculus" = "mm", "Homo sapiens" = "hs", "Danio rerio" = "dr"
-          )
+            "Mus musculus" = "mm", "Homo sapiens" = "hs",
+            "Rattus norvegicus" = "rn", "Danio rerio" = "dr",
+            "Bos taurus" = "bt", "Drosophila melanogaster" = "dm",
+            "Gallus gallus" = "gg", "Macaca mulatta" = "mmul",
+            "Pan troglodytes" = "pt", "Sus scrofa" = "ss", "Nenurodyta" = "nn"
+          ),
+          selected = "nn"
         ),
-        p("* - privalomas įvesties laukas", class = "info_text")
+        p("* - privalomas įvesties laukas", class = "info_text"),
+        br(),
+        br(),
+        actionButton(
+          inputId = "sample_data",
+          label = "Pavyzdiniai duomenys",
+          icon = icon("th"), 
+          onclick = "window.open('https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG', '_blank')"
+        )
       ),
       mainPanel(
         width = 8,
-        p("Esančioje lentelėje pateikta įkeltus mėginius apibendrinanti
-          informacija: originalus mėginio pavadinimas, failo tipas bei
-          naujas mėginiui priskirtas pavadinimas, kuris bus naudojamas
-          duomenų kokybės bei analizių grafikuose."),
+        p("Pateiktose lentelėse apibendrinta mėginių bei kita įvesta
+           informacija:"),
+        tableOutput("table0"),
         DT::dataTableOutput("samples")
       )
     )
@@ -745,19 +992,14 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         p("Pasirinkite vieną arba kelis pateiktus mėginius, kuriems atliksite
           analizes:", style = "font-weight:bold; font-size:17px;
           margin-left:0px"),
-        DT::dataTableOutput("samples3"),
-        selectInput(
-          inputId = "tf_options",
-          label = "Pasirinkite transkripcijos faktorių:",
-          choices = c("Tbx5", "GATA3", "Tcf21"),
-          selected = "GATA3"
-        ),
-        radioButtons(
-          inputId = "genome",
-          label = "Pasirinkite genomą:",
-          choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
-                      "Danio rerio" = "dr")
-        )
+        DT::dataTableOutput("samples3")
+        # ,
+        # radioButtons(
+        #   inputId = "genome",
+        #   label = "Pasirinkite genomą:",
+        #   choices = c("Homo sapiens" = "hg", "Mus musculus" = "mm",
+        #               "Danio rerio" = "dr")
+        # )
       ),
       mainPanel(
         width = 8,
@@ -784,9 +1026,31 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           ),
           tabPanel("GO analizė",
             tabsetPanel(
-              tabPanel("Motyvų paieška De novo"),
-              tabPanel("Motyvų paieška De novo2"),
-              tabPanel("Motyvų paieška De novo3")
+              id = "go",
+              tabPanel("GO lentelė",
+                id = "go_table",
+                p("Pateiktoje lentelėje nurodyti gauti genų ontologijos
+                   rezultatai:"),
+                width = 12,
+                withLoader(reactableOutput("table1"), type = "html",
+                           loader = "dnaspin")
+              ),
+              tabPanel("GO aciklinis grafas",
+                id = "go_graph",
+                p("Gauto GO analizės rezultato pavaizdavimas kryptiniu
+                   acikliniu grafu:"),
+                width = 12,
+                withLoader(plotOutput("plot9"), type = "html",
+                           loader = "dnaspin")
+              ),
+              tabPanel("GO medžio struktūra",
+                id = "go_tree",
+                p("Gauto GO analizės rezultato pavaizdavimas, pritaikius
+                  hierarchinį klasterizavimą:"),
+                width = 12,
+                withLoader(plotOutput("plot10"), type = "html",
+                           loader = "dnaspin")
+              )
             )
           ),
           tabPanel("Motyvų paieška De novo",
@@ -797,12 +1061,22 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
                style = "font-weight:bold; color:red"),
             shinydashboard::box(
               width = 12,
-              withLoader(DT::dataTableOutput(outputId = "table1"),
+              withLoader(DT::dataTableOutput(outputId = "table2"),
                          type = "html", loader = "dnaspin"),
               downloadButton("downloadData", "Download")
             )
           )
         )
+      )
+    )
+  ),
+  tabPanel("Taikinių spėjimas",
+    sidebarLayout(
+      sidebarPanel(
+        width = 4
+      ),
+      mainPanel(
+        width = 8
       )
     )
   )
