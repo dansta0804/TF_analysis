@@ -120,18 +120,16 @@
 \colorbox{green}{PILDOMA...}
 
 \subsection*{Darbo tikslas}
-Pritaikius pozicines transkripcijos faktorių svorių matricas realizuoti
-transkripcijos faktorių taikinių spėjimo metodą tarp dviejų skirtingų organizmų.
+Sukurti algoritmą bei jo implementaciją R \emph{Shiny}, kurie leistų nuspėti
+transkripcijos faktorių prisijungimo vietas, remiantis sekų paašumu.
 
 \subsection*{Uždaviniai}
 \begin{itemize}
-    \item Išsiaiškinti ChIP sekoskaitos vykdymo etapus;
     \item Išanalizuoti metodus, taikomus praturtintų nuskaitymų - pikų -
           nustatymui;
-    \item Įgyvendinti \emph{Mus musculus} transkripcijos faktorių taikinių
-          spėjimo metodą \emph{Homo sapiens} organizme;
-    \item Pritaikyti R programas, kad jos galėtų analizuoti mėginius, išgautus
-          iš įvairių organizmų audinių;          
+    \item Įgyvendinti transkripcijos faktorių taikinių spėjimo metodą;
+    \item Modifikuoti ir adaptuoti sukurtas R programas, galinčias apdoroti
+          ChIP sekoskaitos duomenis iš skirtingų organizmų;          
     \item Sukurti internetinę aplikaciją, leidžiančią įvertinti pateiktų
           ChIP sekoskaitos duomenų kokybę bei atlikti analizes.
 
@@ -164,14 +162,14 @@ rinkinius.
 \subsection{Transkripcijos faktoriai ir jų prasmė}
 
 \textbf{Transkripcijos faktorius} - ypatingas baltymų tipas. Šio tipo baltymai
-atpažįsta specifines DNR sekas (genų promotoriuose esančias sekas) ir tokiu būdu
-kontroliuoja chromatino struktūros kondensacijos laipsnį bei atitinkamų genų
-ekspresijos procesus, inicijuojant arba slopinant genų transkripciją. Šių
-baltymų sąveika su DNR įtakoja daug biologiškai svarbių procesų: ląstelių
-diferenciaciją, ląstelės ciklo eigą, genų transkripciją, DNR replikaciją,
-imuninio atsako valdymą ir daugelį kitų procesų\cite{ARTICLE10, ARTICLE11}.
+atpažįsta specifines DNR sekas ir tokiu būdu kontroliuoja chromatino struktūros
+kondensacijos laipsnį bei atitinkamų genų ekspresijos procesus, inicijuojant
+arba slopinant genų transkripciją. Šių baltymų sąveika su DNR įtakoja daug
+biologiškai svarbių procesų: ląstelių diferenciaciją, ląstelės ciklo eigą, genų
+transkripciją, DNR replikaciją, imuninio atsako valdymą ir daugelį kitų
+procesų\cite{ARTICLE10, ARTICLE11}.
 
-Nepaisant to, transkripcijos faktoriai bei sekos, prie kurių jie jungiasi, gali
+Transkripcijos faktoriai bei sekos, prie kurių jie jungiasi, gali
 mutuoti. Šios pastarųjų baltymų mutacijos nulemia įvairių ligų išsivystymą.
 Pavyzdžiui, atsiradusios mutacijos AIRE (autoimuniniame reguliatoriuje)
 transkripcijos faktoriuje sukelia I tipo autoimuninį poliendokrinopatijos
@@ -220,11 +218,13 @@ pagrindinius etapus:
 \end{enumerate}
 
 \subsubsection{Mėginių paruošimas ir sekvenavimas}
+Mėginių paruošimo bei sekvenavimo etapai įprastai skirstomi į šiuos etapus:
+
 \begin{itemize}
-    \item \textbf{Baltymo prijungimas prie DNR.} Priklausomai nuo to, kokio
-        baltymo sąveika su DNR yra tiriama, baltymo ir DNR sąveika gali būti
-        sustiprinta, naudojant įvairias chemines medžiagas (formaldehidas
-        naudojamas dažniausiai).
+    \item \textbf{Baltymo prijungimas prie DNR.} Šiame etape transkripcijos faktorius susiejamas su DNR, naudojant įvairias chemines medžiagas (formaldehidas naudojamas dažniausiai). Ši baltymo ir DNR fiksacija,
+        naudojant chemines medžiagas, padeda išlaikyti baltymo - DNR
+        sąsają. Šios sąsajos išsaugojimas yra būtina sąlyga imunoprecipitacijos
+        proceso vykdymui.
     \item \textbf{DNR suskaidymas į fragmentus.} \emph{NGS} bibliotekos 
         paruošimui reikalingas DNR suskaidymo į fragmentus etapas. Šiame etape
         DNR dažniausiai suskaidoma į 150 - 500 nukleotidus turinčius fragmentus,
@@ -250,14 +250,19 @@ pagrindinius etapus:
         amplifikacijos etapai - reikalingas bibliotekos sukonstravimas, kuris
         gali skirtis, priklausomai nuo pasirinktos sekvenavimo platformos
         ir jai specifinės bibliotekos paruošimo protokolo\cite{ARTICLE5}.
-        Įvykdžius šiuos etapus gali būti gautas „triukšmas“\cite{ARTICLE4}
+        Įvykdžius šiuos etapus gali būti gautas \colorbox{red}{„triukšmas“}\cite{ARTICLE4}
         (angl. \emph{bias}), kuris gali būti mažesnis, atliekant mažiau DNR
         amplifikacijos (padauginimo) ciklų. Sukonstravus biblioteką atliekamas
         \emph{NGS} sekvenavimas.
-        
 \end{itemize}
 
+Įgyvendinus mėginių paruošimo ir sekvenavimo etapus atliekama gautų duomenų
+kompiuterinė analizė.
+
 \subsubsection{Kompiuterinė analizė}
+Gauti ChIP sekoskaitos duomenys apdorojami ir analizuojami, vykdant šiuos
+etapus:
+
 \begin{itemize}
     \item \textbf{DNR nuskaitymų kartografavimas.} Nusekvenuoti DNR 
         fragmentai išsaugomi \emph{FASTQ} arba \emph{CSFSATQ} formatais. Šie DNR
@@ -279,12 +284,22 @@ pagrindinius etapus:
         \emph{BED} formato failai\cite{ARTICLE1}, kuriuose pateikiamos genominės
         pikų pozicijos, įvairūs statistiniai įverčiai bei identifikacijos kodai,
         kuriuos naudojant galima vykdyti įvairias analizes.
-    \item \textbf{Analizių atlikimas.} Dažniausiai atliekamos analizės yra
+    \item \textbf{Biologinės analizės.} Dažniausiai atliekamos analizės yra
         motyvų analizė bei genų ontologijos analizė\cite{ARTICLE1}
         (angl. \emph{GO - \textbf{G}ene \textbf{O}ntology enrichment analysis}),
         pateikianti biologinių procesų, ląstelinių komponentų ir molekulinių
-        funkcijų, kuriose dalyvauja genas, sąrašą.
+        funkcijų, kuriose dalyvauja genas, sąrašą. Įvertinus motyvų dažnį,
+        konservatyvumą bei biologines funkcijas, susijusias su transkripcijos
+        faktorių prisijungimu prie šių motyvų, gali būti identifikuoti
+        genominiai regionai, prie kurių gali jungtis transkripcijos faktoriai,
+        konservatyvūs motyvai, galintys indikuoti baltymas - baltymas sąveiką,
+        bei gali būti analizuojama genų evoliucija.
 \end{itemize}
+
+Įvykdžius kompiuterinės analizės etapus gaunami rezultatai, suteikiantys
+įžvalgų apie genų reguliavimo mechanizmus bei padedantys nustatyti
+transkripcijos faktorių taikinius, siekiant sustabdyti kai kurių ligų
+progresavimą.
 
 % Paaiškinti, kas yra ChIP sekoskaita ir koks jos tikslas, kokie jos privalumai.
 % Kokie egzistuoja metodai, leidžiantys įvertinti TF taikinius kitame organizme?
@@ -309,11 +324,24 @@ Pagrindinė pikų nustatymo algoritmų įvestis yra kartografavimo metu su genom
 išlyginti DNR fragmentų nuskaitymai. Antrajame paveiksle šie fragmentai pažymėti
 raudona ir žalia spalvomis.
 
+
+
+% \includegraphics[scale=.30]{example-image-b}
+
+% \caption{A caption with long text bla bla bla bla bla bla bla bla
+% bla bla bla bla bla bla bla bla bla bla}
+% \end{figure}
+
+
 \begin{figure}[ht]
     \begin{center}
+        \captionsetup{justification=centering}
         \includegraphics[width=0.6\linewidth]{../Figures/Read_mapping.png}
         \vspace{-1\baselineskip}
-        \caption*{\small\textbf{2 pav. DNR nuskaitymų kartografavimas}}
+        \caption*{\small\textbf{2 pav. DNR nuskaitymų kartografavimas. Žalia
+                                spalva pavaizduoti 5' \(\rightarrow\) 3' DNR
+                                galo link kartografuoti nuskaitymai. Raudona
+                                spalva - 3' \(\rightarrow\) 5' nuskaitymai.}}
     \end{center}
 \end{figure}
 
@@ -400,11 +428,10 @@ kurie indikuoja svarbų DNR ir baltymo sąveikos regioną\cite{ARTICLE12}.
   
 \subsubsection{GEM}
 \textbf{GEM} - \textbf{G}enome wide \textbf{E}vent finding and \textbf{M}otif
-discovery. Tai yra vienas iš naujesnių (sukurtas 2012 metais) algoritmų, kuris
-išsiskiria tuo, jog jame yra kombinuojama pikų paieška bei motyvų analizė, jog
-būtų pagerinta galutinių pikų rezoliucija\footnote{\textbf{Rezoliucija - }
-genetikoje aukšta rezoliucija reiškia, jog yra žinoma itin daug molekulinių
-detalių apie DNR.}.\\
+discovery. Šis 2012 metais sukurtas algoritmas išsiskiria tuo, jog jame yra
+kombinuojama pikų paieška bei motyvų analizė, jog būtų pagerinta galutinių pikų
+rezoliucija\footnote{\textbf{Rezoliucija - } genetikoje aukšta rezoliucija
+reiškia, jog yra žinoma itin daug molekulinių detalių apie DNR.}.\\
 
 GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 \begin{enumerate}
@@ -472,20 +499,23 @@ GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 
 \newpage
 
+%%%%%%%%%%%%%%%%%%%%%%%
+% METODO REALIZACIJA
+%%%%%%%%%%%%%%%%%%%%%%%
+\section{Transkripcijos faktoriaus taikinių spėjimo metodas}
+
+\newpage
+
 %%%%%%%%%%%%%%%%%%%%%%
 % MĖGINIŲ APRAŠYMAS
 %%%%%%%%%%%%%%%%%%%%%%
 
 \section{Pasirinktų mėginių charakteristika}
 Metodo patikimumui ir tikslumui įvertinti naudoti naminės pelės ir žmogaus
-ChIP sekoskaitos duomenys, gauti iš ChIP-Atlas\cite{CHIPATLAS} duomenų bazės.
-Kursiniame darbe bei Kursiniame projekte naudotas ChIP sekoskaitos duomenų
-šaltinis - GTRD (Gene Transcription Regulation Database)\cite{GTRD} duomenų
-bazė, sauganti informaciją apie transkripcijos sekas bei atviro chromatino
-regionus - buvo pakeistas ChIP-Altas duomenų baze, nes pastaroji duomenų
-bazė turi didesnį kiekį ChIP sekoskaitos duomenų, kurie gali būti panaudoti
-atliekant tyrimus, nei GTRD duomenų bazė, kuriai būdingas mažesnis duomenų
-rinkinys.
+ChIP sekoskaitos duomenys, gauti iš nuolat atnaujinamo bei papildomo
+ChIP-Atlas\cite{CHIPATLAS} serverio, saugančio ChIP bei kitų sekoskaitų
+epigenetinių duomenų rinkinius bei leidžiančio vizualizuoti praturtintų sekų -
+pikų - regionus\cite{CHIPATLAS2}.
 
 Metodo testavimui naudoti 8 skirtingi naminių pelių (lot. \emph{Mus musculus})
 bei 8 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai, išgauti iš
@@ -647,19 +677,17 @@ programavimo kalbos funkciją \emph{length()}. Pastaroji funkcija leidžia
 apskaičiuoti, kiek kiekviename mėginyje yra pikų regionų.
 
 \subsubsection*{Pikų skaičius chromosomose}
-Atliekant šį duomenų kokybės įvertinimo etapą Kursiniame darbe panaudota
-funkcija \emph{facet\_wrap()}, kuri nustato, kiek pikų yra nustatyta skirtingose
-chromosomose. Kursiniame darbe buvo naudojamos tik naminės pelės
-(lot. \emph{Mus musculus}) chromosomos. Šiame darbe organizmų, kurių genominiai
-duomenys gali būti analizuojami, sąrašas papildytas, todėl šiame duomenų
-įvertinimo etape analizuojamos tik tos chromosomos, kurios yra būdingos
-organizmams, iš kurių išgauti audinių mėginiai yra analizuojami.
+Atliekant šį duomenų kokybės įvertinimo etapą panaudota funkcija
+\emph{facet\_wrap()}, kuri nustato, kiek pikų yra nustatyta skirtingose
+chromosomose. Pikų skaičiaus pasiskirstymą skirtingose chromosomose
+vizualizuojančios stulpelinės diagramos sukurtos su \emph{ggplot2}\cite{GGPLOT2}
+bibliotekos funkcija \emph{geom\_bar()}.
 
 \subsubsection*{Mėginių panašumas}
 Mėginių tarpusavio panašumui įvertinti panaudota Kursinio darbo metu
 realizuota modifikuota \emph{Jaccard()} funkcija. Mėginių panašumas
 vizualizuotas, panaudojus spalvų intensyvumo grafiką - pritaikius
-\emph{ggplot2}\cite{GGPLOT2} bibliotekos funkciją \emph{geom\_tile()}.
+\emph{ggplot2} bibliotekos funkciją \emph{geom\_tile()}.
 
 \subsubsection*{Genominė distribucija}
 Šio Kursinio projekto metu realizuoto duomenų kokybės vertinimo rezultatas,
@@ -734,11 +762,6 @@ HOMER\cite{HOMER} \emph{Perl} programą \emph{findMotifsGenome}, analizuojanči�
 ChIP sekoskaitos mėginius, konvertuotus į BED formato failus. Taip pat taikant
 šią programą nurodytas organizmo, iš kurio išgauti mėginiai, referentinio genomo
 trumpinys (pavyzdžiui, naminės pelės referentinis genomas \emph{mm10}).
-
-\newpage
-
-\subsection{Transkripcijos faktoriaus taikinių spėjimas}
-\colorbox{green}{PILDOMA...}
 
 \newpage
 
@@ -825,6 +848,12 @@ update: a data-mining suite for exploring epigenomic landscapes by fully
 integrating ChIP-seq, ATAC-seq and Bisulfite-seq data. Nucleic Acids Res.
 50(W1), W175-W182, 2022, \newline
 \url{http://dx.doi.org/10.1093/nar/gkac199}.
+
+\bibitem{CHIPATLAS2} Zhaonan Zou, Tazro Ohta, Fumihito Miura, Shinya Oki,
+ChIP-Atlas 2021 update: a data-mining suite for exploring epigenomic landscapes
+by fully integrating ChIP-seq, ATAC-seq and Bisulfite-seq data, Nucleic Acids
+Research, Volume 50, Issue W1, 5 July 2022, Pages W175–W182,
+\url{https://doi.org/10.1093/nar/gkac199}.
 
 \bibitem{ARTICLE1} Nakato R, Sakata T. Methods for ChIP-seq analysis: A
 practical workflow and advanced applications. Methods. 2021 Mar;187:44-53.
