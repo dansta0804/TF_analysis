@@ -1,7 +1,90 @@
 # nolint start
 PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
-INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
-RESULTS     <- paste0(INTER_FILES, "Generated_files")
+# INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
+INTER_FILES <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Intermediate_data_files/"
+RESULTS     <- paste0(INTER_FILES, "Generated_files/")
+# INPUTS      <- paste0(PROJECT, "Input")
+
+# source(PROJECT, "Scripts/App/app.R")
+
+# Format detection and conversion:
+# format_detection <- function(x) {
+#     tryCatch(
+#       {
+#         path <- paste0(PROJECT, "Analyses/Tbx5_analysis_I/Inputs/")
+#         file <- file.path(path, "BigBed/", x)
+#         gr <- import(test_bb)
+#         return(gr)
+
+
+#         if (input$file_format == "bed") {
+#       colnames(converted_table) <-
+#         c("Old file name", "New file name", "Graph name")
+        
+#       for(sample in 1:length(input$bigbed[, c("name")])) {
+#         names <- input$bigbed[sample, 'name']
+#         row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
+#         converted_table[nrow(converted_table) + 1, ] <- row
+#       }
+#       output$samples <- DT::renderDataTable({converted_table})
+#     } else if (input$file_format == "bw") {
+#         colnames(converted_table) <-
+#           c("Old file name", "New file name", "Graph name")
+        
+#         for(sample in 1:length(input$bigbed[, c("name")])) {
+#           names <- input$bigbed[sample, 'name']
+#           system(paste("/home/daniele/Tools/bigWigToBedGraph",
+#                  paste0(BIGWIG, "Mus_musculus/", names),
+#                  paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
+#           row <- c(names, paste0(names, ".bedGraph"),
+#                    paste0("Sample", sample, "_", input$organism))
+#           converted_table[nrow(converted_table) + 1, ] <- row
+#         }
+#         output$samples <- DT::renderDataTable({converted_table})
+#     }
+#       },
+#         error = function(e) {
+#             message('An Error Occurred')
+#             print(e)
+#         },
+#         warning = function(w) {
+#             message('A Warning Occurred')
+#             print(w)
+#             return(NA)
+#         }
+#     )
+#   }
+
+
+  # if (input$file_format == "bed") {
+    #   colnames(converted_table) <-
+    #     c("Old file name", "New file name", "Graph name")
+        
+    #   for(sample in 1:length(input$bigbed[, c("name")])) {
+    #     names <- input$bigbed[sample, 'name']
+    #     row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
+    #     converted_table[nrow(converted_table) + 1, ] <- row
+    #   }
+    #   output$samples <- DT::renderDataTable({converted_table})
+    # } else if (input$file_format == "bw") {
+    #     colnames(converted_table) <-
+    #       c("Old file name", "New file name", "Graph name")
+        
+    #     for(sample in 1:length(input$bigbed[, c("name")])) {
+    #       names <- input$bigbed[sample, 'name']
+    #       system(paste("/home/daniele/Tools/bigWigToBedGraph",
+    #              paste0(BIGWIG, "Mus_musculus/", names),
+    #              paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
+    #       row <- c(names, paste0(names, ".bedGraph"),
+    #                paste0("Sample", sample, "_", input$organism))
+    #       converted_table[nrow(converted_table) + 1, ] <- row
+    #     }
+    #     output$samples <- DT::renderDataTable({converted_table})
+    # }
+# A function that formats number by adding spaces (e.g., 5000 -> 5 000):
+spaces <- function(number) {
+  format(number, big.mark = " ")
+}
 
 # A function that reads PWM of certain transcription factor:
 get_PWM <- function(pwm_name) {
@@ -18,7 +101,7 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
     for (object in 1:length(peak_set)) {
         name <- gsub(" ", "_", names(peak_set[object]))
         peak <- peak_set[[object]]
-        seqlengths(peak) <- seqlengths(peak) - 10001
+        # seqlengths(peak) <- seqlengths(peak) - 10001
         peak_annotation <-
             annotatePeak(peak, tssRegion = c(-3000, 3000), TxDb = known_genes,
             annoDb = anno_db)
@@ -27,7 +110,7 @@ annotate_peaks <- function(peak_set, genome, known_genes, anno_db) {
         entrezids <- unique(annotation$geneId)
         entrez2gene <-
             genome %>%
-            filter(entrez %in% entrezids) %>%
+            dplyr::filter(entrez %in% entrezids) %>%
             dplyr::select(entrez, symbol)
 
         m <- match(annotation$geneId, entrez2gene$entrez)
@@ -84,7 +167,7 @@ count_pwm_hits <- function(sequence_dataset, pwm, state) {
 
         # Writing the results into a file:
         write.table(gene_hits_total[[sample]],
-                    file = paste0(RESULTS, paste0("/Hg_pwm_hits_", state, "_",
+                    file = paste0(RESULTS, paste0("Hg_pwm_hits_", state, "_",
                     sample, ".txt")), sep = "\t", quote = FALSE,
                     row.names = FALSE)
     }
@@ -117,9 +200,10 @@ count_peaks <- function(name, objects) {
     return(peak_counts)
 }
 
-jaccard <- function(data, a, b) {
-    len <- reduce(c(data[[a]], data[[a]])) %>% length()
-    return((length(intersect(data[[a]], data[[b]])) / len) * 100)
+# Declaring a function that calculates modified Jaccard coefficient:
+jaccard <- function(granges, a, b) {
+    len <- reduce(c(granges[[a]], granges[[a]])) %>% length()
+    return((length(GenomicRanges::intersect(granges[[a]], granges[[b]])) / len) * 100)
 }
 
 find_motif_hits <- function(sequences, mpwm) {
@@ -139,4 +223,78 @@ calculate_peaks <- function(filename) {
     return(region_count)
 }
 
+html <- function(x, inline = FALSE) {
+  container <- if (inline) htmltools::span else htmltools::div
+  container(dangerouslySetInnerHTML = list("__html" = x))
+}
+
+find_ontologies_table <- function(data, subontology) {
+  pl <- enrichGO(gene = data[[1]]$ENTREZID,
+                            OrgDb = org.Mm.eg.db, ont = subontology,
+                            pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                            qvalueCutoff  = 0.05, readable = TRUE)
+
+  pl <- as.data.frame(pl)
+  pl$Status <- "Peržiūrėti genų sąrašą"
+  pl <-
+    pl %>%
+    dplyr::select(c("ID", "Description", "GeneRatio", "Count",
+                    "Status", "geneID")) %>%
+    rename("GO ID" = "ID", "Apibūdinimas" = "Description",
+            "Genų santykis" = "GeneRatio", "Genų skaičius" = "Count",
+            "Peržiūra" = "Status")
+  
+  reactable(
+    pl, searchable = FALSE, showSortable = TRUE, rownames = FALSE,
+    pagination = TRUE, highlight = TRUE,
+    defaultColDef = colDef(
+      align = "center",
+      minWidth = 70
+      # headerStyle = list(background = "#f7f7f8")
+    ),
+    columns = list(
+      `Peržiūra` = colDef(
+        style = function(value) {
+          list(color = "#500909", fontWeight = "bold")
+        },
+        details = function(value) {
+          genes <- unlist(strsplit(pl$geneID, split = "/")[value])
+          add_NA <- 8 - (length(genes) - 8 * (length(genes) %/% 8))
+          genes <- c(genes, rep(" ", add_NA))
+          tb <- data.frame(matrix(genes, ncol = 8), ncol = 8)
+          colnames(tb) <- c(rep(paste0("Genai ", 1:8)))
+
+          htmltools::div(
+            style = "padding: 1rem",
+            reactable(tb[, 1:8], outlined = TRUE, fullWidth = TRUE,
+              defaultColDef = colDef(
+                align = "center",
+                minWidth = 70
+                # headerStyle = list(background = "#f7f7f8")
+              )
+            )
+          )
+        }
+      ),
+      geneID = colDef(show = FALSE)
+    )
+  )
+}
+
+find_ontologies_graph <- function(data, subontology) {
+  pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = org.Mm.eg.db,
+                 ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                 qvalueCutoff  = 0.05, readable = TRUE)
+  goplot(pl)
+}
+
+find_ontologies_tree <- function(data, subontology) {
+  pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = org.Mm.eg.db,
+                 ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
+                 qvalueCutoff  = 0.05, readable = TRUE)
+  pl_modified <- setReadable(pl, 'org.Mm.eg.db', 'ENTREZID')
+  pl_modified <- pairwise_termsim(pl_modified)
+  treeplot(pl_modified, cluster.params = list(method = "average"),
+           xlim = c(0, 30))
+}
 # nolint end
