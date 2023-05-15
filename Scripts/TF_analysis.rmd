@@ -12,8 +12,9 @@ org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler)
 # nolint start
 PROJECT     <- paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/")
 BIGBEDS     <- paste0(PROJECT, "Input/BigBed/")
-MMUSCULUS   <- paste0(BIGBEDS, "Mus_musculus/")
-HSAPIENS    <- paste0(BIGBEDS, "Homo_sapiens/")
+BEDS        <- paste0(PROJECT, "Input/BED/")
+MMUSCULUS   <- paste0(BEDS, "Mouse/")
+HSAPIENS    <- paste0(BEDS, "Human/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 SCRIPTS     <- paste0(PROJECT, "Scripts/")
 RESULTS     <- paste0(INTER_FILES, "Generated_files")
@@ -33,8 +34,8 @@ source(paste0(SCRIPTS, "plots.R"))
 ```{r BIGBED_READING, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 # Listing sample BigBed files for each analyzed organism:
-bbfiles_mm <- list.files(path = MMUSCULUS, "*bb")
-bbfiles_hg <- list.files(path = HSAPIENS, "*bb")
+bbfiles_mm <- list.files(path = MMUSCULUS, "*bed")
+bbfiles_hg <- list.files(path = HSAPIENS, "*bed")
 
 # Making a granges list for each analyzed organism:
 grl_mm <- GRangesList()
@@ -45,29 +46,142 @@ len_mm <- length(bbfiles_mm)    # Length of samples for Mus musculus
 len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
 
 # Creating GRanges objects and extracting certain chromosomes for Mus musculus:
-for (i in 1:len_mm) {
-    grl_mm[[i]] <-
-        import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
-        dplyr::filter(seqnames %in% chr_abr)
-    names(grl_mm)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_mm[i]]
-}
+# for (i in 1:len_mm) {
+#     grl_mm[[i]] <-
+#         import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
+#         dplyr::filter(seqnames %in% chr_abr)
+#     names(grl_mm)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_mm[i]]
+# }
 
-# Creating GRanges objects and extracting certain chromosomes for Homo sapiens.
-# These files will be used as control samples to check whether TF binding sites
-# were predicted successfully using Homo sapiens annotation:
-for (i in 1:len_hg) {
-    grl_hg[[i]] <-
-        import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
-        dplyr::filter(seqnames %in% chr_abr)
-    names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
-}
+# # Creating GRanges objects and extracting certain chromosomes for Homo sapiens.
+# # These files will be used as control samples to check whether TF binding sites
+# # were predicted successfully using Homo sapiens annotation:
+# for (i in 1:len_hg) {
+#     grl_hg[[i]] <-
+#         import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
+#         dplyr::filter(seqnames %in% chr_abr)
+#     names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
+# }
+
+
+
+
+
+
+bigbed_files <- list()
+      for(rows in 1:len_mm) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(MMUSCULUS, bbfiles_mm[rows]))
+        colnames(bigbed_files[[rows]]) <-
+          c("seqnames", "start", "end", "name", "abs_summit", "pileup",
+              "p_value", "fold_enrichment", "q_value", "ID")
+
+        grl_mm[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+      }
+bigbed_files <- list()
+      for(rows in 1:len_hg) {
+        bigbed_files[[rows]] <-
+          read.table(file = paste0(HSAPIENS, bbfiles_hg[rows]))
+        colnames(bigbed_files[[rows]]) <-
+          c("seqnames", "start", "end", "name", "abs_summit", "pileup",
+              "p_value", "fold_enrichment", "q_value", "ID")
+
+        grl_hg[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+      }
+
+
+
+
+       
+        rownames(pwm) <- c("A", "C", "G", "T")
+
+        peak_sequences <- list()
+
+        for (file in 1:length(grl_mm)) {
+          peak_sequences[[1]] <-
+            getSeq(BSgenome.Mmusculus.UCSC.mm10, grl_mm[[1]])
+          names(peak_sequences)[1] <- "A"
+        }
+
+        tbx5_motifs <- data.frame(matrix(nrow = 0, ncol = 4))
+        colnames(tbx5_motifs) <-
+          c("Sample", "Motif_count", "Peak_count", "Percentage")
+
+        for (i in 1:length(peak_sequences)) {
+        #   filename <- input$bigbed[[i, 'datapath']]
+          name <- substring(names(peak_sequences[i]), 1, 11)
+
+          motif <- find_motif_hits(peak_sequences[[i]], pwm)
+          peaks <- calculate_peaks(paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Input/BED/Mouse/","PEAKS035687_Tbx5_P70326_MACS2_437.bed"))
+          percentage <- round((motif / peaks) * 100, 2)
+
+          data_row <- c(name, motif, peaks, as.numeric(percentage))
+          tbx5_motifs[nrow(tbx5_motifs) + 1, ] <- data_row
+        }
+
+        # Reading a file that stores information about Tbx5 motif counts and
+        # peak percentages:
+        motif_data <- tbx5_motifs
+
+        # Calling factor() function in order to maintain certain Sample
+        # order:
+        motif_data$Sample <-
+                factor(motif_data$Sample, levels = motif_data$Sample)
+
+        # 'Melting' the dataframe:
+        melted_df <- melt(motif_data, id = c("Sample", "Percentage"))
+
+
+        ggplot(melted_df, aes(fill = variable, y = as.numeric(value), x = Sample)) + 
+    geom_bar(width = 0.4, size = 0.2, colour = "#3f2704", stat = 'identity',
+             position = position_dodge(0.4)) +
+          scale_fill_manual(values = c("#e3a15e", "#c7633b"),
+                            labels = c("Tbx5 motyvų skaičius",
+                                       "Pikų skaičius")) +
+          scale_y_continuous(labels = label_number(suffix = " K",
+                                                   scale = 1e-3)) +
+           geom_text(aes(label = ifelse(variable == "Motif_count",
+                                 paste0(round(as.numeric(Percentage),
+                                              digits = 2), "%"), ""),
+              fontface = 2), vjust = 3.2, hjust = -0.3, size = 5) +                                        
+          guides(fill = guide_legend(title = "Spalvų paaiškinimas", size = 6)) +
+          labs(title = "", x = "", y = "TF/Pikų skaičius") +
+          theme(axis.text = element_text(size = 10, colour = "black"),
+            axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
+                                       size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+            axis.title.x = element_text(size = 14, colour = "black"),
+            axis.title.y = element_text(size = 14, colour = "black"),
+            panel.grid.major = element_line(color = "#eeeeee"),
+            plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+            panel.background = element_rect(fill = "#eeeef1",
+                                            colour = "#4c0001"),
+            panel.grid.major.y = element_line(colour = "#cab5b5",
+                                              size = 0.3, linetype = "dashed"),
+            panel.grid.minor.y = element_line(colour = "#cab5b5",
+                                              size = 0.3, linetype = "dashed"),
+            panel.grid.major.x = element_line(colour = "#cab5b5",
+                                              size = 0.2, linetype = "longdash"),
+            panel.grid.minor.x = element_line(colour = "#cab5b5",
+                                              size = 0.2, linetype = "longdash"),
+            legend.title = element_text(size = 12),
+            legend.text = element_text(size = 11))+
+            coord_flip()
+      }
+
+
+
+
+
 # nolint end
 ```
 
 ```{r PWM_READING, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 # Making a list of analyzed TF PWM matrices from different organisms:
-pwm <- get_PWM("GATA3_MOUSE.H11MO.0.A.pwm")
+pwm <- get_PWM("TBX5_MOUSE.H11MO.0.D.pwm")
 # nolint end
 ```
 
@@ -75,6 +189,9 @@ pwm <- get_PWM("GATA3_MOUSE.H11MO.0.A.pwm")
 # nolint start
 
 grl_mm[[1]]
+
+significant_peaks <- grl_mm[[1]][grl_mm[[1]]$q_value < 2, ] %>% list(.)
+
 mm_annotated_peaks <-
     annotate_peaks(grl_mm, grcm38, TxDb.Mmusculus.UCSC.mm10.knownGene,
                    "org.Mm.eg.db")
@@ -89,11 +206,23 @@ write.table(mm_annotated_peaks,
 # nolint start
 # Getting the peaks that are significant. q value must be lower than 2
 # (-log10(0.01) = 2):
-significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ] %>% list(.)
+# significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ] %>% list(.)
+
+# e <- names(seqlengths(significant_peaks[[1]])) %in% names(seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene))
+# f <- mixedsort(seqlengths(significant_peaks[[1]])[e])
+# g <- mixedsort(seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene)[d])
+
+# F <- as.data.frame(f)
+# G <- as.data.frame(g)
+
+# seqlengths(significant_peaks[[1]])[e][order(names(seqlengths(significant_peaks[[1]])[e]))] <- g[order(names(g))]
+
+# genome(grl_hg)
+# genome(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
 
 hg_annotated_peaks <-
-    annotate_peaks(significant_peaks, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene,
-                   "org.Hs.eg.db")
+    annotate_peaks(grl_hg, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene, "org.Hs.eg.db")
 
 write.table(hg_annotated_peaks,
             file = paste0(RESULTS, "/hg_annotated_peaks.txt"), sep = "\t",
@@ -133,31 +262,39 @@ edb <- EnsDb.Mmusculus.v79
 all_proteins <- character()
 gprotein_sequences <- data.frame(matrix(ncol = 2, nrow = 0))
 
-for (gene_name in 1:length(mm_genes[[1]]$gene_symbol)) {
+for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
     gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
+
+    length(mm_genes[[1]]$gene_symbol)
+    length(unique(mm_genes[[1]]$gene_symbol))
 
     if (is.na(gene)) {
         next
     } else {
         proteins <- proteins(edb, filter = GeneNameFilter(gene),
                      return.type = "AAStringSet")
-    }
 
-    if (length(proteins) == 0) {
+        if (length(proteins) == 0) {
         next
     } else {
         print(paste("Getting sequence for", gene, "..."))
         proteins_df <- aas_to_df(proteins)
         proteins_df$name <- gene
 
-        genes_in_sample <- length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
-        row <- c(gene, proteins_df$seq[1]) # Galbūt čia reikėtų pataisyti, kad
-                                           # imtų viską, o ne tik pirmą seką
-        gprotein_sequences[nrow(gprotein_sequences) + 1, ] <- row
+        for (s in 1:length(proteins_df$seq)) {
+            row <- c(gene, proteins_df$seq[s]) # Pataisymas, kad imtų viską, o ne tik pirmą seką
+            gprotein_sequences[nrow(gprotein_sequences) + 1, ] <- row
 
-        all_proteins <- append(all_proteins, proteins[1])
+            all_proteins <- append(all_proteins, proteins[s])
+        }
+
+        proteins_df <- c()
     }
+    }
+    
 }
+
+length(all_proteins)
 
 sink(paste0(PROJECT, "aa_sequences_80.txt"))
 print(gprotein_sequences)
@@ -167,12 +304,10 @@ sink()
 ```
 
 Su Blast surandame Homo sapiens genus, kurie yra panašūs į Mus musculus
-genus (sekų indentiškumas = 60).
+genus (sekų identiškumas = 60).
 
 Sudarome lentelę, kurioje nurodytas Mus musculus genas ir jo ID bei jo
 Blast atitikmuo - genas ir jo ID.
-
-
 
 
 ```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
@@ -196,7 +331,7 @@ sink()
 
 # Reading a file that stores blastp result:
 predictions <- read.table(paste0(PROJECT, "predictions_p.txt"))
-predictions <- predictions[predictions$`Perc.Ident` > 50, ]
+predictions <- predictions[predictions$`Perc.Ident` > 50, ] #50, 60, 70
 
 grouped_predictions <-
     predictions %>%
@@ -310,6 +445,36 @@ percentages$SubjectGene %in% hg_annotated_peaks[[1]]$gene_symbol
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Čia yra tikrinama, kaip veikia GO analizės:
 ```{R}
 library(DOSE)
@@ -384,13 +549,15 @@ for (me in 1:length(merged_expanded)) {
 
 a <- enrichGO(gene          = merged_expanded[[1]]$ENTREZID,
                 OrgDb         = org.Mm.eg.db,
-                ont           = "CC",
+                ont           = "BP",
                 pAdjustMethod = "BH",
                 pvalueCutoff  = 0.01,
                 qvalueCutoff  = 0.05,
         readable      = TRUE)
 
 goplot(a)
+
+head(a)
 colnames(a)
 
 a <- as.data.frame(a)
