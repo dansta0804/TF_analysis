@@ -4,7 +4,8 @@ p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
        ggseqlogo, ChIPseeker, tools, reactable, annotables, enrichplot,
-       clusterProfiler, shinyalert, rjson)
+       clusterProfiler, shinyalert, rjson, BSgenome.Mmusculus.UCSC.mm10,
+       TxDb.Mmusculus.UCSC.mm10.knownGene, org.Mm.eg.db)
 
 PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 # setwd("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Scripts/App/") 
@@ -22,53 +23,55 @@ HOMER_RESULTS <- paste0(RESULTS, "HOMER/")
 source(FUNCTIONS)
 
 server <- function(input, output, session) {
-  observe({
-    result <- fromJSON(file = paste0(INPUT, "genome_data.json"))
-    print(input$organism)
-    print(result[[1]][5])
-    for (genome in 1:length(result)) {
-      if (input$organism == "Nenurodyta") {
-        # shinyalert("Nurodykite organizmą!", type = "error",
-        #            confirmButtonText = "Rinktis organizmą")
-        return()
-      } else if (input$organism == result[[genome]][5]) {
-        if (system.file(package = result[[genome]][1]) != 0 &&
-            system.file(package = result[[genome]][2]) != 0 &&
-            system.file(package = result[[genome]][3]) != 0) {
+  # observe({
+  #   result <- fromJSON(file = paste0(INPUT, "genome_data.json"))
+  #   print(input$organism)
+  #   print(result[[1]][5])
+  #   for (genome in 1:length(result)) {
+  #     if (input$organism == "Nenurodyta") {
+  #       # shinyalert("Nurodykite organizmą!", type = "error",
+  #       #            confirmButtonText = "Rinktis organizmą")
+  #       return()
+  #     } else if (input$organism == result[[genome]][5]) {
+  #       if (system.file(package = result[[genome]][1], character.only = TRUE) != 0 &&
+  #           system.file(package = result[[genome]][2], character.only = TRUE) != 0 &&
+  #           system.file(package = result[[genome]][3], character.only = TRUE) != 0) {
 
-              library(pacman)
-          p_load(result[[genome]][1], result[[genome]][2], result[[genome]][3])
-            } else {
-              BiocManager::install(result[[genome]][1], update = FALSE)
-              BiocManager::install(result[[genome]][2], update = FALSE)
-              BiocManager::install(result[[genome]][3], update = FALSE)
-            }
-      } else { next }
-    }
-  })
+  #             library(pacman)
+  #         p_load(result[[genome]][1], result[[genome]][2], result[[genome]][3], character.only = TRUE)
+  #           } else {
+  #             BiocManager::install(result[[genome]][1], update = FALSE)
+  #             BiocManager::install(result[[genome]][2], update = FALSE)
+  #             BiocManager::install(result[[genome]][3], update = FALSE)
+  #           }
+  #     } else { next }
+  #   }
+  # })
 
-  observe({
-    output$table0 <- renderTable({
-      input_data <- data.frame(matrix(ncol = 2, nrow = 0), row.names = NULL)
-      colnames(input_data) <- c("Reikalinga informacija", "Reikšmė")
+  json <- fromJSON(file = paste0(INPUT, "genome_data.json"))
 
-      checkable_values <-
-        c(input$tf_options, input$organism, input$pwm)
-      col1_text <-
-        c("Transkripcijos faktorius:", "Organizmas, iš kurio išgauti duomenys:",
-          "PWM motyvo logotipas:")
+  output$table0 <- renderTable({
+    req(input$organism)
+    req(input$tf_options)
+    
+    input_data <- data.frame(matrix(ncol = 2, nrow = 0), row.names = NULL)
+    colnames(input_data) <- c("Reikalinga informacija", "Reikšmė")
 
-      for (value in 1:length(checkable_values)) {
-        if (checkable_values[value] != "Nenurodyta") {
-          input_data[nrow(input_data) + 1, ] <-
-            c(col1_text[value], checkable_values[value])
-        } else {
-          input_data[nrow(input_data) + 1, ] <-
-            c(col1_text[value], "Trūksta informacijos!")
-        }
+    checkable_values <-
+      c(input$tf_options, input$organism)
+    col1_text <-
+      c("Transkripcijos faktorius:", "Organizmas, iš kurio išgauti duomenys:")
+
+    for (value in 1:length(checkable_values)) {
+      if (checkable_values[value] != "Nenurodyta") {
+        input_data[nrow(input_data) + 1, ] <-
+          c(col1_text[value], checkable_values[value])
+      } else {
+        input_data[nrow(input_data) + 1, ] <-
+          c(col1_text[value], checkable_values[value])
       }
-      input_data
-    })
+    }
+    input_data
   })
 
   ############################# FORMAT CONVERSION #############################
@@ -118,22 +121,35 @@ server <- function(input, output, session) {
     req(input$bigbed)
     
     colnames(converted_table) <-
-      c("Originalus pavadinimas", "Grafikų pavadinimas", "Mėginio dydis (Mb)")
+      c("Originalus pavadinimas", "Grafikų pavadinimas",
+        "Mėginio dydis (pikais)")
     
     for(sample in 1:length(input$bigbed[, c("name")])) {
       names <- input$bigbed[sample, 'name']
-      size <- as.numeric(input$bigbed[sample, 'size']) / 1000000
-      row <- c(names, paste0("Sample", sample, "_", input$organism), size)
+      # size <- as.numeric(input$bigbed[sample, 'size']) / 1000000
+      file <- read.table(file = input$bigbed[sample, 'datapath'])
+      size <- spaces(length(rownames(file)))
+      row <- c()
+      organism <- input$organism
+
+      if (organism == "Nenurodyta") {
+        row <- c(names, paste0("Sample", sample, "_", "nn"), size)
+      } else {
+        genome <-
+          as.data.frame(json, check.names = FALSE) %>%
+          dplyr::select(all_of(organism))
+        row <- c(names, paste0("Sample", sample, "_", genome[5, 1]), size)
+      }
       converted_table[nrow(converted_table) + 1, ] <- row
     }
       
     output$samples <- DT::renderDataTable({converted_table}, server = TRUE)
     output$samples2 <-
       DT::renderDataTable({
-        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (Mb)")]}, server = TRUE)
+        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (pikais)")]}, server = TRUE)
     output$samples3 <-
       DT::renderDataTable({
-        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (Mb)")]}, server = TRUE)
+        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (pikais)")]}, server = TRUE)
   
     ########################### GENOMIC DATA QUALITY #######################
     # GENOMIC DATA QUALITY - PEAK COUNT (PLOT 1):
@@ -261,7 +277,7 @@ server <- function(input, output, session) {
     output$plot3 <- renderPlot({
       req(input$samples2_rows_selected)
       bigbed_files <- list()
-      grl <- list()
+      grl <- GRangesList()
       row_index <- input$samples2_rows_selected
 
       for(rows in 1:length(row_index)) {
@@ -282,29 +298,27 @@ server <- function(input, output, session) {
         names(grl)[rows] <- converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
 
-
       if (length(row_index) == 0) {
         return()
       } else {
-        coef_matrix <- matrix(nrow = length(bigbed_files),
-                              ncol = length(bigbed_files))
+        coef_matrix <- matrix(nrow = length(grl), ncol = length(grl))
 
         # Calculating Jaccard coefficient for sample pair:
-        for (i in 1:length(bigbed_files)) {
-          for (y in 1:length(bigbed_files)) {
-            coef_matrix[i, y] <- jaccard(bigbed_files, i, y)
-          }
+        for (i in 1:length(grl)) {
+            for (y in 1:length(grl)) {
+                coef_matrix[i, y] = jaccard(grl, i, y)
+            }
         }
 
         # Setting colnames and rownames for the matrix:
-        colnames(coef_matrix) <- names(bigbed_files)
-        rownames(coef_matrix) <- names(bigbed_files)
+        colnames(coef_matrix) <- names(grl)
+        rownames(coef_matrix) <- names(grl)
 
         coef_mat1 <- coef_matrix
         coef_mat2 <- coef_matrix
 
-        # Passing Jaccard coefficients to matrix except for the diagonal -
-        # it contains 'NA':
+        # Passing Jaccard coefficients to matrix except for the diagonal - it
+        # contains 'NA':
         coef_mat1[lower.tri(coef_mat1, diag = TRUE)] <- NA
         coef_mat2[upper.tri(coef_mat2, diag = TRUE)] <- NA
 
@@ -321,16 +335,15 @@ server <- function(input, output, session) {
                         color = "#030101", fontface = "bold") +
           labs(x = "", y = "") +
           scale_fill_gradient(low = "#ffee8e", high = "#ab1f1f") +
-          guides(fill = guide_colourbar(title = "Koeficientas",
-                                        face = "bold")) +
+          guides(fill = guide_colourbar(title = "Koeficientas", face = "bold")) +
           theme(axis.text = element_text(size = 12, colour = "black",
                                          face = "bold"),
-          axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-          axis.title.x = element_text(size = 14, colour = "black"),
-          axis.title.y = element_text(size = 14, colour = "black"),
-          panel.grid.major = element_line(color = "#eeeeee"),
-          plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-          legend.position = "bottom")
+                axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+                axis.title.x = element_text(size = 14, colour = "black"),
+                axis.title.y = element_text(size = 14, colour = "black"),
+                panel.grid.major = element_line(color = "#eeeeee"),
+                plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+                legend.position = "bottom")
       }
     })
 
@@ -463,16 +476,6 @@ server <- function(input, output, session) {
       }
     })
 
-
-    # if (length(row_index) > 1) {
-    #     shinyalert("Pasirinkite tik vieną mėginį!", type = "error")
-    #     return()
-    #   } else if (length(row_index) == 0) {
-        
-    #   }
-
-    
-
   ########################## GENOMIC DATA ANALYSIS #######################
     output$text <- renderText({
       req(input$tf_options)
@@ -493,9 +496,14 @@ server <- function(input, output, session) {
     # GENOMIC DATA ANALYSIS - PWM MATRIX MATCHES (PLOT 8):
     output$plot8 <- renderPlot({
       req(input$samples3_rows_selected)
-      req(input$pwm)
       bigbed_files <- list()
       row_index <- input$samples3_rows_selected
+
+      if (length(input$pwm) == 0) {
+        shinyalert("PWM matrica neįkelta!", type = "error",
+                   confirmButtonText = "Įkelti matricą")
+        return()
+      }
 
       for(rows in 1:length(row_index)) {
         bigbed_files[[rows]] <-
@@ -546,7 +554,7 @@ server <- function(input, output, session) {
           peaks <- calculate_peaks(filename)
           percentage <- round((motif / peaks) * 100, 2)
 
-          data_row <- c(name, motif, peaks, paste0(percentage, "%"))
+          data_row <- c(name, motif, peaks, as.numeric(percentage))
           tbx5_motifs[nrow(tbx5_motifs) + 1, ] <- data_row
         }
 
@@ -559,23 +567,24 @@ server <- function(input, output, session) {
         motif_data$Sample <-
                 factor(motif_data$Sample, levels = motif_data$Sample)
 
-        # Subseting data to extract all columns except for 'X' column
-        # (column 1):
-        subset_df <- motif_data[, 1:3]
-
         # 'Melting' the dataframe:
-        melted_df <- melt(subset_df, id = c("Sample"))
+        melted_df <- melt(motif_data, id = c("Sample", "Percentage"))
 
-        ggplot(data = melted_df, aes(x = Sample, y = as.numeric(value),
-                                     fill = variable, label = value)) +
-          geom_bar(stat = "identity", colour = "#35170450", size = 0.5,
-                   width = 0.8) +
+        ggplot(melted_df,
+               aes(fill = variable, y = as.numeric(value), x = Sample)) + 
+          geom_bar(width = 0.4, size = 0.2, colour = "#3f2704",
+                   stat = "identity", position = position_dodge(0.4)) +
           scale_fill_manual(values = c("#e3a15e", "#c7633b"),
                             labels = c("Tbx5 motyvų skaičius",
                                        "Pikų skaičius")) +
           scale_y_continuous(labels = label_number(suffix = " K",
                                                    scale = 1e-3)) +
+          geom_text(aes(label = ifelse(variable == "Motif_count",
+                                       paste0(round(as.numeric(Percentage),
+                                                    digits = 2), "%"), ""),
+                        fontface = 2), vjust = 3.2, hjust = -0.3, size = 5) +
           guides(fill = guide_legend(title = "Spalvų paaiškinimas", size = 6)) +
+          coord_cartesian(ylim = c(0, as.numeric(max(melted_df$value)) + 2000)) +
           labs(title = "", x = "", y = "TF/Pikų skaičius") +
           theme(axis.text = element_text(size = 10, colour = "black"),
             axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
@@ -587,16 +596,17 @@ server <- function(input, output, session) {
             plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
             panel.background = element_rect(fill = "#eeeef1",
                                             colour = "#4c0001"),
-            panel.grid.major.y = element_line(colour = "#cab5b5",
-                                              size = 0.3, linetype = "dashed"),
-            panel.grid.minor.y = element_line(colour = "#cab5b5",
-                                              size = 0.3, linetype = "dashed"),
-            panel.grid.major.x = element_line(colour = "#cab5b5",
-                                              size = 0.2, linetype = "longdash"),
-            panel.grid.minor.x = element_line(colour = "#cab5b5",
-                                              size = 0.2, linetype = "longdash"),
+            panel.grid.major.y = element_line(colour = "#cab5b5", size = 0.3,
+                                              linetype = "dashed"),
+            panel.grid.minor.y = element_line(colour = "#cab5b5", size = 0.3,
+                                              linetype = "dashed"),
+            panel.grid.major.x = element_line(colour = "#cab5b5", size = 0.2,
+                                              linetype = "longdash"),
+            panel.grid.minor.x = element_line(colour = "#cab5b5",  size = 0.2,
+                                              linetype = "longdash"),
             legend.title = element_text(size = 12),
-            legend.text = element_text(size = 11))
+            legend.text = element_text(size = 11)) +
+          coord_flip()
       }
     })
     
@@ -678,83 +688,22 @@ server <- function(input, output, session) {
     })
 
     # GENOMIC DATA ANALYSIS - GO ANALYSIS (TABLE 1):
-    output$table1 <- renderReactable({
-        pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
-                                OrgDb = org.Mm.eg.db, ont = "CC",
-                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
-                                qvalueCutoff  = 0.05, readable = TRUE)
-
-        pl <- as.data.frame(pl)
-        pl$Status <- "Peržiūrėti genų sąrašą"
-        pl <-
-          pl %>%
-          dplyr::select(c("ID", "Description", "GeneRatio", "Count",
-                          "Status", "geneID")) %>%
-          rename("GO ID" = "ID", "Apibūdinimas" = "Description",
-                 "Genų santykis" = "GeneRatio", "Genų skaičius" = "Count",
-                 "Peržiūra" = "Status")
-        
-        reactable(
-          pl, searchable = FALSE, showSortable = TRUE, rownames = FALSE,
-          pagination = FALSE, highlight = TRUE, height = 750,
-          defaultColDef = colDef(
-            align = "center",
-            minWidth = 70
-            # headerStyle = list(background = "#f7f7f8")
-          ),
-          columns = list(
-            `Peržiūra` = colDef(
-              style = function(value) {
-                list(color = "#500909", fontWeight = "bold")
-              },
-              details = function(value) {
-                genes <- unlist(strsplit(pl$geneID, split = "/")[value])
-                add_NA <- 8 - (length(genes) - 8 * (length(genes) %/% 8))
-                genes <- c(genes, rep(" ", add_NA))
-                tb <- data.frame(matrix(genes, ncol = 8), ncol = 8)
-                colnames(tb) <- c(rep(paste0("Genai ", 1:8)))
-
-                htmltools::div(
-                  style = "padding: 1rem",
-                  reactable(tb[, 1:8], outlined = TRUE, fullWidth = TRUE,
-                    defaultColDef = colDef(
-                      align = "center",
-                      minWidth = 70
-                      # headerStyle = list(background = "#f7f7f8")
-                    )
-                  )
-                )
-              }
-            ),
-            geneID = colDef(show = FALSE)
-          )
-        )   
-    })
+    output$table1 <- renderReactable({find_ontologies_table(go_data(), "BP")})
+    output$table2 <- renderReactable({find_ontologies_table(go_data(), "MF")})
+    output$table3 <- renderReactable({find_ontologies_table(go_data(), "CC")})
 
     # GENOMIC DATA ANALYSIS - GO ANALYSIS (ACYCLIC GRAPH) (PLOT 9):
-    output$plot9 <- renderPlot({
-      pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
-                                OrgDb = org.Mm.eg.db, ont = "CC",
-                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
-                                qvalueCutoff  = 0.05, readable = TRUE)
-      goplot(pl)
-    })
+    output$plot9 <- renderPlot({find_ontologies_graph(go_data(), "BP")})
+    output$plot10 <- renderPlot({find_ontologies_graph(go_data(), "MF")})
+    output$plot11 <- renderPlot({find_ontologies_graph(go_data(), "CC")})
 
     # GENOMIC DATA ANALYSIS - GO ANALYSIS (TREE POT) (PLOT 10):
-    output$plot10 <- renderPlot({
-      pl <- enrichGO(gene = go_data()[[1]]$ENTREZID,
-                                OrgDb = org.Mm.eg.db, ont = "CC",
-                                pAdjustMethod = "BH", pvalueCutoff  = 0.01,
-                                qvalueCutoff  = 0.05, readable = TRUE)
-      pl_modified <- setReadable(pl, 'org.Mm.eg.db', 'ENTREZID')
-      pl_modified <- pairwise_termsim(pl_modified)
-      p <- treeplot(pl_modified, cluster.params = list(method = "average"),
-                    xlim = c(0, 30))
-      p
-    })
+    output$plot12 <- renderPlot({find_ontologies_tree(go_data(), "BP")})
+    output$plot13 <- renderPlot({find_ontologies_tree(go_data(), "MF")})
+    output$plot14 <- renderPlot({find_ontologies_tree(go_data(), "CC")})
 
     # GENOMIC DATA ANALYSIS - DE NOVO MOTIFS (TABLE 1):
-    output$table2 <- DT::renderDataTable({
+    output$table4 <- DT::renderDataTable({
       req(input$samples3_rows_selected)
       bigbed_files <- list()
       names <- c()
@@ -800,6 +749,7 @@ server <- function(input, output, session) {
                                        sep = "\t", header = FALSE, skip = 1)
           }
 
+          print(homer_motifs)
           colnames(homer_motifs) <-
             c("Motif Name", "Consensus", "P value", "Log P value",
               "q value (Benjamini)", "Target Sequences with Motif (#)",
@@ -864,6 +814,16 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           buttonLabel = "Ieškoti failo",
           placeholder = "Failas nepasirinktas"
         ),
+        selectInput(
+          inputId = "organism",
+          label = "Nurodykite, iš kokio organizmo išgauti mėginiai:",
+          choices = c(
+            "Mus musculus", "Homo sapiens", "Rattus norvegicus", "Danio rerio",
+            "Bos taurus", "Drosophila melanogaster", "Gallus gallus",
+            "Macaca mulatta", "Pan troglodytes", "Sus scrofa", "Nenurodyta"
+          ),
+          selected = "Nenurodyta"
+        ),
         fileInput(
           inputId = "pwm",
           label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
@@ -877,18 +837,6 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           choices = c("Tbx5", "GATA3", "Tcf21", "Nenurodyta"),
           selected = "Nenurodyta"
         ),
-        selectInput(
-          inputId = "organism",
-          label = "Nurodykite, iš kokio organizmo išgauti mėginiai:",
-          choices = c(
-            "Mus musculus" = "mm", "Homo sapiens" = "hs",
-            "Rattus norvegicus" = "rn", "Danio rerio" = "dr",
-            "Bos taurus" = "bt", "Drosophila melanogaster" = "dm",
-            "Gallus gallus" = "gg", "Macaca mulatta" = "mmul",
-            "Pan troglodytes" = "pt", "Sus scrofa" = "ss", "Nenurodyta" = "nn"
-          ),
-          selected = "nn"
-        ),
         p("* - privalomas įvesties laukas", class = "info_text"),
         br(),
         br(),
@@ -901,9 +849,14 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
       ),
       mainPanel(
         width = 8,
-        p("Pateiktose lentelėse apibendrinta mėginių bei kita įvesta
-           informacija:"),
         tableOutput("table0"),
+        # p("Transkripcijos faktoriaus motyvo logotipas:"),
+        shinydashboard::box(
+            width = 12,
+            withLoader(plotOutput("plot7", width = "40%", height = "250px"),
+                       type = "html", loader = "dnaspin")
+        ),
+        # p("Mėginių informacija:"),
         DT::dataTableOutput("samples")
       )
     )
@@ -1004,16 +957,6 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
       mainPanel(
         width = 8,
         tabsetPanel(
-          tabPanel("Transkripcijos faktoriaus motyvas", 
-            p("Pateiktame paveiksle pavaizduotas įkeltą pozicinę svorių matricą
-               atitinkančio transkripcijos faktoriaus motyvo sekos logotipas."),
-            h4(strong("Transkripcijos faktorius: "), textOutput("text")),
-            shinydashboard::box(
-              width = 12, 
-              withLoader(plotOutput("plot7", width = "70%"), type = "html",
-                         loader = "dnaspin")
-            )
-          ),
           tabPanel("PWM matricos atitikimai",
             p("Pateiktoje stulpelinėje diagramoje pavaizduota, kokią procentinę
                dalį sudaro įkeltą transkripcijos faktoriaus pozicinę svorių
@@ -1029,26 +972,47 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
               id = "go",
               tabPanel("GO lentelė",
                 id = "go_table",
-                p("Pateiktoje lentelėje nurodyti gauti genų ontologijos
-                   rezultatai:"),
+                p("Biologinių procesų (BP) genų ontologijos rezultatai:"),
                 width = 12,
                 withLoader(reactableOutput("table1"), type = "html",
+                           loader = "dnaspin"),
+                p("Molekulinių funkcijų (MF) genų ontologijos rezultatai:"),
+                width = 12,
+                withLoader(reactableOutput("table2"), type = "html",
+                           loader = "dnaspin"),
+                p("Ląstelinių komponentų (CC) genų ontologijos rezultatai:"),
+                width = 12,
+                withLoader(reactableOutput("table3"), type = "html",
                            loader = "dnaspin")
               ),
               tabPanel("GO aciklinis grafas",
                 id = "go_graph",
-                p("Gauto GO analizės rezultato pavaizdavimas kryptiniu
-                   acikliniu grafu:"),
+                p("Biologinių procesų (BP) kryptinis aciklinis grafas:"),
                 width = 12,
                 withLoader(plotOutput("plot9"), type = "html",
+                           loader = "dnaspin"),
+                p("Molekulinių funkcijų (MF) kryptinis aciklinis grafas:"),
+                width = 12,
+                withLoader(plotOutput("plot10"), type = "html",
+                           loader = "dnaspin"),
+                p("Ląstelinių komponentų (CC) kryptinis aciklinis grafas:"),
+                width = 12,
+                withLoader(plotOutput("plot11"), type = "html",
                            loader = "dnaspin")
               ),
               tabPanel("GO medžio struktūra",
                 id = "go_tree",
-                p("Gauto GO analizės rezultato pavaizdavimas, pritaikius
-                  hierarchinį klasterizavimą:"),
+                p("Biologinių procesų (BP) hierarchinis klasterizavimas:"),
                 width = 12,
-                withLoader(plotOutput("plot10"), type = "html",
+                withLoader(plotOutput("plot12"), type = "html",
+                           loader = "dnaspin"),
+                p("Molekulinių funkcijų (MF) hierarchinis klasterizavimas:"),
+                width = 12,
+                withLoader(plotOutput("plot13"), type = "html",
+                           loader = "dnaspin"),
+                p("Ląstelinių komponentų (CC) hierarchinis klasterizavimas:"),
+                width = 12,
+                withLoader(plotOutput("plot14"), type = "html",
                            loader = "dnaspin")
               )
             )
@@ -1061,7 +1025,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
                style = "font-weight:bold; color:red"),
             shinydashboard::box(
               width = 12,
-              withLoader(DT::dataTableOutput(outputId = "table2"),
+              withLoader(DT::dataTableOutput(outputId = "table4"),
                          type = "html", loader = "dnaspin"),
               downloadButton("downloadData", "Download")
             )
