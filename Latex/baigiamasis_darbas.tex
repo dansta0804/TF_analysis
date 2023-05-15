@@ -473,36 +473,14 @@ GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
           patikslinti baltymo - DNR sąveikos regionai.
 \end{enumerate}
 
-% \subsubsection{CisGenome}
-% Taikant šį pikų nustatymo įrankį DNR nuskaitymai yra kartografuojami. Baltymo -
-% DNR sąveikos regionai yra identifikuojami kaip tos genomo sritys, kurioms
-% būdingas itin didelis nuskaitymų skaičius. Priklausomai nuo to, ar kontroliniai
-% mėginiai yra sekvenuojami, taikant šį įrankį pikai gali būti nustatomi dvejopai.
-
-% Naudojant \emph{CisGenome} įrankį vykdomi šie etapai\cite{ARTICLE16}:
-% \begin{enumerate}
-%     \item \textbf{\emph{FDR} skaičiavimas.} Pasirinkto organizmo genomas yra
-%           suskaidomas į nepersidegiančius pasirinkto dydžio fragmentus - langus
-%           (angl. \emph{windows}). Atlikus genomo suskaidymą yra suskaičiuojama,
-%           kiek kiekviename fragmente (lange) yra kartografuotų sekų nuskaitymų.
-%           \emph{FDR} reikšmė gaunama spėjamą \(k\) nuskaitymų lange proporciją 
-%           padalinus iš stebimos \(k\) nuskaitymų lange proporcijos, remiantis
-%           neigiamu binominiu modeliu. Šiame etape nustatoma, kokiam
-%           kartografuotų nuskaitymų skaičiui būdinga mažesnė nei 0.1 \emph{FDR}
-%           reikšmė.
-%     \item \textbf{Pikų nustatymas.} Jeigu du pikus skiria mažesnis bazių porų
-%           skaičius nei maksimalus jų skaičius, šie du pikai yra sujungiami į
-%           vieną piką. Taip pat pikai, kurie yra trumpesni nei nurodytas
-%           minimalus piko ilgis, tada tokie pikai nėra įtraukiami į bendrą pikų
-%           sąrašą.
-% \end{enumerate}
-
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % METODO REALIZACIJA
 %%%%%%%%%%%%%%%%%%%%%%%
 \section{Transkripcijos faktoriaus taikinių spėjimo metodas}
+% Transkripcijos faktorių taikinių spėjimo metodas leidžia nustatyti, kokiose
+% genominėse 
 
 \newpage
 
@@ -521,6 +499,12 @@ Metodo testavimui naudoti 8 skirtingi naminių pelių (lot. \emph{Mus musculus})
 bei 8 skirtingi žmogaus (lot. \emph{Homo sapiens}) mėginiai, išgauti iš
 skirtingų tipų ląstelių: pliuripotentinių kamieninių ląstelių, gebančių
 diferencijuoti į visų tipų ląsteles, nervinių bei kraujo ląstelių.
+
+Iš ChIP-Atlas duomenų bazės atsisiųsti tik statistiškai patikimi ChIP
+sekoskaitos duomenys, atrinkti įvertinus statistinio \emph{q} įverčio reikšmes.
+Įvertinus genominių regionų \emph{q} vertes gautas mažesnis duomenų rinkinys,
+kuris gali būti apdorojamas, nesukeliant kirtingų mėginių ChIP sekoskaitos duomenys atsisiųsti \emph{BED} formato
+pavidalu
 
 ChIP sekoskaitos mėginiai, išgauti iš naminės pelės ląstelių, aprašyti pirmoje
 lentelėje.
@@ -754,7 +738,28 @@ kuri vizualizuota, pritaikius pagrindinę \emph{ggplot2} bibliotekos funkciją
 \emph{ggplot()} bei \emph{geom\_bar()}.
 
 \subsubsection*{Praturtintų sekų biologinių funkcijų nustatymas}
-\colorbox{green}{PILDOMA...}
+Praturtintų sekų biologinės funkcijas apibendrinanti lentelė gauta, pritaikius R
+bibliotekos \emph{clusterProfiler}\cite{CLUSTERPROFILER} funkciją
+\emph{enrichGO()}. Šiai funkcijai perduoti anotuotų ChIP sekoskaitos duomenų
+pikų \emph{Entrez} identifikacijos numeriai, organizmo, iš kurio buvo išgautas
+pasirinktas mėginys, anotacijos objektas (veikimas tikrintas su naminės pelės
+anotacijos objektu \emph{org.Mm.eg.db}), subontologijos (\emph{BP} -
+biologiniai procesai, \emph{MF} - molekulinės funkcijos, \emph{CC} - ląstelės
+komponentai) parametras bei įvairūs statistiniai įverčiai, reikalingi genų
+ontologijos analizės atlikimui.
+
+Biologinius procesus vizualizuojantis aciklinis kryptinis grafas sukonstruotas,
+perdavus funkcijos \emph{enrichGO()} rezultato objektą ir bibliotekos
+\emph{enrichplot}\cite{ENRICHPLOT} funkcijai \emph{goplot()}.
+
+Funkcijos \emph{enrichGO()} rezultato objektas taip pat buvo panaudotas
+atliekant hierarchinį klasterizavimą ir anotuotų pikų genus suskirsčius į
+5 skirtingus klasterius, kurie vizualizuoti su \emph{enrichplot} bibliotekos
+funkcija \emph{treeplot()}. Pastarosios funkcijos pritaikymui \emph{enrichGO()}
+objektas perduotas \emph{pairwise\_termsim()} funkcijai, priklausančiai
+\emph{enrichplot} bibliotekai. Šioje funkcijoje realizuotas Žakardo
+(angl. \emph{Jaccard}) panašumo indekso tarp skirtingų biologinių procesų
+skaičiavimas, leidžiantis suskirstyti biologinius procesus į klasterius.
 
 \subsubsection*{Motyvų paieška \emph{De novo}}
 Praturtintos sekos nustatytos, pritaikius komandinės eilutės įrankio
@@ -772,6 +777,20 @@ papildomas analizes, sukurta su R programavimo kalbos biblioteka
 interaktyvias internetines aplikacijas (angl. \emph{Interactive Web App}),
 naudojant R bei internetinių puslapių kūrimo kalbų - HTML, CSS, JavaScript -
 funkcijas.
+
+\subsubsection*{Aplikacijos pritaikymas skirtingiems organizmas}
+R \emph{Shiny} aplikacija gali būti panaudota, analizuojant mėginius išgautus
+iš skirtingų organizmų, tačiau šis sąrašas yra ribotas. Realizuojant aplikaciją
+yra naudojamas parašytos funkcijos, kurios naudoja R programavimo kalbos
+\emph{BSgenome}, \emph{Txdb} bei \emph{org.x.eg.db} genominių anotacijų
+bibliotekas. Dabartinėje R versijoje (4.2.3) yra prieinamos 33 skirtingų
+organizmų \emph{BSgenome} bei 12 \emph{Txdb} ir \emph{org.x.eg.db} bibliotekos.
+Sukurtoje aplikacijoje galima analizuoti 12 skirtingų organizmų ChIP sekoskaitos
+duomenis, kurie anotuojami bei analizuojami, naudojant naujausias organizmų
+genomų anotacijų versijas. Šių organizmų genominių anotacijų bibliotekos
+pateiktos \emph{JSON}\cite{JSON} formato pavidalu. Šis formatas sukurtoje
+R aplikacijoje apdorotas, pritaikius \emph{rjson}\cite{RJSON} bibliotekos
+funkciją \emph{fromJSON()}.
 
 \subsubsection*{Duomenų įkėlimas}
 Naudotojas gali įkelti vieną arba daugiau \emph{BED} formato failų, saugančių
@@ -972,6 +991,22 @@ package version 1.4.3.
 Biostrings: Efficient manipulation of biological strings. R package version
 2.66.0, \newline
 \url{https://bioconductor.org/packages/Biostrings}.
+
+\bibitem{CLUSTERPROFILER} T Wu, E Hu, S Xu, M Chen, P Guo, Z Dai, T Feng,
+L Zhou, W Tang, L Zhan, X Fu, S Liu, X Bo, and G Yu. clusterProfiler 4.0:
+A universal enrichment tool for interpreting omics data. The Innovation. 2021,
+2(3):100141.
+
+\bibitem{ENRICHPLOT} Yu G (2023). enrichplot: Visualization of Functional
+Enrichment Result. R package version 1.18.4, \newline
+\url{https://yulab-smu.top/biomedical-knowledge-mining-book}.
+
+\bibitem{JSON} Pezoa, F. et al., 2016. Foundations of JSON schema. In
+Proceedings of the 25th International Conference on World Wide Web. pp. 263–273.
+
+\bibitem{RJSON} Couture-Beil A (2022). rjson: JSON for R. R package version
+0.2.21, \newline
+\url{https://CRAN.R-project.org/package=rjson}.
 
 \bibitem{HOMER} Heinz S, Benner C, Spann N, Bertolino E et al. Simple
 Combinations of Lineage-Determining Transcription Factors Prime cis-Regulatory
