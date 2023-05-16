@@ -861,7 +861,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
       )
     )
   ),
-  tabPanel("Duomenų kokybė",
+  tabPanel("Kokybės vertinimas",
     sidebarLayout(
       sidebarPanel(
         width = 4,
@@ -938,7 +938,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
       )
     )
   ),
-  tabPanel("Analizės",
+  tabPanel("Biologinės analizės",
     sidebarLayout(
       sidebarPanel(
         width = 4,
