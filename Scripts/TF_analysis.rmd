@@ -4,7 +4,8 @@ library(pacman)
 p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
-org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler)
+org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler, ensembldb,
+EnsDb.Mmusculus.v79, deepredeff)
 # nolint end
 ```
 
@@ -20,7 +21,6 @@ SCRIPTS     <- paste0(PROJECT, "Scripts/")
 RESULTS     <- paste0(INTER_FILES, "Generated_files")
 FASTAS      <- paste0(INTER_FILES, "FASTA/")
 FIGURES     <- paste0(PROJECT, "Figures/")
-
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
 DATABASES   <- paste0(PROJECT, "Databases/")
 # nolint end
@@ -63,11 +63,6 @@ len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
 #     names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
 # }
 
-
-
-
-
-
 bigbed_files <- list()
       for(rows in 1:len_mm) {
         bigbed_files[[rows]] <-
@@ -91,90 +86,6 @@ bigbed_files <- list()
                                                 keep.extra.columns = TRUE)
       }
 
-
-
-
-       
-        rownames(pwm) <- c("A", "C", "G", "T")
-
-        peak_sequences <- list()
-
-        for (file in 1:length(grl_mm)) {
-          peak_sequences[[1]] <-
-            getSeq(BSgenome.Mmusculus.UCSC.mm10, grl_mm[[1]])
-          names(peak_sequences)[1] <- "A"
-        }
-
-        tbx5_motifs <- data.frame(matrix(nrow = 0, ncol = 4))
-        colnames(tbx5_motifs) <-
-          c("Sample", "Motif_count", "Peak_count", "Percentage")
-
-        for (i in 1:length(peak_sequences)) {
-        #   filename <- input$bigbed[[i, 'datapath']]
-          name <- substring(names(peak_sequences[i]), 1, 11)
-
-          motif <- find_motif_hits(peak_sequences[[i]], pwm)
-          peaks <- calculate_peaks(paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Input/BED/Mouse/","PEAKS035687_Tbx5_P70326_MACS2_437.bed"))
-          percentage <- round((motif / peaks) * 100, 2)
-
-          data_row <- c(name, motif, peaks, as.numeric(percentage))
-          tbx5_motifs[nrow(tbx5_motifs) + 1, ] <- data_row
-        }
-
-        # Reading a file that stores information about Tbx5 motif counts and
-        # peak percentages:
-        motif_data <- tbx5_motifs
-
-        # Calling factor() function in order to maintain certain Sample
-        # order:
-        motif_data$Sample <-
-                factor(motif_data$Sample, levels = motif_data$Sample)
-
-        # 'Melting' the dataframe:
-        melted_df <- melt(motif_data, id = c("Sample", "Percentage"))
-
-
-        ggplot(melted_df, aes(fill = variable, y = as.numeric(value), x = Sample)) + 
-    geom_bar(width = 0.4, size = 0.2, colour = "#3f2704", stat = 'identity',
-             position = position_dodge(0.4)) +
-          scale_fill_manual(values = c("#e3a15e", "#c7633b"),
-                            labels = c("Tbx5 motyvų skaičius",
-                                       "Pikų skaičius")) +
-          scale_y_continuous(labels = label_number(suffix = " K",
-                                                   scale = 1e-3)) +
-           geom_text(aes(label = ifelse(variable == "Motif_count",
-                                 paste0(round(as.numeric(Percentage),
-                                              digits = 2), "%"), ""),
-              fontface = 2), vjust = 3.2, hjust = -0.3, size = 5) +                                        
-          guides(fill = guide_legend(title = "Spalvų paaiškinimas", size = 6)) +
-          labs(title = "", x = "", y = "TF/Pikų skaičius") +
-          theme(axis.text = element_text(size = 10, colour = "black"),
-            axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
-                                       size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-            axis.title.x = element_text(size = 14, colour = "black"),
-            axis.title.y = element_text(size = 14, colour = "black"),
-            panel.grid.major = element_line(color = "#eeeeee"),
-            plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-            panel.background = element_rect(fill = "#eeeef1",
-                                            colour = "#4c0001"),
-            panel.grid.major.y = element_line(colour = "#cab5b5",
-                                              size = 0.3, linetype = "dashed"),
-            panel.grid.minor.y = element_line(colour = "#cab5b5",
-                                              size = 0.3, linetype = "dashed"),
-            panel.grid.major.x = element_line(colour = "#cab5b5",
-                                              size = 0.2, linetype = "longdash"),
-            panel.grid.minor.x = element_line(colour = "#cab5b5",
-                                              size = 0.2, linetype = "longdash"),
-            legend.title = element_text(size = 12),
-            legend.text = element_text(size = 11))+
-            coord_flip()
-      }
-
-
-
-
-
 # nolint end
 ```
 
@@ -187,9 +98,6 @@ pwm <- get_PWM("TBX5_MOUSE.H11MO.0.D.pwm")
 
 ```{r MM_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-
-grl_mm[[1]]
-
 significant_peaks <- grl_mm[[1]][grl_mm[[1]]$q_value < 2, ] %>% list(.)
 
 mm_annotated_peaks <-
@@ -245,17 +153,18 @@ for (sample in seq_along(mm_annotated_peaks)) {
     selected_genes <-
         tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
         tolower(mmgene_ranges$gene_symbol)
+        # length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
+        # length(mmgene_ranges$gene_symbol)
                             
     genes <- mmgene_ranges[selected_genes]
+    # genes <- mm_annotated_peaks[[sample]][selected_genes]
     mm_genes[[sample]] <- genes 
 }
 
 # Čia išgaunamos nukleotidų sekos konkretiems genams:
-gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
+# gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
 
-library(ensembldb)
-library(EnsDb.Mmusculus.v79)
-library(deepredeff)
+
 
 edb <- EnsDb.Mmusculus.v79
 
@@ -287,14 +196,15 @@ for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
 
             all_proteins <- append(all_proteins, proteins[s])
         }
-
         proteins_df <- c()
     }
     }
     
 }
 
-length(all_proteins)
+
+writeXStringSet(AAStringSet(all_proteins), filepath = paste0(PROJECT, "Rez.fasta"), format = "fasta")
+
 
 sink(paste0(PROJECT, "aa_sequences_80.txt"))
 print(gprotein_sequences)
@@ -322,6 +232,8 @@ human_db <-
 # 'AAStringSet' object that contains protein sequences of annotated genes:
 predictions <-
     predict(human_db, all_proteins, BLAST_args = "-num_threads 10")
+
+system(paste0("blastp -query ", paste0(PROJECT, "Rez.fasta"), " -db ", human_db, " -out mm-second.x.zebrafish.txt -num_threads 10"))
 
 # Saving blastp result into a file so that it can be used for further analysis:
 # FIND BETTER WAY TO SAVE THE RESULT!
