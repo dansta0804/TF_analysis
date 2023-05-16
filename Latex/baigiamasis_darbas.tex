@@ -94,7 +94,7 @@
 
 \hfill \break
 \textbf{Raktiniai žodžiai:} R, \emph{Shiny}, \emph{Homo sapiens},
-\emph{Mus musculus}, ChIP sekoskaita
+\emph{Mus musculus}, ChIP sekoskaita, transkripcijos faktorius, PWM
 
 \newpage
 
@@ -107,7 +107,7 @@
 
 \hfill \break
 \textbf{Keywords:} R, \emph{Shiny}, \emph{Homo sapiens},
-\emph{Mus musculus}, ChIP-seq
+\emph{Mus musculus}, ChIP-seq, transcription factor, PWM
 
 \newpage
 
@@ -479,8 +479,41 @@ GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 % METODO REALIZACIJA
 %%%%%%%%%%%%%%%%%%%%%%%
 \section{Transkripcijos faktoriaus taikinių spėjimo metodas}
-% Transkripcijos faktorių taikinių spėjimo metodas leidžia nustatyti, kokiose
-% genominėse 
+Transkripcijos faktorių taikinių spėjimo metodas leidžia nustatyti, kokiose
+pasirinkto organizmo genomo pozicijose yra įmanomas nurodyto transkripcijos
+faktoriaus prisijungimas, naudojant kito organizmo genomines sekas. Metodas
+realizuotas, įgyvendinus šiuos etapus:
+
+\begin{itemize}
+    \item \textbf{Pikų anotavimas.} Šiame etape yra anotuojami ChIP sekoskaitos
+        mėginiai, išgauti iš organizmo, kurio duomenys panaudojami, atliekant
+        transkripcijos faktorių taikinių spėjimą. Taip pat anotuojami ir
+        kontroliniai ChIP sekoskaitos mėginiai, kurie išgauti iš organizmo,
+        kurio genome spėjamos transkripcijos faktoriaus prisijungimo vietos.
+        Kontroliniai mėginiai reikalingi tam, jog būtų galima įvertinti
+        metodo tikslumą. ChIP sekoskaitos duomenys - pikų rinkiniai -
+        anotuojami, pritaikant sukurtą \emph{annotate\_peak()} funkciją. Šiai
+        funkcijai turi būti perduoti šie parametrai:
+            \begin{itemize}
+                \item \textbf{\emph{Pikų rinkinys:}} ChIP sekoskaitos duomenų
+                    rinkinys, saugomas \emph{GRanges} objektų sąraše
+                    (\emph{GRangesList});
+                \item \textbf{\emph{Ensembl genomo anotacija:}} organizmų
+                    genominės anotacijos iš R \emph{annotables} bibliotekos;
+                \item \textbf{\emph{TxDb objektas:}} pasirinktų organizmų
+                    duomenų bazės, kuriose saugoma informacija įprastai atitinka
+                    GTF/GFF failų informaciją;
+                \item \textbf{\emph{org.x.eg.db anotacija:}} x atitinka
+                    organizmų lotyniškų pavadinimų santrumpą (pavyzdžiui,
+                    \emph{Mus musculus} - \emph{Mm}).
+            \end{itemize}
+        Perduoti parametrai panaudojami \emph{ChIPseeker} bibliotekos
+        funkcijos \emph{annotatePeak()}, kuri pikams priskiria artimiausius
+        genus. Taip pat šiame etape anotuotiems pikams priskiriami genų
+        identifikacijos numeriai bei genų simboliai.
+    \item \textbf{Aminorūgščių sekų išgavimas.}
+    \item \textbf{\emph{Blastp} paieška.}
+\end{itemize}
 
 \newpage
 
@@ -503,8 +536,9 @@ diferencijuoti į visų tipų ląsteles, nervinių bei kraujo ląstelių.
 Iš ChIP-Atlas duomenų bazės atsisiųsti tik statistiškai patikimi ChIP
 sekoskaitos duomenys, atrinkti įvertinus statistinio \emph{q} įverčio reikšmes.
 Įvertinus genominių regionų \emph{q} vertes gautas mažesnis duomenų rinkinys,
-kuris gali būti apdorojamas, nesukeliant kirtingų mėginių ChIP sekoskaitos duomenys atsisiųsti \emph{BED} formato
-pavidalu
+kuris gali būti apdorojamas, nesukeliant programos veikimo trikdžių bei
+nesumažinant rezultatų generavimo spartos. Statistiškai patikimi duomenys
+atsisiųsti \emph{BED} formato pavidalu.
 
 ChIP sekoskaitos mėginiai, išgauti iš naminės pelės ląstelių, aprašyti pirmoje
 lentelėje.
@@ -649,8 +683,8 @@ lentelėje.
 Transkripcijos faktorių taikinių spėjimo pasirinktame organizme metodas
 įgyvendintas su R programavimo kalba\cite{R} (4.2.3 versija).
 
-\subsection{Duomenų kokybės įvertinimas}
-Genominių duomenų kokybės įvertinimui panaudotos Kursinio darbo bei Kursinio
+\subsection{Duomenų kokybės vertinimas}
+Genominių duomenų kokybės vertinimui panaudotos Kursinio darbo bei Kursinio
 projekto metu atliktos duomenų kokybės įvertinimo analizės. Taip pat
 duomenų kokybės įvertinimo analizių sąrašas papildytas 3 naujomis analizėmis.
 
@@ -706,7 +740,7 @@ Nustačius šalia \emph{TSS} regionų esančių sekų regionus panaudota
 
 \newpage
 
-\subsection{Duomenų analizės atlikimas}
+\subsection{Biologinių analizių atlikimas}
 Šiame etape buvo panaudotos patobulintos Kursinio darbo metu įgyvendintos
 analizės, kurias galima atlikti su pasirinktais genominiais duomenimis.
 
@@ -778,20 +812,6 @@ interaktyvias internetines aplikacijas (angl. \emph{Interactive Web App}),
 naudojant R bei internetinių puslapių kūrimo kalbų - HTML, CSS, JavaScript -
 funkcijas.
 
-\subsubsection*{Aplikacijos pritaikymas skirtingiems organizmas}
-R \emph{Shiny} aplikacija gali būti panaudota, analizuojant mėginius išgautus
-iš skirtingų organizmų, tačiau šis sąrašas yra ribotas. Realizuojant aplikaciją
-yra naudojamas parašytos funkcijos, kurios naudoja R programavimo kalbos
-\emph{BSgenome}, \emph{Txdb} bei \emph{org.x.eg.db} genominių anotacijų
-bibliotekas. Dabartinėje R versijoje (4.2.3) yra prieinamos 33 skirtingų
-organizmų \emph{BSgenome} bei 12 \emph{Txdb} ir \emph{org.x.eg.db} bibliotekos.
-Sukurtoje aplikacijoje galima analizuoti 12 skirtingų organizmų ChIP sekoskaitos
-duomenis, kurie anotuojami bei analizuojami, naudojant naujausias organizmų
-genomų anotacijų versijas. Šių organizmų genominių anotacijų bibliotekos
-pateiktos \emph{JSON}\cite{JSON} formato pavidalu. Šis formatas sukurtoje
-R aplikacijoje apdorotas, pritaikius \emph{rjson}\cite{RJSON} bibliotekos
-funkciją \emph{fromJSON()}.
-
 \subsubsection*{Duomenų įkėlimas}
 Naudotojas gali įkelti vieną arba daugiau \emph{BED} formato failų, saugančių
 genominę ChIP sekoskaitos mėginių informaciją. Duomenų įkėlimo skiltyje
@@ -804,7 +824,7 @@ norima atlikti transkripcijos faktoriaus taikinių spėjimą.
 
 \colorbox{green}{PAPILDYTI APRAŠYMU APIE FAILŲ FORMATŲ KONVERSIJOS ETAPĄ...}
 
-\subsubsection*{Duomenų kokybė}
+\subsubsection*{Duomenų kokybės vertinimas}
 Duomenų kokybės skiltyje pateikiama įkeltų ChIP sekoskaitos mėginių duomenų
 lentelė, kurios elementus naudotojas gali pasirinkti bei vykdyti duomenų
 kokybės vertinimo etapus tik pasirinktiems mėginiams. Taip pat naudotojas
@@ -813,7 +833,7 @@ gali apjungti pasirinktus arba visus įkeltus mėginius į vieną duomenų rinki
 arba analizuoti tik pasirinktų arba pažymėtų mėginių persidengiančius pikus
 (įgyvendinta, panaudojus funkciją \emph{intersect()}).
 
-\subsubsection*{Analizės}
+\subsubsection*{Biologinės analizės}
 Analizių atlikimo lange naudotojas gali pasirinkti, su kokiais įkeltais
 mėginiais nori atlikti transkripcijos faktorių apibūdinančios pozicinės
 svorių matricos atitikimų skaičiavimą, atlikti motyvų paiešką \emph{De novo}
@@ -832,6 +852,23 @@ užtrukti dėl įrankio atliekamų motyvų paieškos skaičiavimų.
 \subsubsection*{Taikinių spėjimas}
 \colorbox{green}{PILDOMA...}
 
+\subsubsection*{Aplikacijos pritaikymas skirtingiems organizmams}
+R \emph{Shiny} aplikacija gali būti panaudota, analizuojant mėginius išgautus
+iš skirtingų organizmų, tačiau šis sąrašas yra ribotas. Realizuojant aplikaciją
+yra naudojamas parašytos funkcijos, kurios naudoja R programavimo kalbos
+\emph{BSgenome}, \emph{Txdb} bei \emph{org.x.eg.db} genominių anotacijų
+bibliotekas. Dabartinėje R versijoje (4.2.3) yra prieinamos 33 skirtingų
+organizmų \emph{BSgenome} bei 12 \emph{Txdb} ir \emph{org.x.eg.db} bibliotekos.
+Sukurtoje aplikacijoje galima analizuoti 12 skirtingų organizmų ChIP sekoskaitos
+duomenis, kurie anotuojami bei analizuojami, naudojant naujausias organizmų
+genomų anotacijų versijas. Šių organizmų genominių anotacijų bibliotekos
+pateiktos \emph{JSON}\cite{JSON} formato pavidalu. Šis formatas sukurtoje
+R aplikacijoje apdorotas, pritaikius \emph{rjson}\cite{RJSON} bibliotekos
+funkciją \emph{fromJSON()}.
+
+\subsubsection*{Aplikacijos prieinamumas}
+\colorbox{green}{PILDOMA...}
+
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -848,6 +885,13 @@ užtrukti dėl įrankio atliekamų motyvų paieškos skaičiavimų.
 %%%%%%%%%%%%
 
 \section{Išvados}
+Sukūrus transkripcijos faktorių taikinių spėjimo metodą bei realizavus jo
+implementaciją R \emph{Shiny} aplinkoje gauti rezultatai buvo apibendrinti:
+
+\begin{itemize}
+    \item a
+\end{itemize}
+
 \newpage
 
 %%%%%%%%%%%%%%%
