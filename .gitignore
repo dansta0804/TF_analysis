@@ -2327,3 +2327,5 @@ Input/BED/Mouse/PEAKS035687_Tbx5_P70326_MACS2_437.bed
 Input/BED/Human/human_bed.bed
 Input/BED/mouse_bed.bed
 Input/genomes.txt
+Intermediate_data/Generated_files/hg_annotated_peaks.txt
+Intermediate_data/Generated_files/mm_annotated_peaks.txt
