@@ -96,22 +96,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section*{Santrauka}
-\colorbox{green}{PILDOMA...}
-
 Šiais laikais plačiai atliekami biologinių procesų tyrimai yra itin svarbūs,
 siekiant suprasti įvairiuose organizmuose vykstančius procesus. Pastarųjų
 procesų mechanizmų supratimas daro įtaką šiuolaikiniui įvairių žmogaus ligų
-gydymui bei prevencijai. Pavyzdžiui, genų reguliavimas yra vienas iš svarbiausių procesų,
-kurio metu yra ekspresuojami konkretūs genai. Baltymus koduojančių genų
-ekspresijos metu yra susintetinami baltymai, atliekantys įvairias funkcijas:
-įeinantys į struktūrinių audinių sudėti bei organizmų apsauginių elementų
-rinkinį, turintys medžiagų pernašos bei organizmo homeostazės palaikymo
-funkcionalumą, dalyvaujantys organizmų embriogenezės, tolimesnio vystymosi
-bei kituose biologiniuose procesuose, užtikrinančiuose normalų organizmų
-funkcionavimą. Atitinkamų genų aktyvavimas bei išaktyvinimas yra valdomas
-transkripcijos faktorių, kurie lemia organizmui reikalingų baltymų sintezę,
-arba, įvykus transkripcijos faktorių mutacijoms ar pasireiškus kitoms sąlygoms,
-ligų atsiradimą.
+gydymui bei prevencijai. Pavyzdžiui, tobulėjantys tyrimų metodai bei įrankiai
+padėjo išsiaiškinti, kad vėžiniai susirgimai, neurologiniai sutrikimai, širdies
+ir kraujagyslių ligos, diabetas ir net nutukimas gali būti reguliatorinių sekų, 
+transkripcijos faktorių bei kitų, genų reguliavime dalyvaujančių elementų,
+mutacijų pasekmė\cite{ARTICLE0}.
+
+Genų reguliavimas yra vienas iš svarbiausių procesų, kurio metu yra
+ekspresuojami konkretūs genai. Baltymus koduojančių genų ekspresijos metu yra
+susintetinami baltymai, atliekantys įvairias funkcijas: įeinantys į struktūrinių
+audinių sudėtį bei organizmų apsauginių elementų rinkinį, turintys medžiagų
+pernašos bei organizmo homeostazės palaikymo funkcionalumą, dalyvaujantys
+organizmų embriogenezės, tolimesnio vystymosi bei kituose biologiniuose
+procesuose, užtikrinančiuose normalų organizmų funkcionavimą. Atitinkamų genų
+aktyvavimas bei išaktyvinimas yra valdomas transkripcijos faktorių, kurie lemia
+organizmui reikalingų baltymų sintezę, arba, įvykus transkripcijos faktorių
+mutacijoms ar pasireiškus kitoms sąlygoms, ligų atsiradimą.
 
 Šiame darbe, naudojantis R programavimo kalbos bibliotekomis bei
 bioinformatiniais komandinės eilutės įrankiais, sukurtas transkripcijos faktorių
@@ -122,12 +125,10 @@ aplikacijoje. Naudojantis sukurta aplikacija galima analizuoti iš skirtingų
 organizmų išgautus ChIP sekoskaitos duomenis bei, pagal poreikį, panaudoti
 sugeneruotas rezultatų lenteles ir vizualizacijas.
 
-
-
 \hfill \break
 \textbf{Raktiniai žodžiai:} genų reguliavimas, transkripcijos faktorius, 
-transkripcijos faktoriaus taikinys, R, \emph{Shiny} aplikacija, pozicinės svorių
-matricos, ChIP sekoskaita
+transkripcijos faktoriaus taikinys, R, \emph{Shiny} aplikacija, pozicinė svorių
+matrica, ChIP sekoskaita.
 
 \newpage
 
@@ -136,11 +137,38 @@ matricos, ChIP sekoskaita
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section*{Summary}
-\colorbox{green}{PILDOMA...}
+The investigation of biological processes is remarkably important in order to
+understand the processes that occur in all living organisms. The understanding
+of aforementioned processes and their mechanisms plays a crucial role in
+disease treatment and prevention. For instance, the latest advances in research
+methods and tools helped to determine that diseases like cancer, neurological
+disorders, cardiovascular diseases, diabetes and even obesity can be caused
+by mutations that occur in regulatory sequences, transcription factors and
+other elements that are involved in gene regulation.
+
+Gene regulation is one of the biological processes that invokes expression of
+particular genes. During the expression of protein coding genes the proteins
+that perform different functions are synthethised. The functions involve the
+formation of structural frameworks, immune function, substance transportation,
+homeostasis, embryogenesis, later development and other biological processes
+that maintain proper functioning of all living organisms. The activation and
+inactivation of certain genes is controlled by transcription factors that can
+either start protein synthesis or, in case of being mutation - affected,
+result in the development of the diseases.
+
+In this work, a method that predicts transcription factor target sites in
+specified genome by using positional weight matrix (PWM) was created using R
+programming language libraries and bioinformatical command line tools. The
+method along with biological analyses that process ChIP sequencing data was
+implemented in \emph{Shiny} application. The application allows to analyze
+ChIP sequencing data retrieved from various organisms' samples. Furthermore,
+the application is capable of generating result tables and visualizations that
+can be downloaded and used in research.
 
 \hfill \break
-\textbf{Keywords:} R, \emph{Shiny}, \emph{Homo sapiens},
-\emph{Mus musculus}, ChIP-seq, transcription factor, PWM
+\textbf{Keywords:} gene regulation, transcription factor, transcription factor's
+target, R, \emph{Shiny} application, positional weight matrix, ChIP
+sequencing.
 
 \newpage
 
@@ -852,8 +880,6 @@ transkripcijos faktoriaus pavadinimą, pateikti nurodyto transkripcijos
 faktoriaus pozicinę svorių matricą bei pasirinkti, kokio organizmo genome
 norima atlikti transkripcijos faktoriaus taikinių spėjimą.
 
-\colorbox{green}{PAPILDYTI APRAŠYMU APIE FAILŲ FORMATŲ KONVERSIJOS ETAPĄ...}
-
 \subsubsection*{Duomenų kokybės vertinimas}
 Duomenų kokybės skiltyje pateikiama įkeltų ChIP sekoskaitos mėginių duomenų
 lentelė, kurios elementus naudotojas gali pasirinkti bei vykdyti duomenų
@@ -930,6 +956,10 @@ implementaciją R \emph{Shiny} aplinkoje gauti rezultatai buvo apibendrinti:
 
 \bibliographystyle{plain}
 \begin{thebibliography}{99}
+
+\bibitem{ARTICLE0} Lee TI, Young RA. Transcriptional regulation and its
+misregulation in disease. Cell. 2013 Mar 14;152(6):1237-51.
+doi: 10.1016/j.cell.2013.02.014. PMID: 23498934; PMCID: PMC3640494.
 
 \bibitem{BIOTOOLS} Ison, J. et al. (2015). Tools and data services registry: a
 community effort to document bioinformatics resources. Nucleic Acids Research.
