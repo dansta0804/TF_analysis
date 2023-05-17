@@ -18,7 +18,7 @@ MMUSCULUS   <- paste0(BEDS, "Mouse/")
 HSAPIENS    <- paste0(BEDS, "Human/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 SCRIPTS     <- paste0(PROJECT, "Scripts/")
-RESULTS     <- paste0(INTER_FILES, "Generated_files")
+RESULTS     <- paste0(INTER_FILES, "Generated_files/")
 FASTAS      <- paste0(INTER_FILES, "FASTA/")
 FIGURES     <- paste0(PROJECT, "Figures/")
 SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
@@ -28,8 +28,21 @@ DATABASES   <- paste0(PROJECT, "Databases/")
 
 ```{r FUNCTION_SOURCING, echo=FALSE, message=FALSE, warning=FALSE}
 source(paste0(SCRIPTS, "functions.R"))
-source(paste0(SCRIPTS, "plots.R"))
 ```
+
+```{r OBJECT_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
+txdb_mm <- TxDb.Mmusculus.UCSC.mm10.knownGene
+txdb_hs <- TxDb.Hsapiens.UCSC.hg38.knownGene
+
+orgdb_mm <- "org.Mm.eg.db"
+orgdb_hs <- "org.Hs.eg.db"
+
+orgdbmm_obj <- org.Mm.eg.db
+orgdbhs_obj <- org.Hs.eg.db
+
+edb <- EnsDb.Mmusculus.v79
+```
+
 
 ```{r BIGBED_READING, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
@@ -45,47 +58,27 @@ chr_abr <- c(paste0("chr", 1:19), "chrX", "chrY")
 len_mm <- length(bbfiles_mm)    # Length of samples for Mus musculus
 len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
 
-# Creating GRanges objects and extracting certain chromosomes for Mus musculus:
-# for (i in 1:len_mm) {
-#     grl_mm[[i]] <-
-#         import(paste0(MMUSCULUS, bbfiles_mm[i])) %>%
-#         dplyr::filter(seqnames %in% chr_abr)
-#     names(grl_mm)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_mm[i]]
-# }
+data_mm <- list()
+for(rows in 1:len_mm) {
+    data_mm[[rows]] <- read.table(file = paste0(MMUSCULUS, bbfiles_mm[rows]))
+    colnames(data_mm[[rows]]) <-
+        c("seqnames", "start", "end", "name", "abs_summit", "pileup",
+          "p_value", "fold_enrichment", "q_value", "ID")
 
-# # Creating GRanges objects and extracting certain chromosomes for Homo sapiens.
-# # These files will be used as control samples to check whether TF binding sites
-# # were predicted successfully using Homo sapiens annotation:
-# for (i in 1:len_hg) {
-#     grl_hg[[i]] <-
-#         import(paste0(HSAPIENS, bbfiles_hg[i])) %>%
-#         dplyr::filter(seqnames %in% chr_abr)
-#     names(grl_hg)[i] <- SAMPLES$Graph_names[SAMPLES$Filename == bbfiles_hg[i]]
-# }
+    grl_mm[[rows]] <- makeGRangesFromDataFrame(data_mm[[rows]],
+                                               keep.extra.columns = TRUE)
+}
 
-bigbed_files <- list()
-      for(rows in 1:len_mm) {
-        bigbed_files[[rows]] <-
-          read.table(file = paste0(MMUSCULUS, bbfiles_mm[rows]))
-        colnames(bigbed_files[[rows]]) <-
-          c("seqnames", "start", "end", "name", "abs_summit", "pileup",
-              "p_value", "fold_enrichment", "q_value", "ID")
+data_hs <- list()
+for(rows in 1:len_hg) {
+    data_hs[[rows]] <- read.table(file = paste0(HSAPIENS, bbfiles_hg[rows]))
+    colnames(data_hs[[rows]]) <-
+        c("seqnames", "start", "end", "name", "abs_summit", "pileup",
+          "p_value", "fold_enrichment", "q_value", "ID")
 
-        grl_mm[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
-                                                keep.extra.columns = TRUE)
-      }
-bigbed_files <- list()
-      for(rows in 1:len_hg) {
-        bigbed_files[[rows]] <-
-          read.table(file = paste0(HSAPIENS, bbfiles_hg[rows]))
-        colnames(bigbed_files[[rows]]) <-
-          c("seqnames", "start", "end", "name", "abs_summit", "pileup",
-              "p_value", "fold_enrichment", "q_value", "ID")
-
-        grl_hg[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
-                                                keep.extra.columns = TRUE)
-      }
-
+    grl_hg[[rows]] <- makeGRangesFromDataFrame(data_hs[[rows]],
+                                               keep.extra.columns = TRUE)
+}
 # nolint end
 ```
 
@@ -98,84 +91,46 @@ pwm <- get_PWM("TBX5_MOUSE.H11MO.0.D.pwm")
 
 ```{r MM_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-significant_peaks <- grl_mm[[1]][grl_mm[[1]]$q_value < 2, ] %>% list(.)
+mm_annot_peaks <- annotate_peaks(grl_mm, grcm38, txdb_mm, orgdb_mm)
 
-mm_annotated_peaks <-
-    annotate_peaks(grl_mm, grcm38, TxDb.Mmusculus.UCSC.mm10.knownGene,
-                   "org.Mm.eg.db")
-
-write.table(mm_annotated_peaks,
-            file = paste0(RESULTS, "/mm_annotated_peaks.txt"), sep = "\t",
-            quote = FALSE, row.names = FALSE)
+write.table(mm_annot_peaks, file = paste0(RESULTS, "/mm_annotated_peaks.txt"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
 # nolint end
 ```
 
 ```{r HS_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
-# nolint start
-# Getting the peaks that are significant. q value must be lower than 2
-# (-log10(0.01) = 2):
-# significant_peaks <- grl_hg[[1]][grl_hg[[1]]$q_value < 2, ] %>% list(.)
+hg_annot_peaks <- annotate_peaks(grl_hg, grch38, txdb_hs, orgdb_hs)
 
-# e <- names(seqlengths(significant_peaks[[1]])) %in% names(seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene))
-# f <- mixedsort(seqlengths(significant_peaks[[1]])[e])
-# g <- mixedsort(seqlengths(TxDb.Hsapiens.UCSC.hg38.knownGene)[d])
-
-# F <- as.data.frame(f)
-# G <- as.data.frame(g)
-
-# seqlengths(significant_peaks[[1]])[e][order(names(seqlengths(significant_peaks[[1]])[e]))] <- g[order(names(g))]
-
-# genome(grl_hg)
-# genome(TxDb.Hsapiens.UCSC.hg38.knownGene)
-
-
-hg_annotated_peaks <-
-    annotate_peaks(grl_hg, grch38, TxDb.Hsapiens.UCSC.hg38.knownGene, "org.Hs.eg.db")
-
-write.table(hg_annotated_peaks,
-            file = paste0(RESULTS, "/hg_annotated_peaks.txt"), sep = "\t",
-            quote = FALSE, row.names = FALSE)
+write.table(hg_annot_peaks, file = paste0(RESULTS, "/hg_annotated_peaks.txt"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
 # nolint end
 ```
 
 ```{r NUCLEOTIDE_TO_AMINOACIDS, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 # nolint start
-mmgene_ranges <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+mmgene_ranges <- genes(txdb_mm)
 
 # Adding 'gene_symbol' column to gene_ranges GRange:
-mmgene_ranges$gene_symbol <-
-    mapIds(org.Mm.eg.db, keys = mmgene_ranges$gene_id, column = "SYMBOL",
-           keytype = "ENTREZID", multiVals = "first")
+mmgene_ranges$gene_symbol <- mapIds(orgdbmm_obj, keys = mmgene_ranges$gene_id,
+                                    column = "SYMBOL", keytype = "ENTREZID")
 
 mm_genes <- GRangesList()
 
-for (sample in seq_along(mm_annotated_peaks)) {
+for (sample in seq_along(mm_annot_peaks)) {
     selected_genes <-
-        tolower(unique(mm_annotated_peaks[[sample]]$gene_symbol)) %in%
+        tolower(unique(mm_annot_peaks[[sample]]$gene_symbol)) %in%
         tolower(mmgene_ranges$gene_symbol)
-        # length(unique(mm_annotated_peaks[[sample]]$gene_symbol))
-        # length(mmgene_ranges$gene_symbol)
-                            
-    genes <- mmgene_ranges[selected_genes]
-    # genes <- mm_annotated_peaks[[sample]][selected_genes]
-    mm_genes[[sample]] <- genes 
+
+    mm_genes[[sample]] <- mmgene_ranges[selected_genes]
 }
 
 # Čia išgaunamos nukleotidų sekos konkretiems genams:
 # gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
 
-
-
-edb <- EnsDb.Mmusculus.v79
-
 all_proteins <- character()
-gprotein_sequences <- data.frame(matrix(ncol = 2, nrow = 0))
 
 for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
     gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
-
-    length(mm_genes[[1]]$gene_symbol)
-    length(unique(mm_genes[[1]]$gene_symbol))
 
     if (is.na(gene)) {
         next
@@ -184,31 +139,23 @@ for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
                      return.type = "AAStringSet")
 
         if (length(proteins) == 0) {
-        next
-    } else {
-        print(paste("Getting sequence for", gene, "..."))
-        proteins_df <- aas_to_df(proteins)
-        proteins_df$name <- gene
+            next
+        } else {
+            print(paste("Getting sequence for", gene, "..."))
+            proteins_df <- aas_to_df(proteins)
+            proteins_df$name <- gene
 
-        for (s in 1:length(proteins_df$seq)) {
-            row <- c(gene, proteins_df$seq[s]) # Pataisymas, kad imtų viską, o ne tik pirmą seką
-            gprotein_sequences[nrow(gprotein_sequences) + 1, ] <- row
-
-            all_proteins <- append(all_proteins, proteins[s])
+            for (s in 1:length(proteins_df$seq)) {
+                all_proteins <- append(all_proteins, proteins[s])
+            }
+            proteins_df <- c()
         }
-        proteins_df <- c()
     }
-    }
-    
 }
 
-
-writeXStringSet(AAStringSet(all_proteins), filepath = paste0(PROJECT, "Rez.fasta"), format = "fasta")
-
-
-sink(paste0(PROJECT, "aa_sequences_80.txt"))
-print(gprotein_sequences)
-sink()
+writeXStringSet(AAStringSet(all_proteins),
+                filepath = paste0(RESULTS, "Extracted_protein_sequences.fasta"),
+                format = "fasta")
 
 # nolint end
 ```
@@ -231,16 +178,20 @@ human_db <-
 # Performing blastp search using defined Homo sapiens protein database and
 # 'AAStringSet' object that contains protein sequences of annotated genes:
 predictions <-
-    predict(human_db, all_proteins, BLAST_args = "-num_threads 10")
-
-system(paste0("blastp -query ", paste0(PROJECT, "Rez.fasta"), " -db ", human_db, " -out mm-second.x.zebrafish.txt -num_threads 10"))
+    predict(human_db, all_proteins,
+            BLAST_args = "-num_threads 10",
+            custom_format = "qseqid sseqid qacc saqq length qcovs evalue")
 
 # Saving blastp result into a file so that it can be used for further analysis:
 # FIND BETTER WAY TO SAVE THE RESULT!
 sink(paste0(PROJECT, "predictions_protein.txt"))
 print(predictions)
 sink()
+# nolint end
+```
 
+```{r ID_MAPPINGS, echo=FALSE, message=FALSE, warning=FALSE}
+# nolint start
 # Reading a file that stores blastp result:
 predictions <- read.table(paste0(PROJECT, "predictions_p.txt"))
 predictions <- predictions[predictions$`Perc.Ident` > 50, ] #50, 60, 70
@@ -289,7 +240,7 @@ matched_data <-
 ```{r}
 # nolint start
 matched_data <- matched_data[!(is.na(matched_data$EntrezQuery)), ]
-hggene_ranges <- genes(TxDb.Hsapiens.UCSC.hg38.knownGene)
+hggene_ranges <- genes(txdb_hs)
 
 mm_sequences <- character()
 hg_sequences <- character()
