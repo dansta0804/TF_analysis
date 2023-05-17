@@ -50,12 +50,18 @@
 \bigskip
 \centerline{\large \textbf{BIOINFORMATIKOS BAKALAURO STUDIJŲ PROGRAMA}}
 
+% Sukurti algoritmą bei jo implementaciją R \emph{Shiny}, kurie leistų nuspėti
+% transkripcijos faktorių prisijungimo vietas, remiantis sekų paašumu.
+
+
 \vskip 90pt
 \begin{center}
-    {\bf \LARGE Pavadinimas lietuviškai}
+    {\bf \LARGE Transkripcijos faktorių taikinių spėjimo metodo implementacija
+    \emph{Shiny} aplikacijoje}
 \end{center}
 \begin{center}
-    {\bf \Large Pavadinimas angliškai}
+    {\bf \Large The implementation of transcription factors' target prediction
+    in \emph{Shiny} application}
 \end{center}
 \vskip 20pt
 \centerline{\bf \large \textbf{Bakalauro baigiamasis darbas}}
@@ -92,9 +98,36 @@
 \section*{Santrauka}
 \colorbox{green}{PILDOMA...}
 
+Šiais laikais plačiai atliekami biologinių procesų tyrimai yra itin svarbūs,
+siekiant suprasti įvairiuose organizmuose vykstančius procesus. Pastarųjų
+procesų mechanizmų supratimas daro įtaką šiuolaikiniui įvairių žmogaus ligų
+gydymui bei prevencijai. Pavyzdžiui, genų reguliavimas yra vienas iš svarbiausių procesų,
+kurio metu yra ekspresuojami konkretūs genai. Baltymus koduojančių genų
+ekspresijos metu yra susintetinami baltymai, atliekantys įvairias funkcijas:
+įeinantys į struktūrinių audinių sudėti bei organizmų apsauginių elementų
+rinkinį, turintys medžiagų pernašos bei organizmo homeostazės palaikymo
+funkcionalumą, dalyvaujantys organizmų embriogenezės, tolimesnio vystymosi
+bei kituose biologiniuose procesuose, užtikrinančiuose normalų organizmų
+funkcionavimą. Atitinkamų genų aktyvavimas bei išaktyvinimas yra valdomas
+transkripcijos faktorių, kurie lemia organizmui reikalingų baltymų sintezę,
+arba, įvykus transkripcijos faktorių mutacijoms ar pasireiškus kitoms sąlygoms,
+ligų atsiradimą.
+
+Šiame darbe, naudojantis R programavimo kalbos bibliotekomis bei
+bioinformatiniais komandinės eilutės įrankiais, sukurtas transkripcijos faktorių
+taikinius pasirinkto organizmo genome spėjantis metodas, pritaikantis pozicines
+transkripcijos faktorių matricas (PWM). Šis metodas kartu su ChIP sekoskaitos
+duomenis apdorojančiomis biologinėmis analizėmis implementuotas \emph{Shiny}
+aplikacijoje. Naudojantis sukurta aplikacija galima analizuoti iš skirtingų
+organizmų išgautus ChIP sekoskaitos duomenis bei, pagal poreikį, panaudoti
+sugeneruotas rezultatų lenteles ir vizualizacijas.
+
+
+
 \hfill \break
-\textbf{Raktiniai žodžiai:} R, \emph{Shiny}, \emph{Homo sapiens},
-\emph{Mus musculus}, ChIP sekoskaita, transkripcijos faktorius, PWM
+\textbf{Raktiniai žodžiai:} genų reguliavimas, transkripcijos faktorius, 
+transkripcijos faktoriaus taikinys, R, \emph{Shiny} aplikacija, pozicinės svorių
+matricos, ChIP sekoskaita
 
 \newpage
 
@@ -117,7 +150,23 @@
 
 \section{Įvadas}
 \subsection*{Darbo temos aktualumas}
-\colorbox{green}{PILDOMA...}
+Yra sukurtas ne vienas bioinformatinis įrankis\cite{BIOTOOLS} bei metodas,
+leidžiantis apdoroti bei analizuoti gautus biologinius - DNR, RNR, baltymų sekų,
+struktūrinius, genų ekspresijos, mutacijų, metabolinių kelių ir kitus -
+duomenis. Sekoskaitos duomenys yra vienas iš biologinių duomenų tipų, kuris,
+priklausomai nuo to, kokio tipo sekoskaita buvo atlikta ir kas yra tiriama, gali
+būti analizuojamas, taikant aprašytas duomenų kompiuterines analizes
+(pavyzdžiui, RNR sekoskaitos duomenų analizės eiga\cite{RNASEQ}).
+
+Iš didžiulės biologinius duomenis galinčių apdoroti įrankių įvairovės galima
+pasirinkti ir pritaikyti ne vieną įrankį ar metodą, kuris padėtų gauti
+interpretuojamą rezultatą, tačiau skirtingų įrankių paieška bei taikymas yra ne
+visada patogi vykdomo tyrimo dalis. Dėl šios priežasties šio darbo metu
+sukurta populiarios ir neretai biologinius duomenis analizuojančių specialistų
+naudojamos \emph{Shiny} aplinkos aplikacija. Ši aplikacija leidžia atlikti
+didžiąją dalį ChIP sekoskaitos duomenų analizės etapų bei pritaikyti metodą,
+nuspėjantį galimas transkripcijos faktoriaus prisijungimo sritis pasirinkto 
+organizmo genome.
 
 \subsection*{Darbo tikslas}
 Sukurti algoritmą bei jo implementaciją R \emph{Shiny}, kurie leistų nuspėti
@@ -301,16 +350,6 @@ etapus:
 transkripcijos faktorių taikinius, siekiant sustabdyti kai kurių ligų
 progresavimą.
 
-% Paaiškinti, kas yra ChIP sekoskaita ir koks jos tikslas, kokie jos privalumai.
-% Kokie egzistuoja metodai, leidžiantys įvertinti TF taikinius kitame organizme?
-% Kas yra transkripcijos faktorius?
-% Ką daro TF?
-% Kuo yra svarbūs TF?
-% Kas yra ChIP sekoskaita?
-% Kokiais metodais gali būti nustatyti pikai?
-% Kokie yra šių metodų privalumai ir trūkumai?
-% Kodėl naudojamas MACS2?
-
 \newpage
 
 \subsection{Pikų nustatymo algoritmai}
@@ -323,15 +362,6 @@ reikšmingumo tikrinimas.
 Pagrindinė pikų nustatymo algoritmų įvestis yra kartografavimo metu su genomu
 išlyginti DNR fragmentų nuskaitymai. Antrajame paveiksle šie fragmentai pažymėti
 raudona ir žalia spalvomis.
-
-
-
-% \includegraphics[scale=.30]{example-image-b}
-
-% \caption{A caption with long text bla bla bla bla bla bla bla bla
-% bla bla bla bla bla bla bla bla bla bla}
-% \end{figure}
-
 
 \begin{figure}[ht]
     \begin{center}
@@ -900,6 +930,15 @@ implementaciją R \emph{Shiny} aplinkoje gauti rezultatai buvo apibendrinti:
 
 \bibliographystyle{plain}
 \begin{thebibliography}{99}
+
+\bibitem{BIOTOOLS} Ison, J. et al. (2015). Tools and data services registry: a
+community effort to document bioinformatics resources. Nucleic Acids Research.
+doi: 10.1093/nar/gkv1116.
+
+\bibitem{RNASEQ} Love MI, Anders S, Kim V, Huber W. RNA-Seqworkflow:
+gene-level exploratory analysis and differential expression. F1000Res.
+2015 Oct 14;4:1070. doi: 10.12688/f1000research.7035.1. PMID: 26674615;
+PMCID: PMC4670015.
 
 \bibitem{GTRD} GTRD: an integrated view of transcription regulation.
 Kolmykov S, Yevshin I, Kulyashov M, Sharipov R, Kondrakhin Y, Makeev VJ,
