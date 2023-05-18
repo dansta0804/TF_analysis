@@ -5,7 +5,11 @@
       "org.Hs.eg.db",
       "Homo sapiens",
       "hs",
-      ["1:22", "X", "Y", "MT"]
+      ["1:22", "X", "Y"],
+      "grch38",
+      "hg38",
+      [249, 242, 198, 190, 182, 171, 159, 145, 138, 134, 135, 133, 114, 107,
+      102, 90, 83, 80, 59, 64, 47, 51, 156, 57]
    ],
    "Mus musculus":[
       "BSgenome.Mmusculus.UCSC.mm10",
@@ -13,7 +17,11 @@
       "org.Mm.eg.db",
       "Mus musculus",
       "mm",
-      ["1:19", "X", "Y", "MT"]
+      ["1:19", "X", "Y"],
+      "grcm38",
+      "mm10",
+      [195, 182, 160, 157, 152, 150, 145, 130, 124, 131, 122, 120, 121, 125,
+      104, 98, 95, 91, 61, 169, 91]
    ],
    "Rattus norvegicus":[
       "BSgenome.Rnorvegicus.UCSC.rn6",
@@ -21,23 +29,11 @@
       "org.Rn.eg.db",
       "Rattus norvegicus",
       "rn",
-      ["1:20", "X", "Y"]
-   ],
-   "Danio rerio":[
-      "BSgenome.Drerio.UCSC.danRer10",
-      "TxDb.Drerio.UCSC.danRer10.refGene",
-      "org.Dr.eg.db",
-      "Danio rerio",
-      "dr",
-      ["1:25"]
-   ],
-   "Bos taurus":[
-      "BSgenome.Btaurus.UCSC.bosTau8",
-      "TxDb.Btaurus.UCSC.bosTau8.refGene",
-      "org.Bt.eg.db",
-      "Bos taurus",
-      "bt",
-      ["1:29", "X", "U"]
+      ["1:20", "X", "Y"],
+      "rnor6",
+      "rn6",
+      [260, 249, 169, 183, 167, 141, 135, 124, 114, 107, 86, 47, 107, 105, 102,
+      85, 87, 84, 57, 54, 152, 18]
    ],
    "Drosophila melanogaster":[
       "BSgenome.Dmelanogaster.UCSC.dm6",
@@ -45,7 +41,10 @@
       "org.Dm.eg.db",
       "Drosophila melanogaster",
       "dm",
-      ["2:4", "X", "Y"]
+      ["2:4", "X", "Y"],
+      "bdgp6",
+      "dm6",
+      [49, 60, 1, 24, 4]
    ],
    "Gallus gallus":[
       "BSgenome.Ggallus.UCSC.galGal4",
@@ -53,7 +52,11 @@
       "org.Gg.eg.db",
       "Gallus gallus",
       "gg",
-      ["1:33", "W", "Z"]
+      ["1:28", "W", "Z"],
+      "galgal5",
+      "galGal4",
+      [196, 150, 111, 91, 60, 36, 36, 30, 24, 20, 20, 20, 18, 15, 13, 3, 11,
+      12, 11, 14, 7, 5, 6, 7, 3, 5, 5, 5, 9, 86]
    ],
    "Macaca mulatta":[
       "BSgenome.Mmulatta.UCSC.rheMac8",
@@ -61,22 +64,10 @@
       "org.Mmu.eg.db",
       "Macaca mulatta",
       "mmul",
-      ["1:20", "X", "Y"]
-   ],
-   "Pan troglodytes":[
-      "BSgenome.Ptroglodytes.UCSC.panTro4",
-      "TxDb.Ptroglodytes.UCSC.panTro4.refGene",
-      "org.Pt.eg.db",
-      "Pan troglodytes",
-      "pt",
-      ["1:22", "X", "Y"]
-   ],
-   "Sus scrofa":[
-      "BSgenome.Sscrofa.UCSC.susScr3",
-      "TxDb.Sscrofa.UCSC.susScr3.refGene",
-      "org.Ss.eg.db",
-      "Sus scrofa",
-      "ss",
-      ["1:12", "X", "Y"]
+      ["1:20", "X", "Y"],
+      "mmul801",
+      "rheMac8", 
+      [223, 196, 185, 170, 187, 179, 170, 146, 134, 100, 133, 130, 109, 128,
+      113, 80, 95, 74, 58, 77, 153, 12]
    ]
 }
