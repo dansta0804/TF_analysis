@@ -129,7 +129,12 @@ for (sample in seq_along(mm_annot_peaks)) {
 
 all_proteins <- character()
 
-for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
+# for (i in 1:length(mm_genes)) {
+#     s <- as.data.frame(mm_genes[i])
+#     print(length(rownames(s)))
+# }
+
+for (gene_name in 1:length(unique(mm_genes[[6]]$gene_symbol))) {
     gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
 
     if (is.na(gene)) {
@@ -141,31 +146,30 @@ for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
         if (length(proteins) == 0) {
             next
         } else {
-            print(paste("Getting sequence for", gene, "..."))
             proteins_df <- aas_to_df(proteins)
             proteins_df$name <- gene
 
             for (s in 1:length(proteins_df$seq)) {
-                all_proteins <- append(all_proteins, proteins[s])
+                if (width(proteins[s]) < 800) {
+                    next
+                } else {
+                    print(paste("Getting sequence for", gene, "..."))
+                    all_proteins <- append(all_proteins, proteins[s])
+                }
             }
             proteins_df <- c()
         }
     }
 }
 
+mean(width(all_proteins))
+
 writeXStringSet(AAStringSet(all_proteins),
-                filepath = paste0(RESULTS, "Extracted_protein_sequences.fasta"),
+                filepath = paste0(RESULTS, "Extracted_protein_sequences_2.fasta"),
                 format = "fasta")
 
 # nolint end
 ```
-
-Su Blast surandame Homo sapiens genus, kurie yra panašūs į Mus musculus
-genus (sekų identiškumas = 60).
-
-Sudarome lentelę, kurioje nurodytas Mus musculus genas ir jo ID bei jo
-Blast atitikmuo - genas ir jo ID.
-
 
 ```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
@@ -180,11 +184,11 @@ human_db <-
 predictions <-
     predict(human_db, all_proteins,
             BLAST_args = "-num_threads 10",
-            custom_format = "qseqid sseqid qacc saqq length qcovs evalue")
+            custom_format = "qseqid sseqid qacc sacc length pident ppos qcovs evalue")
 
 # Saving blastp result into a file so that it can be used for further analysis:
 # FIND BETTER WAY TO SAVE THE RESULT!
-sink(paste0(PROJECT, "predictions_protein.txt"))
+sink(paste0(PROJECT, "predictions_05-18.txt"))
 print(predictions)
 sink()
 # nolint end
