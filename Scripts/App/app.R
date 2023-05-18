@@ -143,7 +143,10 @@ server <- function(input, output, session) {
       converted_table[nrow(converted_table) + 1, ] <- row
     }
       
-    output$samples <- DT::renderDataTable({converted_table}, server = TRUE)
+    output$samples <-
+      DT::renderDataTable({
+        converted_table[, c("Originalus pavadinimas", "Grafikų pavadinimas",
+                            "Mėginio dydis (pikais)")]}, server = TRUE)
     output$samples2 <-
       DT::renderDataTable({
         converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (pikais)")]},
@@ -242,7 +245,7 @@ server <- function(input, output, session) {
           colnames(bigbed_files[[rows]]) <- c("chrom", "start", "end", "other")
         }
 
-         genome <- input$organism
+        genome <- input$organism
         unlisted_json <- unlist(json[[genome]][6])
         start_end <- unlist(strsplit(unlisted_json[1], ":"))
 
@@ -267,8 +270,6 @@ server <- function(input, output, session) {
         peak_counts <-
           lapply(names(grl), count_peaks, objects = grl) %>%
           bind_rows()
-
-         
 
           # Calling factor() function in order to maintain certain Chromosome
           # and Name order:
@@ -419,7 +420,6 @@ server <- function(input, output, session) {
         names(grl)[rows] <-
           converted_table[row_index[rows], "Grafikų pavadinimas"]
       }
-
 
       if (length(row_index) == 0) {
         return()
@@ -722,14 +722,14 @@ server <- function(input, output, session) {
         bigbed_files[[rows]] <-
           read.table(file = converted_table[row_index[rows], "Kelias"])
         
-        if (length(colnames(bigbed_files[[rows]])) > 4) {
+        col_len <- length(colnames(bigbed_files[[rows]]))
+
+        if (col_len > 4) {
           colnames(bigbed_files[[rows]]) <-
-          c("seqnames", "start", "end", "name", "uniprot_id", "abs_summit", "pileup",
-              "p_value", "fold_enrichment", "q_value", "ID")
-            # c("chrom", "start", "end", "name",
-            #   rep(paste0("other", 1:length(colnames) - 4)))
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:(col_len - 4))))
         } else {
-          colnames(bigbed_files[[rows]]) <- c("seqnames", "start", "end", "other")
+          colnames(bigbed_files[[rows]]) <- c("chrom", "start", "end", "other")
         }
 
         bigbed_files[[rows]] <-
@@ -859,16 +859,6 @@ server <- function(input, output, session) {
         homer_motifs
       }
     })
-
-  #   url <- a("Google Homepage", href="https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG")
-  #   output$link <- renderUI({
-  #     tagList("URL link:", url)
-  #   })
-
-  #   observeEvent(input$do, {
-  #   session$sendCustomMessage(type = 'testmessage',
-  #     message = 'Thank you for clicking')
-  # })
   })
 }
 
