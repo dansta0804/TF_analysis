@@ -536,7 +536,7 @@ server <- function(input, output, session) {
           tagMatrix <- getTagMatrix(peak, windows = promoter)
           
           plots[[peak_file]] <- plotAvgProf(tagMatrix, xlim = c(-3000, 3000),
-                                            xlab = "Genomic Region (5'->3')",
+                                            xlab = "Regionas (5'->3')",
                                             ylab = "Read Count Frequency") +
           remove_y +
           ggtitle(names(grl)[peak_file])
@@ -562,13 +562,7 @@ server <- function(input, output, session) {
       rownames(mpwm) <- c("A", "C", "G", "T")
       ggseqlogo(mpwm)
     })
-
-    # GENOMIC DATA ANALYSIS - PWM MATRIX MATCHES (PLOT 8):
-    # plot8 <- reactive({
-      
-    # })
     
-
     plot8 <- reactive({
       req(input$samples3_rows_selected)
       bigbed_files <- list()
@@ -622,7 +616,6 @@ server <- function(input, output, session) {
         return()
       } else {
         mpwm <- read.table(file = input$pwm$datapath, skip = 1)
-        # mpwm <- read.table(file = "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Input/PWM/FOXA2_MOUSE.H11MO.0.A.pwm", skip = 1)
         mpwm <- t(mpwm)
         rownames(mpwm) <- c("A", "C", "G", "T")
 
@@ -667,7 +660,8 @@ server <- function(input, output, session) {
           geom_bar(width = 0.4, size = 0.2, colour = "#3f2704",
                    stat = "identity", position = position_dodge(0.4)) +
           scale_fill_manual(values = c("#e3a15e", "#c7633b"),
-                            labels = c("Tbx5 motyvų skaičius",
+                            labels = c(paste0(input$tf_options,
+                                              " motyvų skaičius"),
                                        "Pikų skaičius")) +
           scale_y_continuous(labels = label_number(suffix = " K",
                                                    scale = 1e-3)) +
@@ -934,7 +928,9 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
         selectInput(
           inputId = "tf_options",
           label = "Pasirinkite transkripcijos faktorių:",
-          choices = c("Tbx5", "GATA3", "Tcf21", "Nenurodyta"),
+          choices = c(
+            "Tbx5", "GATA3", "GATA4", "Tbx5", "Tcf21", "CTCF", "FOXA2",
+            "Nenurodyta"),
           selected = "Nenurodyta"
         ),
         p("* - privalomas įvesties laukas", class = "info_text"),
