@@ -1,86 +1,8 @@
 # nolint start
 PROJECT     <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
-# INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 INTER_FILES <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/Analyses/Tbx5_analysis_I/Intermediate_data_files/"
 RESULTS     <- paste0(INTER_FILES, "Generated_files/")
-# INPUTS      <- paste0(PROJECT, "Input")
 
-# source(PROJECT, "Scripts/App/app.R")
-
-# Format detection and conversion:
-# format_detection <- function(x) {
-#     tryCatch(
-#       {
-#         path <- paste0(PROJECT, "Analyses/Tbx5_analysis_I/Inputs/")
-#         file <- file.path(path, "BigBed/", x)
-#         gr <- import(test_bb)
-#         return(gr)
-
-
-#         if (input$file_format == "bed") {
-#       colnames(converted_table) <-
-#         c("Old file name", "New file name", "Graph name")
-        
-#       for(sample in 1:length(input$bigbed[, c("name")])) {
-#         names <- input$bigbed[sample, 'name']
-#         row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
-#         converted_table[nrow(converted_table) + 1, ] <- row
-#       }
-#       output$samples <- DT::renderDataTable({converted_table})
-#     } else if (input$file_format == "bw") {
-#         colnames(converted_table) <-
-#           c("Old file name", "New file name", "Graph name")
-        
-#         for(sample in 1:length(input$bigbed[, c("name")])) {
-#           names <- input$bigbed[sample, 'name']
-#           system(paste("/home/daniele/Tools/bigWigToBedGraph",
-#                  paste0(BIGWIG, "Mus_musculus/", names),
-#                  paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
-#           row <- c(names, paste0(names, ".bedGraph"),
-#                    paste0("Sample", sample, "_", input$organism))
-#           converted_table[nrow(converted_table) + 1, ] <- row
-#         }
-#         output$samples <- DT::renderDataTable({converted_table})
-#     }
-#       },
-#         error = function(e) {
-#             message('An Error Occurred')
-#             print(e)
-#         },
-#         warning = function(w) {
-#             message('A Warning Occurred')
-#             print(w)
-#             return(NA)
-#         }
-#     )
-#   }
-
-
-  # if (input$file_format == "bed") {
-    #   colnames(converted_table) <-
-    #     c("Old file name", "New file name", "Graph name")
-        
-    #   for(sample in 1:length(input$bigbed[, c("name")])) {
-    #     names <- input$bigbed[sample, 'name']
-    #     row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
-    #     converted_table[nrow(converted_table) + 1, ] <- row
-    #   }
-    #   output$samples <- DT::renderDataTable({converted_table})
-    # } else if (input$file_format == "bw") {
-    #     colnames(converted_table) <-
-    #       c("Old file name", "New file name", "Graph name")
-        
-    #     for(sample in 1:length(input$bigbed[, c("name")])) {
-    #       names <- input$bigbed[sample, 'name']
-    #       system(paste("/home/daniele/Tools/bigWigToBedGraph",
-    #              paste0(BIGWIG, "Mus_musculus/", names),
-    #              paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
-    #       row <- c(names, paste0(names, ".bedGraph"),
-    #                paste0("Sample", sample, "_", input$organism))
-    #       converted_table[nrow(converted_table) + 1, ] <- row
-    #     }
-    #     output$samples <- DT::renderDataTable({converted_table})
-    # }
 # A function that formats number by adding spaces (e.g., 5000 -> 5 000):
 spaces <- function(number) {
   format(number, big.mark = " ")
@@ -203,7 +125,8 @@ count_peaks <- function(name, objects) {
 # Declaring a function that calculates modified Jaccard coefficient:
 jaccard <- function(granges, a, b) {
     len <- reduce(c(granges[[a]], granges[[a]])) %>% length()
-    return((length(GenomicRanges::intersect(granges[[a]], granges[[b]])) / len) * 100)
+    return((length(GenomicRanges::intersect(granges[[a]],
+                                            granges[[b]])) / len) * 100)
 }
 
 find_motif_hits <- function(sequences, mpwm) {
