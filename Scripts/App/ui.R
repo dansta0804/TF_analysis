@@ -6,93 +6,93 @@ PROJECT <- "./"
 
 ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
   includeCSS(paste0(PROJECT, "Scripts/styles.css")),
-  tabPanel("Formatų konversija",
-    sidebarLayout(
-      sidebarPanel(
-        width = 4,
-        fileInput(
-          inputId = "provided_file",
-          label = "Įkelkite ChIP sekoskaitos duomenų failą (-us)*:",
-          multiple = TRUE,
-          buttonLabel = "Ieškoti failo",
-          placeholder = "Failas nepasirinktas"
-        ),
-        radioButtons(
-          inputId = "file_format",
-          label = "Nurodykite įvestų duomenų formatą:",
-          choices = c("BED" = "bed", "BigWig" = "bw", "BigBed" = "bb")
-        ),
-      ),
-      mainPanel(
-        width = 8
-      )
-    )
-  ),
-  # tabPanel("Duomenų įkėlimas",
+  # tabPanel("Formatų konversija",
   #   sidebarLayout(
   #     sidebarPanel(
   #       width = 4,
   #       fileInput(
-  #         inputId = "bigbed",
-  #         label = "Įkelkite BED formato failą (-us)*:",
+  #         inputId = "provided_file",
+  #         label = "Įkelkite ChIP sekoskaitos duomenų failą (-us)*:",
   #         multiple = TRUE,
   #         buttonLabel = "Ieškoti failo",
   #         placeholder = "Failas nepasirinktas"
   #       ),
-  #       selectInput(
-  #         inputId = "organism",
-  #         label = "Nurodykite, iš kokio organizmo išgauti mėginiai:",
-  #         choices = c(
-  #           "Mus musculus", "Homo sapiens", "Rattus norvegicus", "Danio rerio",
-  #           "Bos taurus", "Drosophila melanogaster", "Gallus gallus",
-  #           "Macaca mulatta", "Pan troglodytes", "Sus scrofa", "Nenurodyta"
-  #         ),
-  #         selected = "Nenurodyta"
+  #       radioButtons(
+  #         inputId = "file_format",
+  #         label = "Nurodykite įvestų duomenų formatą:",
+  #         choices = c("BED" = "bed", "BigWig" = "bw", "BigBed" = "bb")
   #       ),
-  #       fileInput(
-  #         inputId = "pwm",
-  #         label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
-  #         multiple = FALSE,
-  #         buttonLabel = "Ieškoti failo",
-  #         placeholder = "Failas nepasirinktas"
-  #       ),
-  #       # selectInput(
-  #       #   inputId = "tf_options",
-  #       #   label = "Pasirinkite transkripcijos faktorių:",
-  #       #   choices = c(
-  #       #     "Tbx5", "GATA3", "GATA4", "Tbx5", "Tcf21", "CTCF", "FOXA2",
-  #       #     "Nenurodyta"),
-  #       #   selected = "Nenurodyta"
-  #       # ),
-  #       textInput(
-  #           inputId = "tf_options", 
-  #           label = "Įveskite transkripcijos faktoriaus pavadinimą:",
-  #           value = "Nenurodyta", 
-  #           width = "100%",
-  #           placeholder = "Transkripcijos faktoriaus pavadinimas..."),
-  #       p("* - privalomas įvesties laukas", class = "info_text"),
-  #       br(),
-  #       br(),
-  #       actionButton(
-  #         inputId = "sample_data",
-  #         label = "Pavyzdiniai duomenys",
-  #         icon = icon("th"), 
-  #         onclick = "window.open('https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG', '_blank')"
-  #       )
   #     ),
   #     mainPanel(
-  #       width = 8,
-  #       tableOutput("table0"),
-  #       shinydashboard::box(
-  #           width = 12,
-  #           withLoader(plotOutput("plot7", width = "40%", height = "250px"),
-  #                      type = "html", loader = "dnaspin")
-  #       ),
-  #       # p("Mėginių informacija:"),
-  #       DT::dataTableOutput("samples")
+  #       width = 8
   #     )
   #   )
   # ),
+  tabPanel("Duomenų įkėlimas",
+    sidebarLayout(
+      sidebarPanel(
+        width = 4,
+        fileInput(
+          inputId = "bigbed",
+          label = "Įkelkite BED formato failą (-us)*:",
+          multiple = TRUE,
+          buttonLabel = "Ieškoti failo",
+          placeholder = "Failas nepasirinktas"
+        ),
+        selectInput(
+          inputId = "organism",
+          label = "Nurodykite, iš kokio organizmo išgauti mėginiai:",
+          choices = c(
+            "Mus musculus", "Homo sapiens", "Rattus norvegicus", "Danio rerio",
+            "Bos taurus", "Drosophila melanogaster", "Gallus gallus",
+            "Macaca mulatta", "Pan troglodytes", "Sus scrofa", "Nenurodyta"
+          ),
+          selected = "Nenurodyta"
+        ),
+        fileInput(
+          inputId = "pwm",
+          label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
+          multiple = FALSE,
+          buttonLabel = "Ieškoti failo",
+          placeholder = "Failas nepasirinktas"
+        ),
+        # selectInput(
+        #   inputId = "tf_options",
+        #   label = "Pasirinkite transkripcijos faktorių:",
+        #   choices = c(
+        #     "Tbx5", "GATA3", "GATA4", "Tbx5", "Tcf21", "CTCF", "FOXA2",
+        #     "Nenurodyta"),
+        #   selected = "Nenurodyta"
+        # ),
+        textInput(
+            inputId = "tf_options", 
+            label = "Įveskite transkripcijos faktoriaus pavadinimą:",
+            value = "Nenurodyta", 
+            width = "100%",
+            placeholder = "Transkripcijos faktoriaus pavadinimas..."),
+        p("* - privalomas įvesties laukas", class = "info_text"),
+        br(),
+        br(),
+        actionButton(
+          inputId = "sample_data",
+          label = "Pavyzdiniai duomenys",
+          icon = icon("th"), 
+          onclick = "window.open('https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG', '_blank')"
+        )
+      ),
+      mainPanel(
+        width = 8,
+        tableOutput("table0"),
+        shinydashboard::box(
+            width = 12,
+            withLoader(plotOutput("plot7", width = "40%", height = "250px"),
+                       type = "html", loader = "dnaspin")
+        ),
+        # p("Mėginių informacija:"),
+        DT::dataTableOutput("samples")
+      )
+    )
+  ),
   tabPanel("Kokybės vertinimas",
     sidebarLayout(
       sidebarPanel(
