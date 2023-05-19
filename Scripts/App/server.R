@@ -567,7 +567,7 @@ server <- function(input, output, session) {
       req(input$samples3_rows_selected)
       bigbed_files <- list()
       row_index <- input$samples3_rows_selected
-      print("labas")
+
       if (length(input$pwm) == 0) {
         shinyalert("PWM matrica neįkelta!", type = "error",
                    confirmButtonText = "Įkelti matricą")
