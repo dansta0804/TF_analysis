@@ -77,7 +77,7 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
           inputId = "sample_data",
           label = "Pavyzdiniai duomenys",
           icon = icon("th"), 
-          onclick = "window.open('https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/Eu4Rfi8-aqJBq-B_XcmeU_QBcdlQ7_Epb4yfy0VIIa5K_g?e=CFFJSG', '_blank')"
+          onclick = "window.open('https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/EtEGQ8POkapLhPv6eHvl48cB-jmes81M0JPW8PVWTz2QgA?e=wjSSKJ', '_blank')"
         )
       ),
       mainPanel(
