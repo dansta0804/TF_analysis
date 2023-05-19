@@ -262,7 +262,18 @@ ui <- navbarPage("ChIP sekoskaitos analizės", theme = shinytheme("cosmo"),
   tabPanel("Taikinių spėjimas",
     sidebarLayout(
       sidebarPanel(
-        width = 4
+        width = 4,
+        selectInput(
+          inputId = "organism",
+          label = "Nurodykite, kokiame organizme spėsite transkripcijos
+                  faktorių taikinius:",
+          choices = c(
+            "Mus musculus", "Homo sapiens", "Rattus norvegicus", "Danio rerio",
+            "Bos taurus", "Drosophila melanogaster", "Gallus gallus",
+            "Macaca mulatta", "Pan troglodytes", "Sus scrofa", "Nenurodyta"
+          ),
+          selected = "Nenurodyta"
+        )
       ),
       mainPanel(
         width = 8
