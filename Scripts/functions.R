@@ -14,7 +14,7 @@ spaces <- function(number) {
 # A function that reads PWM of certain transcription factor:
 get_PWM <- function(pwm_name) {
   TF_pwm <-
-    read.table(file = paste0(INTER_FILES, pwm_name)) %>%
+    read.table(file = pwm_name) %>%
     t() %>%
     `rownames<-`(c("A", "C", "G", "T"))
   return(TF_pwm)
