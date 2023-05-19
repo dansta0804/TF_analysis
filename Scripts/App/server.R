@@ -70,48 +70,6 @@ server <- function(input, output, session) {
     input_data
   })
 
-  ############################# FORMAT CONVERSION #############################
-  observe({
-    req(input$provided_file)
-    input_files <- input$provided_file[, c("name")]
-    print(input_files)
-
-    # test_path <- system.file("tests", package = "rtracklayer")
-  # format_detection(input_files)
-
-  ## Returns ranges with all fields
-  
-
-
-  
-
-    # if (input$file_format == "bed") {
-    #   colnames(converted_table) <-
-    #     c("Old file name", "New file name", "Graph name")
-        
-    #   for(sample in 1:length(input$bigbed[, c("name")])) {
-    #     names <- input$bigbed[sample, 'name']
-    #     row <- c(names, "-", paste0("Sample", sample, "_", input$organism))
-    #     converted_table[nrow(converted_table) + 1, ] <- row
-    #   }
-    #   output$samples <- DT::renderDataTable({converted_table})
-    # } else if (input$file_format == "bw") {
-    #     colnames(converted_table) <-
-    #       c("Old file name", "New file name", "Graph name")
-        
-    #     for(sample in 1:length(input$bigbed[, c("name")])) {
-    #       names <- input$bigbed[sample, 'name']
-    #       system(paste("/home/daniele/Tools/bigWigToBedGraph",
-    #              paste0(BIGWIG, "Mus_musculus/", names),
-    #              paste0(BEDGRAPH, "Mus_musculus/", names, ".bedGraph")))
-    #       row <- c(names, paste0(names, ".bedGraph"),
-    #                paste0("Sample", sample, "_", input$organism))
-    #       converted_table[nrow(converted_table) + 1, ] <- row
-    #     }
-    #     output$samples <- DT::renderDataTable({converted_table})
-    # }
-  })
-
   converted_table <- data.frame(matrix(ncol = 4, nrow = 0))
   observe({
     req(input$bigbed)
