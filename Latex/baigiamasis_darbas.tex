@@ -25,8 +25,8 @@
 \usepackage{textcomp}
 \usepackage{amsmath}
 
-\newcommand{\EE}{\mathbb{E}\,} % Mean
-\newcommand{\ee}{{\mathrm e}}  % nice exponent
+\newcommand{\EE}{\mathbb{E}\,}
+\newcommand{\ee}{{\mathrm e}}
 \newcommand{\dd}{{\mathrm d}}
 \newcommand{\RR}{\mathbb{R}}
 
@@ -494,41 +494,40 @@ reiškia, jog yra žinoma itin daug molekulinių detalių apie DNR.}.\\
 GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 \begin{enumerate}
     \item \textbf{Baltymo ir DNR sąveikos regionų nustatymas.} Pradiniai
-          regionai nustatomi, taikant \emph{GPS} algoritmą\cite{ARTICLE14},
-          kuris naudoja \emph{Dirichlė} skirstinį.
+        regionai nustatomi, taikant \emph{GPS} algoritmą\cite{ARTICLE14},
+        kuris naudoja \emph{Dirichlė} skirstinį.
     \item \textbf{Praturtintų \emph{k - merų} nustatymas.} Jie nustatomi,
-          lyginant \emph{k - merų} dažnius tarp teigiamų sekų ir neigiamų
-          kontrolinių sekų. Teigiamos sekos - sekos, kurios sudarytos iš 61
-          bazių poros ir yra išsidėsčiusios spėjamų baltymo ir DNR sąveikos
-          regionų (gautų pirmajame etape) centruose. Neigiamos kontrolinės
-          sekos - 61 bazių porą turinčios sekos, kurios yra nutolusios nuo
-          teigiamų sekų per 300 bazių porų. Be to, šios sekos nepersidengia su
-          sekomis, esančiomis baltymo - DNR sąveikos sekų centruose. Šiame
-          etape yra skaičiuojami \emph{k - merų} fragmentų atitikimai teigiamų
-          ir neigiamų sekų rinkiniuose. \emph{K - meras} (sekos fragmentas)
-          yra laikomas praturtintu, kai \emph{p} vertė yra mažesnė nei 0.001.
-          % ir 3-fold enrichment in terms of positive/negative hit count?
+        lyginant \emph{k - merų} dažnius tarp teigiamų sekų ir neigiamų
+        kontrolinių sekų. Teigiamos sekos - sekos, kurios sudarytos iš 61
+        bazių poros ir yra išsidėsčiusios spėjamų baltymo ir DNR sąveikos
+        regionų (gautų pirmajame etape) centruose. Neigiamos kontrolinės
+        sekos - 61 bazių porą turinčios sekos, kurios yra nutolusios nuo
+        teigiamų sekų per 300 bazių porų. Be to, šios sekos nepersidengia su
+        sekomis, esančiomis baltymo - DNR sąveikos sekų centruose. Šiame
+        etape yra skaičiuojami \emph{k - merų} fragmentų atitikimai teigiamų
+        ir neigiamų sekų rinkiniuose. \emph{K - meras} (sekos fragmentas)
+        yra laikomas praturtintu, kai \emph{p} vertė yra mažesnė nei 0.001.
+        % ir 3-fold enrichment in terms of positive/negative hit count?
     \item \textbf{Praturtintų \emph{k - merų} klasterizavimas.} Praturtinti
-          \emph{k - merai} klasterizuojami į ekvivalentiškumo klases, kurios
-          apibūdina panašias DNR sekas, prie kurių jungiasi transkripcijos
-          faktorius. Seka atitinka \emph{k - mero} ekvivalentiškumo klasę, kai
-          sekoje nustatomas fragmentas yra vienas iš ekvivalentiškumo klasės
-          elementų.
+        \emph{k - merai} klasterizuojami į ekvivalentiškumo klases, kurios
+        apibūdina panašias DNR sekas, prie kurių jungiasi transkripcijos
+        faktorius. Seka atitinka \emph{k - mero} ekvivalentiškumo klasę, kai
+        sekoje nustatomas fragmentas yra vienas iš ekvivalentiškumo klasės
+        elementų.
     \item \textbf{Išankstinio pasiskirstymo nustatymas.} Labiausiai praturtinta
-          \emph{k - merų} klasė yra naudojama \emph{Dirichlė} išankstinio
-          pasiskirstymo paskaičiavimui. Šiame etape genomas yra suskaidomas į
-          kelis tūkstančius bazių porų turinčius segmentus. Šie segmentai yra
-          gaunami atskiriant DNR fragmentus, kuriuose yra daugiau nei 500 bazių
-          porų turintys tarpai bei DNR regionai, kuriems buvo priskirta mažiau
-          nei 6 DNR nuskaitymai (angl. \emph{reads}). Šie regionai yra
-          skanuojami su DNR sekų fragmentais, kurie priklauso atrinktai
-          \emph{k - merų} ekvivalentiškumo klasei, \emph{k - merų}
-          atitikimai yra skaičiuojami.
+        \emph{k - merų} klasė yra naudojama \emph{Dirichlė} išankstinio
+        pasiskirstymo paskaičiavimui. Šiame etape genomas yra suskaidomas į
+        kelis tūkstančius bazių porų turinčius segmentus. Šie segmentai yra
+        gaunami atskiriant DNR fragmentus, kuriuose yra daugiau nei 500 bazių
+        porų turintys tarpai bei DNR regionai, kuriems buvo priskirta mažiau
+        nei 6 DNR nuskaitymai (angl. \emph{reads}). Šie regionai yra
+        skanuojami su DNR sekų fragmentais, kurie priklauso atrinktai
+        \emph{k - merų} ekvivalentiškumo klasei, \emph{k - merų}
+        atitikimai yra skaičiuojami.
     \item \textbf{Tikslesnių baltymo - DNR sąveikos regionų spėjimas.} Tam yra
-          panaudojamas 4 etape gautas išankstinis pozicijų pasiskirstymas.
-          \colorbox{green}{PAPILDYTI...}
+        panaudojamas 4 etape gautas išankstinis pozicijų pasiskirstymas.
     \item \textbf{2 - 3 etapų kartojimas.} Tam yra panaudojami 5 etape gauti
-          patikslinti baltymo - DNR sąveikos regionai.
+        patikslinti baltymo - DNR sąveikos regionai.
 \end{enumerate}
 
 \newpage
@@ -536,42 +535,68 @@ GEM algoritmą sudaro šeši skirtingi etapai\cite{ARTICLE15}:
 %%%%%%%%%%%%%%%%%%%%%%%
 % METODO REALIZACIJA
 %%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Transkripcijos faktoriaus taikinių spėjimo metodas}
 Transkripcijos faktorių taikinių spėjimo metodas leidžia nustatyti, kokiose
 pasirinkto organizmo genomo pozicijose yra įmanomas nurodyto transkripcijos
 faktoriaus prisijungimas, naudojant kito organizmo genomines sekas. Metodas
-realizuotas, įgyvendinus šiuos etapus:
+realizuotas, įgyvendinus aprašytus etapus.
+
+\subsection{Pikų anotavimas}
+Šiame etape yra anotuojami ChIP sekoskaitos mėginiai, išgauti iš organizmo,
+kurio duomenys panaudojami, atliekant transkripcijos faktorių taikinių spėjimą.
+Taip pat anotuojami ir kontroliniai ChIP sekoskaitos mėginiai, kurie išgauti iš
+organizmo, kurio genome spėjamos transkripcijos faktoriaus prisijungimo vietos.
+Kontroliniai mėginiai reikalingi tam, jog būtų galima įvertinti metodo tikslumą.
+ChIP sekoskaitos duomenys - pikų rinkiniai - anotuojami, pritaikant sukurtą
+\emph{annotate\_peak()} funkciją. Šiai funkcijai turi būti perduoti šie
+parametrai:
 
 \begin{itemize}
-    \item \textbf{Pikų anotavimas.} Šiame etape yra anotuojami ChIP sekoskaitos
-        mėginiai, išgauti iš organizmo, kurio duomenys panaudojami, atliekant
-        transkripcijos faktorių taikinių spėjimą. Taip pat anotuojami ir
-        kontroliniai ChIP sekoskaitos mėginiai, kurie išgauti iš organizmo,
-        kurio genome spėjamos transkripcijos faktoriaus prisijungimo vietos.
-        Kontroliniai mėginiai reikalingi tam, jog būtų galima įvertinti
-        metodo tikslumą. ChIP sekoskaitos duomenys - pikų rinkiniai -
-        anotuojami, pritaikant sukurtą \emph{annotate\_peak()} funkciją. Šiai
-        funkcijai turi būti perduoti šie parametrai:
-            \begin{itemize}
-                \item \textbf{\emph{Pikų rinkinys:}} ChIP sekoskaitos duomenų
-                    rinkinys, saugomas \emph{GRanges} objektų sąraše
-                    (\emph{GRangesList});
-                \item \textbf{\emph{Ensembl genomo anotacija:}} organizmų
-                    genominės anotacijos iš R \emph{annotables} bibliotekos;
-                \item \textbf{\emph{TxDb objektas:}} pasirinktų organizmų
-                    duomenų bazės, kuriose saugoma informacija įprastai atitinka
-                    GTF/GFF failų informaciją;
-                \item \textbf{\emph{org.x.eg.db anotacija:}} x atitinka
-                    organizmų lotyniškų pavadinimų santrumpą (pavyzdžiui,
-                    \emph{Mus musculus} - \emph{Mm}).
-            \end{itemize}
-        Perduoti parametrai panaudojami \emph{ChIPseeker} bibliotekos
-        funkcijos \emph{annotatePeak()}, kuri pikams priskiria artimiausius
-        genus. Taip pat šiame etape anotuotiems pikams priskiriami genų
-        identifikacijos numeriai bei genų simboliai.
-    \item \textbf{Aminorūgščių sekų išgavimas.}
-    \item \textbf{\emph{Blastp} paieška.}
+    \item \textbf{\emph{Pikų rinkinys:}} ChIP sekoskaitos duomenų rinkinys,
+        saugomas \emph{GRanges} objektų sąraše (\emph{GRangesList}).
+    \item \textbf{\emph{Ensembl genomo anotacija:}} organizmų genominės
+        anotacijos iš R \emph{annotables} bibliotekos.
+    \item \textbf{\emph{TxDb objektas:}} pasirinktų organizmų duomenų bazės,
+        kuriose saugoma informacija įprastai atitinka GTF/GFF failų informaciją.
+    \item \textbf{\emph{org.x.eg.db anotacija:}} x atitinka organizmų lotyniškų
+        pavadinimų santrumpą (pavyzdžiui, \emph{Mus musculus} - \emph{Mm}).
 \end{itemize}
+
+Perduoti parametrai panaudojami \emph{ChIPseeker} bibliotekos funkcijos
+\emph{annotatePeak()}, kuri pikams priskiria artimiausius genus. Taip pat šiame
+etape anotuotiems pikams priskiriami genų identifikacijos numeriai bei genų
+simboliai.
+
+\subsection{Aminorūgščių sekų išgavimas}
+Anotuotų pikų rinkinių genus atitinkančios aminorūgščių sekos išgautos,
+panaudojus \emph{ensembldb}\cite{ENSEMBLDB} bibliotekos funkciją 
+\emph{proteins()}. Šiai funkcijai perduoti šie parametrai:
+
+\begin{itemize}
+    \item \textbf{\emph{Ensembl duomenų bazės objektas:}} specifikavus
+        konkretaus organizmo anotacijos objektą, įvykdomas SQL susiejimas su
+        duomenų baze, kurioje saugoma konkretaus organizmo \emph{Ensembl}
+        anotacija.
+    \item \textbf{\emph{Filtras:}} jis taikomas, kad iš \emph{Ensembl} duomenų
+        bazės būtų išgauta tik tam tikra informacija. Realizuojant
+        transkripcijos faktorių taikinių paieškos metodą taikytas
+        \emph{GeneNameFilter()}, kuriam perduodamas geno pikui priskirto geno
+        pavadinimas.
+    \item \textbf{\emph{Grąžinamo rezultato tipas:}} siekiant išgauti
+        aminorūgščių sekas formatu, kuris būtų paprastai apdorojamas
+        tolimesniuose etapuose, pasirinktas \emph{AAStringSet} grąžinamo
+        rezultato tipas.
+\end{itemize}
+
+\subsection{\emph{Blastp} paieška}
+Paieškos atlikimui panaudota \emph{rBlast}\cite{RBLAST} bibliotekos funkcija
+\emph{blast()}, kuriai perduotas pasirinkto organizmo baltymų duomenų bazės
+failas, bei nurodytas \emph{Blast} paieškos tipas - \emph{blastp}.
+\emph{rBlast} biblioteka leidžia naudotis lokaliai instaliuotu
+\emph{BLAST+}\cite{BLAST}, naudojant \emph{Bioconductor} infrastruktūrą.
+
+\subsection{Paieškos rezultatų apdorojimas}
 
 \newpage
 
@@ -871,23 +896,27 @@ naudojant R bei internetinių puslapių kūrimo kalbų - HTML, CSS, JavaScript -
 funkcijas.
 
 \subsubsection*{Duomenų įkėlimas}
-Naudotojas gali įkelti vieną arba daugiau \emph{BED} formato failų, saugančių
-genominę ChIP sekoskaitos mėginių informaciją. Duomenų įkėlimo skiltyje
-specifikuojami papildomi parametrai, kurie panaudojami atliekant duomenų kokybės
-vertinimą, duomenų analizes bei konkretaus transkripcijos faktoriaus taikinių
-spėjimą pasirinktame organizme. Programos naudotojas gali nurodyti
-transkripcijos faktoriaus pavadinimą, pateikti nurodyto transkripcijos
-faktoriaus pozicinę svorių matricą bei pasirinkti, kokio organizmo genome
-norima atlikti transkripcijos faktoriaus taikinių spėjimą.
+Naudotojas gali įkelti vieną arba daugiau failų, turinčių tabuliacijos
+simboliais atskirtus stulpelius. Pastaruosiuose failuose turi būti pateikta
+svarbiausia genominių ChIP sekoskaitos duomenų informacija - chromosomos
+trumpinys bei piko pradžios ir pabaigos rėžiai. Įkėlus neteisingo formato
+duomenis aplikacijoje prieinamos biologinės analizės nėra atliekamos.
+
+Duomenų įkėlimo skiltyje specifikuojami papildomi parametrai, kurie panaudojami
+atliekant duomenų kokybės vertinimą, duomenų analizes bei konkretaus
+transkripcijos faktoriaus taikinių spėjimą pasirinktame organizme. Programos
+naudotojas turi nurodyti iš kokio organizmo išgauti mėginiai. Tai reikalinga
+tam, jog iš JSON formato failo būtų nuskaityti atitinkamos R bibliotekos bei
+chromosomų duomenys ir būtų sugeneruoti aiškūs grafikų pavadinimai. Taip pat
+naudotojas turi įrašyti transkripcijos faktoriaus pavadinimą bei pateikti
+nurodyto transkripcijos faktoriaus pozicinę svorių matricą.
 
 \subsubsection*{Duomenų kokybės vertinimas}
 Duomenų kokybės skiltyje pateikiama įkeltų ChIP sekoskaitos mėginių duomenų
 lentelė, kurios elementus naudotojas gali pasirinkti bei vykdyti duomenų
-kokybės vertinimo etapus tik pasirinktiems mėginiams. Taip pat naudotojas
-gali apjungti pasirinktus arba visus įkeltus mėginius į vieną duomenų rinkinį
-(šis funkcionalumas įgyvendintas, pritaikius bazinę R funkciją \emph{union()})
-arba analizuoti tik pasirinktų arba pažymėtų mėginių persidengiančius pikus
-(įgyvendinta, panaudojus funkciją \emph{intersect()}).
+kokybės vertinimo etapus tik pasirinktiems mėginiams. Atliekant GO analizę bei
+\emph{De novo} motyvų paiešką aplikacija vienu metu gali analizuoti tik vieną
+mėginį.
 
 \subsubsection*{Biologinės analizės}
 Analizių atlikimo lange naudotojas gali pasirinkti, su kokiais įkeltais
@@ -906,7 +935,9 @@ rezultatų pateikimas naudotojui, pateikusiam ir pasirinkusiam mėginius, gali
 užtrukti dėl įrankio atliekamų motyvų paieškos skaičiavimų. 
 
 \subsubsection*{Taikinių spėjimas}
-\colorbox{green}{PILDOMA...}
+Tuo atveju, jei norima vykdyti transkripcijos faktorių taikinių spėjimą,
+naudotojas turi specifikuoti organizmą, kurio genome bus spėjamas transkripcijos
+faktorių prisijungimas.
 
 \subsubsection*{Aplikacijos pritaikymas skirtingiems organizmams}
 R \emph{Shiny} aplikacija gali būti panaudota, analizuojant mėginius išgautus
@@ -915,15 +946,14 @@ yra naudojamas parašytos funkcijos, kurios naudoja R programavimo kalbos
 \emph{BSgenome}, \emph{Txdb} bei \emph{org.x.eg.db} genominių anotacijų
 bibliotekas. Dabartinėje R versijoje (4.2.3) yra prieinamos 33 skirtingų
 organizmų \emph{BSgenome} bei 12 \emph{Txdb} ir \emph{org.x.eg.db} bibliotekos.
-Sukurtoje aplikacijoje galima analizuoti 12 skirtingų organizmų ChIP sekoskaitos
+Sukurtoje aplikacijoje galima analizuoti 6 skirtingų organizmų ChIP sekoskaitos
 duomenis, kurie anotuojami bei analizuojami, naudojant naujausias organizmų
-genomų anotacijų versijas. Šių organizmų genominių anotacijų bibliotekos
+genomų anotacijų versijas. Šių organizmų genominių anotacijų bibliotekos,
+informacija apie kiekvieno organizmo chromosomų rinkinį bei chromosomų ilgius
+(informacija apie chromosomas išgauta iš \emph{NCBI}\cite{NCBI} duomenų bazės)
 pateiktos \emph{JSON}\cite{JSON} formato pavidalu. Šis formatas sukurtoje
 R aplikacijoje apdorotas, pritaikius \emph{rjson}\cite{RJSON} bibliotekos
 funkciją \emph{fromJSON()}.
-
-\subsubsection*{Aplikacijos prieinamumas}
-\colorbox{green}{PILDOMA...}
 
 \newpage
 
@@ -932,7 +962,13 @@ funkciją \emph{fromJSON()}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Rezultatai ir jų aptarimas}
-\colorbox{green}{PILDOMA...}
+Realizuotas transkripcijos faktorių taikinių spėjimo metodas testuotas su 3
+skirtingais \emph{Mus musculus} bei \emph{Homo sapiens} ChIP sekoskaitos
+duomenų rinkiniais.
+
+\subsection{Mėginys Nr. 1}
+\subsection{Mėginys Nr. 2}
+\subsection{Mėginys Nr. 3}
 
 \newpage
 
@@ -1054,6 +1090,10 @@ binding event finding and motif discovery reveals transcription factor spatial
 binding constraints. PLoS Comput Biol. 2012;8(8):e1002638. doi: 10.1371/journal.
 pcbi.1002638. Epub 2012 Aug 9. PMID: 22912568; PMCID: PMC3415389.
 
+\bibitem{ENSEMBLDB} Rainer J, Gatto L, Weichenberger CX (2019) ensembldb: an R
+package to create and use Ensembl-based annotation resources. Bioinformatics.
+doi:10.1093/bioinformatics/btz031.
+
 \bibitem{ARTICLE16} Ji H, Jiang H, Ma W, Wong WH. Using CisGenome to analyze
 ChIP-chip and ChIP-seq data. Curr Protoc Bioinformatics. 2011 Mar;
 Chapter 2:Unit2.13. doi: 10.1002/0471250953.bi0213s33. PMID: 21400695;
@@ -1120,6 +1160,19 @@ Proceedings of the 25th International Conference on World Wide Web. pp. 263–27
 \bibitem{RJSON} Couture-Beil A (2022). rjson: JSON for R. R package version
 0.2.21, \newline
 \url{https://CRAN.R-project.org/package=rjson}.
+
+\bibitem{NCBI} National Center for Biotechnology Information (NCBI)[Internet].
+Bethesda (MD): National Library of Medicine (US), National Center for
+Biotechnology Information; [1988] – [cited 2023 May 19]. Available from:
+\url{https://www.ncbi.nlm.nih.gov/}.
+
+\bibitem{RBLAST} Hahsler M, Nagar A (2019). rBLAST: R Interface for the Basic
+Local Alignment Search Tool. R package version 0.99.2, \newline
+\url{https://github.com/mhahsler/rBLAST}.
+
+\bibitem{BLAST} Camacho C., Coulouris G., Avagyan V., Ma N., Papadopoulos J.,
+Bealer K., Madden T.L. (2008) “BLAST+: architecture and applications.”
+BMC Bioinformatics 10:421. PubMed.
 
 \bibitem{HOMER} Heinz S, Benner C, Spann N, Bertolino E et al. Simple
 Combinations of Lineage-Determining Transcription Factors Prime cis-Regulatory
