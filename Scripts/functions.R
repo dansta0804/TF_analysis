@@ -1,7 +1,10 @@
 # nolint start
+library(imager)
+
 PROJECT     <- "./"
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 RESULTS     <- paste0(INTER_FILES, "Generated_files/")
+FIGURES     <- paste0(PROJECT, "Figures/")
 
 # A function that formats number by adding spaces (e.g., 5000 -> 5 000):
 spaces <- function(number) {
@@ -157,65 +160,94 @@ find_ontologies_table <- function(data, genome, subontology) {
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
                  qvalueCutoff  = 0.05, readable = TRUE)
 
-  pl <- as.data.frame(pl)
-  pl$Status <- "Peržiūrėti genų sąrašą"
-  pl <-
-    pl %>%
-    dplyr::select(c("ID", "Description", "GeneRatio", "Count",
-                    "Status", "geneID")) %>%
-    rename("GO ID" = "ID", "Apibūdinimas" = "Description",
-            "Genų santykis" = "GeneRatio", "Genų skaičius" = "Count",
-            "Peržiūra" = "Status")
-  
-  reactable(
-    pl, searchable = FALSE, showSortable = TRUE, rownames = FALSE,
-    pagination = TRUE, highlight = TRUE,
-    defaultColDef = colDef(
-      align = "center",
-      minWidth = 70
-    ),
-    columns = list(
-      `Peržiūra` = colDef(
-        style = function(value) {
-          list(color = "#500909", fontWeight = "bold")
-        },
-        details = function(value) {
-          genes <- unlist(strsplit(pl$geneID, split = "/")[value])
-          add_NA <- 8 - (length(genes) - 8 * (length(genes) %/% 8))
-          genes <- c(genes, rep(" ", add_NA))
-          tb <- data.frame(matrix(genes, ncol = 8), ncol = 8)
-          colnames(tb) <- c(rep(paste0("Genai ", 1:8)))
+  if (length(rownames(as.data.frame(pl))) == 0) {
+    error <-
+      data.frame(`Klaida` = paste0("GO analizės rezultate nebuvo gauti genų ",
+                                   "GO subontologijų apibūdinimai!"))
+    reactable(
+      error, searchable = FALSE, showSortable = FALSE, rownames = FALSE,
+      pagination = FALSE, highlight = FALSE,
+      defaultColDef = colDef(
+        align = "center",
+        minWidth = 70
+      ),
+      columns = list(
+        `Klaida` = colDef(
+          style = function(value) {
+            list(color = "#8f2222", fontWeight = "bold", fontSize = "20pt")
+          }
+        )
+      )
+    )
+  } else {
+    pl <- as.data.frame(pl)
+    pl$Status <- "Peržiūrėti genų sąrašą"
+    pl <-
+      pl %>%
+      dplyr::select(c("ID", "Description", "GeneRatio", "Count",
+                      "Status", "geneID")) %>%
+      rename("GO ID" = "ID", "Apibūdinimas" = "Description",
+              "Genų santykis" = "GeneRatio", "Genų skaičius" = "Count",
+              "Peržiūra" = "Status")
+    
+    reactable(
+      pl, searchable = FALSE, showSortable = TRUE, rownames = FALSE,
+      pagination = TRUE, highlight = TRUE,
+      defaultColDef = colDef(
+        align = "center",
+        minWidth = 70
+      ),
+      columns = list(
+        `Peržiūra` = colDef(
+          style = function(value) {
+            list(color = "#500909", fontWeight = "bold")
+          },
+          details = function(value) {
+            genes <- unlist(strsplit(pl$geneID, split = "/")[value])
+            add_NA <- 8 - (length(genes) - 8 * (length(genes) %/% 8))
+            genes <- c(genes, rep(" ", add_NA))
+            tb <- data.frame(matrix(genes, ncol = 8), ncol = 8)
+            colnames(tb) <- c(rep(paste0("Genai ", 1:8)))
 
-          htmltools::div(
-            style = "padding: 1rem",
-            reactable(tb[, 1:8], outlined = TRUE, fullWidth = TRUE,
-              defaultColDef = colDef(
-                align = "center",
-                minWidth = 70
+            htmltools::div(
+              style = "padding: 1rem",
+              reactable(tb[, 1:8], outlined = TRUE, fullWidth = TRUE,
+                defaultColDef = colDef(
+                  align = "center",
+                  minWidth = 70
+                )
               )
             )
-          )
-        }
-      ),
-      geneID = colDef(show = FALSE)
+          }
+        ),
+        geneID = colDef(show = FALSE)
+      )
     )
-  )
+  }
 }
 
 find_ontologies_graph <- function(data, genome, subontology) {
   pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = get(genome),
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
                  qvalueCutoff  = 0.05, readable = TRUE)
-  goplot(pl)
+  if (length(rownames(as.data.frame(pl))) == 0) {
+    plot(load.image(paste0(FIGURES, "Error_message.png")))
+  } else {
+    goplot(pl)
+  }
 }
 
 find_ontologies_tree <- function(data, genome, subontology) {
   pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = get(genome),
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
                  qvalueCutoff  = 0.05, readable = TRUE)
-  pl_modified <- setReadable(pl, 'org.Mm.eg.db', 'ENTREZID')
-  pl_modified <- pairwise_termsim(pl_modified)
-  treeplot(pl_modified, cluster.params = list(method = "average"),
-           xlim = c(0, 30))
+  if (length(rownames(as.data.frame(pl))) == 0) {
+    plot(load.image(paste0(FIGURES, "Error_message.png")))
+  } else {
+    pl_modified <- setReadable(pl, 'org.Mm.eg.db', 'ENTREZID')
+    pl_modified <- pairwise_termsim(pl_modified)
+    treeplot(pl_modified, cluster.params = list(method = "average"),
+            xlim = c(0, 30))
+  }
 }
 # nolint end
