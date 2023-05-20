@@ -207,7 +207,7 @@ server <- function(input, output, session) {
 
         filtered_df <-
           bigbed_files[[rows]] %>%
-          filter(chrom %in% chromosomes)
+          dplyr::filter(chrom %in% chromosomes)
 
         grl[[rows]] <- makeGRangesFromDataFrame(filtered_df,
                                                 keep.extra.columns = TRUE)
@@ -268,6 +268,7 @@ server <- function(input, output, session) {
     # GENOMIC DATA QUALITY - OVERLAPS BETWEEN SAMPLES (JACCARD) (PLOT 3):
     plot3 <- reactive({
       req(input$samples2_rows_selected)
+      
       bigbed_files <- list()
       grl <- GRangesList()
       row_index <- input$samples2_rows_selected
@@ -660,7 +661,7 @@ server <- function(input, output, session) {
 
         filtered_df <-
           bigbed_files[[rows]] %>%
-          filter(chrom %in% chromosomes)
+          dplyr::filter(chrom %in% chromosomes)
 
         bigbed_files[[rows]] <-
           makeGRangesFromDataFrame(filtered_df, keep.extra.columns = TRUE)
