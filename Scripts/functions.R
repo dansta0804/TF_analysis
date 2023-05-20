@@ -67,7 +67,7 @@ get_sequences <- function(genome, genes_of_interest) {
   return(sequence_dataset)
 }
 
-# State is one of the two: ("predicted", "control")
+# A function that counts positional weight matrix hits in provided sequences:
 count_pwm_hits <- function(sequence_dataset, pwm, state) {
   # This is a list that stores pwm hit counts for each sample:
   gene_hits_total <- list()
@@ -123,7 +123,7 @@ count_peaks <- function(name, objects, chr_abbr, chr_lengths) {
   return(peak_counts)
 }
 
-# Declaring a function that calculates modified Jaccard coefficient:
+# A function that calculates modified Jaccard coefficient:
 jaccard <- function(granges, a, b) {
   len <-
     reduce(c(granges[[a]], granges[[a]])) %>%
@@ -133,12 +133,13 @@ jaccard <- function(granges, a, b) {
                                           granges[[b]])) / len) * 100)
 }
 
+# A function that calculates positional weight matrix hits:
 find_motif_hits <- function(sequences, mpwm) {
   hit_vec <- c()
   for (i in 1:length(sequences)) {
     hits <- countPWM(as.matrix(mpwm), sequences[[i]], min.score = "75%")
     if (hits == 0) { next }
-    else {hit_vec <- c(hit_vec, hits)}
+    else { hit_vec <- c(hit_vec, hits) }
   }
   return(sum(hit_vec))
 }
@@ -150,11 +151,8 @@ calculate_peaks <- function(filename) {
   return(region_count)
 }
 
-html <- function(x, inline = FALSE) {
-  container <- if (inline) htmltools::span else htmltools::div
-  container(dangerouslySetInnerHTML = list("__html" = x))
-}
-
+# A function that creates a table after performing GO analysis for the
+# specified subontology:
 find_ontologies_table <- function(data, genome, subontology) {
   pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = get(genome),
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
@@ -226,6 +224,8 @@ find_ontologies_table <- function(data, genome, subontology) {
   }
 }
 
+# A function that plots a graph after performing GO analysis for the
+# specified subontology:
 find_ontologies_graph <- function(data, genome, subontology) {
   pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = get(genome),
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
@@ -237,6 +237,8 @@ find_ontologies_graph <- function(data, genome, subontology) {
   }
 }
 
+# A function that creates a treeplot with highlighted clusters after
+# performing GO analysis for the specified subontology:
 find_ontologies_tree <- function(data, genome, subontology) {
   pl <- enrichGO(gene = data[[1]]$ENTREZID, OrgDb = get(genome),
                  ont = subontology, pAdjustMethod = "BH", pvalueCutoff  = 0.01,
