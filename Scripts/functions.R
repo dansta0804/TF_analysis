@@ -1,6 +1,7 @@
 # nolint start
 # Library loading:
-library(imager)
+library(pacman)
+p_load(imager, GenomicRanges, dplyr)
 
 # Path declarations:
 PROJECT     <- "./"
@@ -33,7 +34,7 @@ count_peaks <- function(name, objects, chr_abbr, chr_lengths) {
   for (chr in 1:length(chr_abr)) {
     peaks <-
       objects[[name]] %>%
-      filter(seqnames == chr_abr[chr]) %>%
+      dplyr::filter(seqnames == chr_abr[chr]) %>%
       length() / chr_bp[chr] * 100000000
     peak_counts[nrow(peak_counts) + 1, ] <- c(name, chr_abr[chr], peaks)
   }
@@ -47,7 +48,7 @@ jaccard <- function(granges, a, b) {
     length()
 
   return(
-    (length(GenomicRanges::intersect(granges[[a]], ranges[[b]])) / len) * 100
+    (length(GenomicRanges::intersect(granges[[a]], granges[[b]])) / len) * 100
   )
 }
 
