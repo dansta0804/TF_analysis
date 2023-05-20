@@ -594,9 +594,57 @@ Paieškos atlikimui panaudota \emph{rBlast}\cite{RBLAST} bibliotekos funkcija
 \emph{blast()}, kuriai perduotas pasirinkto organizmo baltymų duomenų bazės
 failas, bei nurodytas \emph{Blast} paieškos tipas - \emph{blastp}.
 \emph{rBlast} biblioteka leidžia naudotis lokaliai instaliuotu
-\emph{BLAST+}\cite{BLAST}, naudojant \emph{Bioconductor} infrastruktūrą.
+\emph{BLAST+}\cite{BLAST}, naudojant \emph{Bioconductor} in\-fra\-struk\-tū\-rą.
+Specifikavus duomenų bazę, kurioje atliekama paieška, taikoma funkcija
+\emph{predict()}. Šiai funkcijai perduodamas duomenų bazės objektas, pradinio
+organizmo genų aminorūgščių sekų rinkinys, \emph{Blast} paieškai naudojamų gijų
+skaičius bei galutinio rezultato formatas - identifikacijos numerius, sekų
+ilgius, sekų identiškumo bei ieškomų sekų padengimo procentus specifikuojantys
+stulpeliai.
 
 \subsection{Paieškos rezultatų apdorojimas}
+Gauti \emph{Blast} paieškos rezultatai sugrupuojami pagal identifikacijos
+numerius ir atrenkami tos rezultatų eilutės, kurios atitinka dvejus \emph{dplyr}
+bibliotekos filtrus: maksimalus ieškomų sekų padengimo procentas bei maksimalus
+sekų identiškumas.
+
+Po filtrų pritaikymo gavus mažesnį rezultatų rinkinį ieškomų sekų \emph{Ensembl}
+identifikacijos numeriams priskirti NCBI genų identifikacijos numeriai bei
+genų simboliai. Šiame metodo realizavimo etape taip pat ieškomas sekas
+atitinkančioms sekoms priskirti NCBI identifikacijos numeriai bei genų
+simboliai, naudojant bibliotekos \emph{clusterProfiler}\cite{CLUSTERPROFILER}
+funkciją \emph{bitr}, surastoms sekoms priskiriančią pastaruosius numerius,
+naudojant organizmo, kurio genome siekiama atlikti transkripcijos faktorių
+spėjimą, genomo anotacijos objektą \emph{org.x.eg.db}, kur \emph{x} - organizmo
+lotyniško pavadinimo pirmosios raidės.
+
+Ieškomų sekų informacija buvo sujungta su sekų, turinčių didelį sekų identiškumą
+bei sekų padengimą, informacija.
+
+\subsection{Duomenų rinkinio sekų išgavimas}
+Šiame etape naudojami du \emph{TxDb} bibliotekos organizmų objektai,
+saugantys nurodytų organizmų genominę informaciją. Nukleotidų sekų išgavimui iš
+konkretaus organizmo genomo panaudota \emph{BSgenome} bibliotekos funkcija
+\emph{getSeq}. Šiai funkcijai perduotas konkretaus organizmo \emph{BSgenome}
+objektas bei \emph{GRanges} objektas, kuriame išsaugota genominių regionų
+informacija - genominės pozicijos tų genų, kurie specifikuoti apdorotame duomenų
+rinkinyje bei patenka į organizmų \emph{TxDb} objektų duomenų rinkinį.
+
+\subsection{PWM atitikimų nustatymas}
+Išgauti kiekvieno organizmo sekų rinkiniai analizuoti atskirai. Kiekvienai
+sekų rinkiniui priklausančiai sekai pritaikyta \emph{Biostrings} bibliotekos
+funkcija \emph{countPWM()}, kuriai pateikta pasirinkto transkripcijos faktoriaus
+pozicinė svorių matrica bei \emph{min.score} vertė procentais, nurodanti
+minimalų sekos fragmento bei pozicinės svorių matricos atitikimą. Grąžintas
+pozicinės matricos atitikimų skaičius bei geno pavadinimas patalpintas į
+\emph{data.frame} duomenų struktūrą.
+
+Nustačius, kiek genų sekose esama pozicijų, kuriose galimas konkretaus
+transkripcijos faktoriaus prisijungimas, gautos duomenų struktūros sujungtos
+į bendrą duomenų struktūrą, kuriai sukurtas papildomas stulpelis,
+specifikuojantis užklausos sekose nustatytų transkripcijos faktorių
+prisijungimo procentą, palyginus transkripcijos faktorių taikinių skaičių
+užklausos sekose su skaičiumi, gautu \emph{Blast} nustatytose sekose. 
 
 \newpage
 
@@ -640,37 +688,19 @@ lentelėje.
         \thead{CTCF} &
         \thead{\href{https://chip-atlas.org/view?id=SRX13476140}{SRX13476140}}\\ 
         \hline
-        \thead{Nervinės iš mESC} & - & Maz -/- &
-        \thead{CTCF} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX13476141}{SRX13476141}}\\ 
-        \hline
-        \thead{Endoderminės\\iš mESC} & DKI &
-        \thead{Išgavimas po 3 dienų;\\r1} &
-        \thead{anti-Foxa2} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX4298469}{SRX4298469}}\\ 
-        \hline
         \thead{Endoderminės\\iš mESC} & DKI &
         \thead{Išgavimas po 3 dienų;\\r2} &
         \thead{anti-Foxa2} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX4298470}{SRX4298470}}\\ 
-        \hline
-        \thead{Endoderminės\\iš mESC} & DKI & 
-        \thead{Išgavimas po 3 dienų;\\mezendoderminės ląstelės} &
-        \thead{anti-Gata4} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX4298473}{SRX4298473}}\\ 
+        \thead{\href{https://chip-atlas.org/view?id=SRX4298470}{SRX4298470}}\\
         \hline
         \thead{Endoderminės\\iš mESC} & DKI &
         \thead{Išgavimas po 5 dienų;\\endoderminės ląstelės} &
-        \thead{anti-Gata4} &
+        \thead{anti-Gata4} & IMTI ŠiTĄ!
         \thead{\href{https://chip-atlas.org/view?id=SRX4298474}{SRX4298474}}\\ 
-        \hline
-        \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA  &
-        \thead{Tiesioginis ląstelių\\išgavimas} & \thead{anti-Sox2} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX2378798}{SRX2378798}}\\ 
         \hline
         \thead{Nervinės\\progenitorinės} & C57BL/6 x DBA &
         \thead{Ląstelių išgavimas\\po disociacijos} & \thead{anti-Sox2} &
-        \thead{\href{https://chip-atlas.org/view?id=SRX2749159}{SRX2749159}}\\ 
+        \thead{\href{https://chip-atlas.org/view?id=SRX2749159}{SRX2749159}}\\
         \hline
     \end{tabular}
 \end{table}
@@ -683,8 +713,6 @@ lentelėje.
           nustatomas kartu su CTCF transk\-rip\-ci\-jos faktoriumi,
           kontroliuojant kohezino poziciją ir genomo organizaciją. -/- nurodo,
           kad šio geno kopijos nėra organizme.
-    \item \textbf{Mezendoderminės ląstelės} - embrionų ląstelės, kurios
-          diferencijuoja į mezodermos ir galutines endodermines ląsteles.
     \item \textbf{Endoderminės ląstelės} - ląstelių tipas, iš kurių 
           susiformuoja įvairių organų epitelinis audinys.
     \item \textbf{DKI} - pelių kamienas, kuriam būdingas dvigubas
@@ -711,34 +739,34 @@ lentelėje.
     \textbf{\thead{Poveikis}} & \textbf{Antikūnai} &
     \textbf{\thead{ChIP-Atlas ID}} \\
     \hline
-    \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl-} &
-    \thead{CTCF} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX4417526}{SRX4417526}}\\ 
-    \hline
-    \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl+} &
-    \thead{CTCF} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX4417527}{SRX4417527}}\\ 
-    \hline
-    \thead{Endoderminės\\iš hESC} & \thead{DE} &
-    \thead{FOXA2} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX11080722}{SRX11080722}}\\ 
-    \hline
-    \thead{Endoderminės\\iš hESC} & TKO & \thead{FOXA2} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX11080727}{SRX11080727}}\\ 
-    \hline
-    \thead{Endoderminės\\iš hESC} & Replika 1 & \thead{GATA4} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX701989}{SRX701989}}\\ 
-    \hline
-    \thead{Endoderminės\\iš hESC} & Replika 2 & \thead{GATA4} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX701990}{SRX701990}}\\ 
-    \hline
-    \thead{Nervinės\\progenitorinės} & Laukinis tipas (\emph{wt}) &
-    \thead{anti-SOX2} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX5716451}{SRX5716451}}\\ 
-    \hline
-    \thead{Nervinės\\progenitorinės} & K755R/+ & \thead{anti-SOX2} &
-    \thead{\href{https://chip-atlas.org/view?id=SRX5716452}{SRX5716452}}\\ 
-    \hline
+    % \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl-} &
+    % \thead{CTCF} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX4417526}{SRX4417526}}\\ 
+    % \hline
+    % \thead{Nervinės iš hESC} & \thead{Laukinis tipas (\emph{wt});\\KCl+} &
+    % \thead{CTCF} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX4417527}{SRX4417527}}\\ 
+    % \hline
+    % \thead{Endoderminės\\iš hESC} & \thead{DE} &
+    % \thead{FOXA2} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX11080722}{SRX11080722}}\\ 
+    % \hline
+    % \thead{Endoderminės\\iš hESC} & TKO & \thead{FOXA2} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX11080727}{SRX11080727}}\\ 
+    % \hline
+    % \thead{Endoderminės\\iš hESC} & Replika 1 & \thead{GATA4} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX701989}{SRX701989}}\\ 
+    % \hline
+    % \thead{Endoderminės\\iš hESC} & Replika 2 & \thead{GATA4} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX701990}{SRX701990}}\\ 
+    % \hline
+    % \thead{Nervinės\\progenitorinės} & Laukinis tipas (\emph{wt}) &
+    % \thead{anti-SOX2} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX5716451}{SRX5716451}}\\ 
+    % \hline
+    % \thead{Nervinės\\progenitorinės} & K755R/+ & \thead{anti-SOX2} &
+    % \thead{\href{https://chip-atlas.org/view?id=SRX5716452}{SRX5716452}}\\ 
+    % \hline
     \end{tabular}
 \end{table}
 
@@ -748,10 +776,10 @@ lentelėje.
           \textbf{C}ells}).
     \item \textbf{KCl (+/-)} - ląstelių stimuliavimas arba nestimuliavimas kalio
           chlorido tirpalu.
-    \item \textbf{DE} - galutinė endoderma (angl. \emph{\textbf{d}efinitive
-          \textbf{e}ndoderm});
-    \item \textbf{TKO} - trijų genų panaikinimas arba jų išaktyvinimas
-          (angl. \emph{\textbf{t}riple \textbf{k}nock-\textbf{o}ut}).
+    % \item \textbf{DE} - galutinė endoderma (angl. \emph{\textbf{d}efinitive
+    %       \textbf{e}ndoderm});
+    % \item \textbf{TKO} - trijų genų panaikinimas arba jų išaktyvinimas
+    %       (angl. \emph{\textbf{t}riple \textbf{k}nock-\textbf{o}ut}).
     \item \textbf{K755R} - mutacijos nomenklatūra. 755 geno pozicijoje esanti
           lizino (K) aminorūgštis pakeista argininu (R).
 \end{itemize}
@@ -962,7 +990,7 @@ funkciją \emph{fromJSON()}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Rezultatai ir jų aptarimas}
-Realizuotas transkripcijos faktorių taikinių spėjimo metodas testuotas su 3
+Realizuotas transkripcijos faktorių taikinių spėjimo metodas testuotas su 4
 skirtingais \emph{Mus musculus} bei \emph{Homo sapiens} ChIP sekoskaitos
 duomenų rinkiniais.
 
