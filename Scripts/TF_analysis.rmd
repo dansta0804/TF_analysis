@@ -5,23 +5,23 @@ p_load(GenomicRanges, ggplot2, rtracklayer, dplyr, plyranges, ChIPseeker,
 TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg38.knownGene,
 BSgenome.Mmusculus.UCSC.mm10, BSgenome.Hsapiens.UCSC.hg38, org.Mm.eg.db,
 org.Hs.eg.db, annotables, rBLAST, rentrez, clusterProfiler, ensembldb,
-EnsDb.Mmusculus.v79, deepredeff)
+EnsDb.Mmusculus.v79, deepredeff, imager,
+ggplot2, ggthemes,reshape2, plotly, heatmaply, dplyr, gplots, scales)
 # nolint end
 ```
 
 ```{r PATH_DECLARATION, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 PROJECT     <- paste0("/home/daniele/Desktop/IV_course/II_semester/TF_analysis/")
-BIGBEDS     <- paste0(PROJECT, "Input/BigBed/")
 BEDS        <- paste0(PROJECT, "Input/BED/")
+PWM         <- paste0(PROJECT, "Input/PWM/")
 MMUSCULUS   <- paste0(BEDS, "Mouse/")
 HSAPIENS    <- paste0(BEDS, "Human/")
 INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
 SCRIPTS     <- paste0(PROJECT, "Scripts/")
-RESULTS     <- paste0(INTER_FILES, "Generated_files/")
-FASTAS      <- paste0(INTER_FILES, "FASTA/")
+INT_FILES   <- paste0(INTER_FILES, "Generated_files/")
+RESULTS     <- paste0(PROJECT, "Results/")
 FIGURES     <- paste0(PROJECT, "Figures/")
-SAMPLES     <- read.csv(file = paste0(INTER_FILES, "sample_key.csv"))
 DATABASES   <- paste0(PROJECT, "Databases/")
 # nolint end
 ```
@@ -58,6 +58,8 @@ chr_abr <- c(paste0("chr", 1:19), "chrX", "chrY")
 len_mm <- length(bbfiles_mm)    # Length of samples for Mus musculus
 len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
 
+bbfiles_mm
+
 data_mm <- list()
 for(rows in 1:len_mm) {
     data_mm[[rows]] <- read.table(file = paste0(MMUSCULUS, bbfiles_mm[rows]))
@@ -67,6 +69,7 @@ for(rows in 1:len_mm) {
 
     grl_mm[[rows]] <- makeGRangesFromDataFrame(data_mm[[rows]],
                                                keep.extra.columns = TRUE)
+    names(grl_mm)[rows] <- bbfiles_mm[rows]
 }
 
 data_hs <- list()
@@ -78,6 +81,7 @@ for(rows in 1:len_hg) {
 
     grl_hg[[rows]] <- makeGRangesFromDataFrame(data_hs[[rows]],
                                                keep.extra.columns = TRUE)
+    names(grl_hg)[rows] <- bbfiles_hg[rows]
 }
 # nolint end
 ```
@@ -85,7 +89,7 @@ for(rows in 1:len_hg) {
 ```{r PWM_READING, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 # Making a list of analyzed TF PWM matrices from different organisms:
-pwm <- get_PWM("TBX5_MOUSE.H11MO.0.D.pwm")
+pwm <- get_PWM(paste0(PWM, "TBX5_MOUSE.H11MO.0.D.pwm"))
 # nolint end
 ```
 
@@ -93,7 +97,7 @@ pwm <- get_PWM("TBX5_MOUSE.H11MO.0.D.pwm")
 # nolint start
 mm_annot_peaks <- annotate_peaks(grl_mm, grcm38, txdb_mm, orgdb_mm)
 
-write.table(mm_annot_peaks, file = paste0(RESULTS, "/mm_annotated_peaks.txt"),
+write.table(mm_annot_peaks, file = paste0(INT_FILES, "/mm_annotated_peaks.txt"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 # nolint end
 ```
@@ -101,7 +105,9 @@ write.table(mm_annot_peaks, file = paste0(RESULTS, "/mm_annotated_peaks.txt"),
 ```{r HS_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 hg_annot_peaks <- annotate_peaks(grl_hg, grch38, txdb_hs, orgdb_hs)
 
-write.table(hg_annot_peaks, file = paste0(RESULTS, "/hg_annotated_peaks.txt"),
+names(grl_hg)
+
+write.table(hg_annot_peaks, file = paste0(INT_FILES, "/hg_annotated_peaks.txt"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 # nolint end
 ```
@@ -118,188 +124,488 @@ mm_genes <- GRangesList()
 
 for (sample in seq_along(mm_annot_peaks)) {
     selected_genes <-
-        tolower(unique(mm_annot_peaks[[sample]]$gene_symbol)) %in%
+        tolower(mm_annot_peaks[[6]]$gene_symbol) %in%
         tolower(mmgene_ranges$gene_symbol)
 
-    mm_genes[[sample]] <- mmgene_ranges[selected_genes]
+    # mmgene_ranges[mmgene_ranges$gene_symbol %in% mm_annot_peaks[[8]][selected_genes]$gene_symbol]
+
+    # write.csv(as.data.frame(tolower(mm_annot_peaks[[8]]$gene_symbol), na.rm = TRUE),
+    #           paste0(PROJECT, "a.csv"),
+    #           row.names = FALSE)
+
+    # write.csv(as.data.frame(tolower(mmgene_ranges$gene_symbol), na.rm = TRUE),
+    #           paste0(PROJECT, "b.csv"),
+    #           row.names = FALSE)
+
+    mm_genes[[4]] <-
+        mmgene_ranges[mmgene_ranges$gene_symbol %in% mm_annot_peaks[[6]][selected_genes]$gene_symbol]
+
 }
 
-# Čia išgaunamos nukleotidų sekos konkretiems genams:
-# gene_sequences <- getSeq(BSgenome.Mmusculus.UCSC.mm10, mm_genes[[1]])
+# Čia mm_genes[[1]] keisis į mm_genes[[2]] ir t.t.
 
-all_proteins <- character()
-
-# for (i in 1:length(mm_genes)) {
-#     s <- as.data.frame(mm_genes[i])
-#     print(length(rownames(s)))
-# }
-
-for (gene_name in 1:length(unique(mm_genes[[6]]$gene_symbol))) {
-    gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
-
-    if (is.na(gene)) {
-        next
-    } else {
-        proteins <- proteins(edb, filter = GeneNameFilter(gene),
-                     return.type = "AAStringSet")
-
-        if (length(proteins) == 0) {
-            next
-        } else {
-            proteins_df <- aas_to_df(proteins)
-            proteins_df$name <- gene
-
-            for (s in 1:length(proteins_df$seq)) {
-                if (width(proteins[s]) < 800) {
-                    next
-                } else {
-                    print(paste("Getting sequence for", gene, "..."))
-                    all_proteins <- append(all_proteins, proteins[s])
-                }
-            }
-            proteins_df <- c()
-        }
-    }
-}
-
-mean(width(all_proteins))
-
-writeXStringSet(AAStringSet(all_proteins),
-                filepath = paste0(RESULTS, "Extracted_protein_sequences_2.fasta"),
-                format = "fasta")
-
-# nolint end
-```
-
-```{r BLAST_SEARCH, echo=FALSE, message=FALSE, warning=FALSE}
-# nolint start
 # Loading downloaded Homo sapiens protein database:
 human_db <-
     blast(db = paste0(DATABASES,
           "Homo_sapiens_protein/GCF_000001405.38_GRCh38.p12_protein.fna"),
           type = "blastp")
 
-# Performing blastp search using defined Homo sapiens protein database and
-# 'AAStringSet' object that contains protein sequences of annotated genes:
-predictions <-
-    predict(human_db, all_proteins,
-            BLAST_args = "-num_threads 10",
-            custom_format = "qseqid sseqid qacc sacc length pident ppos qcovs evalue")
 
-# Saving blastp result into a file so that it can be used for further analysis:
-# FIND BETTER WAY TO SAVE THE RESULT!
-sink(paste0(PROJECT, "predictions_05-18.txt"))
-print(predictions)
-sink()
+for (file in 1:length(mm_genes)) {
+    all_proteins <- character()
+    print(paste0("Reading file: ",  file, "..."))
+    for (gene_name in 1:length(unique(mm_genes[[4]]$gene_symbol))) {
+        gene <- mm_genes[[4]]$gene_symbol[[gene_name]]
+        if (is.na(gene)) {
+            next
+        } else {
+            proteins <-
+                proteins(edb, filter = GeneNameFilter(gene),
+                         return.type = "AAStringSet")
+
+            if (length(proteins) == 0) {
+                next
+            } else {
+                print(paste("Getting sequence for", gene, "..."))
+                max_val <- unlist(lapply(strsplit(aas_to_df(proteins)$seq, ""), length))
+                protein <- proteins[which.max(max_val)]
+                all_proteins <- append(all_proteins, protein)
+            }
+        }
+    }
+    writeXStringSet(AAStringSet(all_proteins),
+                    filepath = paste0(INT_FILES, "Extracted_protein_sequences_",
+                                      "sample_4_good.fasta"),
+                format = "fasta")
+
+    # Performing blastp search using defined Homo sapiens protein database and
+    # 'AAStringSet' object that contains protein sequences of annotated genes:
+    pre <-
+        predict(human_db, all_proteins, BLAST_args = "-num_threads 10",
+                custom_format = "qseqid sseqid qacc sacc length pident ppos qcovs evalue qstart qend sstart send")
+
+    write.csv(pre, paste0(RESULTS, "Blastp/predictions_sample4_full.csv"),
+              row.names = FALSE)
+}
+
+all_proteins <-
+    readAAStringSet(paste0(INT_FILES,
+                           "Extracted_protein_sequences_sample4.fasta"),
+                    format="fasta")
 # nolint end
 ```
+
 
 ```{r ID_MAPPINGS, echo=FALSE, message=FALSE, warning=FALSE}
 # nolint start
 # Reading a file that stores blastp result:
-predictions <- read.table(paste0(PROJECT, "predictions_p.txt"))
-predictions <- predictions[predictions$`Perc.Ident` > 50, ] #50, 60, 70
+# pred <- read.csv(paste0(PROJECT, "predictions[predictions$pident>60.csv")) # Veikiantis pavyzdys (6 mėginys)
+pred5 <- read.csv(paste0(PROJECT, "prediction5[prediction5$pident>60.csv")) # Veikiantis pavyzdys (5 mėginys)
 
-grouped_predictions <-
-    predictions %>%
-    group_by(QueryID) %>%
-    dplyr::filter(`Perc.Ident` == max(`Perc.Ident`)) %>%
-    as.data.frame()
+# Reading files that store blastp results:
+prediction_list <- list.files(path = paste0(RESULTS, "Blastp/"), "*_full.csv")
+prediction_data <- list()
 
-proteins_symbols <-
-    ensembldb::select(EnsDb.Mmusculus.v79, keys = grouped_predictions$`QueryID`,
-                      keytype = "PROTEINID", columns = c("ENTREZID", "SYMBOL"))
+mm_seq_list <- list()
+hg_seq_list <- list()
 
-merged_data <-
-    merge(proteins_symbols, grouped_predictions,
-          by.x = "PROTEINID", by.y = "QueryID") %>%
-    dplyr::select(c("PROTEINID", "ENTREZID", "SYMBOL",
-                    "SubjectID", "Perc.Ident"))
+df <- data.frame(matrix(ncol = 2, nrow = 0))
+colnames(df) <- c("Sample", "Percentage")
 
-# Removing '.[1-9]' from accession numbers (if the step is skipped the
-# following function 'bitr()' does not return any results):
-merged_data$SubjectID <-
-    merged_data$SubjectID %>%
-    gsub("\\.[1-9]+", "", .)
+for (file in 1:length(prediction_list)) {
+    prediction_table <-
+        read.csv(paste0(RESULTS, "Blastp/", prediction_list[[file]]), header = TRUE)
+    names(prediction_table) <- prediction_list[[file]]
+    colnames(prediction_table) <- c("qseqid","sseqid","qacc","sacc","length","pident","ppos","qcovs","evalue","qstart","qend","sstart","send")
+    prediction_data[[file]] <- prediction_table
+}
 
-# Accessing Entrez identification numbers and gene symbols for every
-# accession number (some accession numbers do not have Entrez id, therefore
-# they are not matched):
-entrezs_symbols <-
-    bitr(merged_data$SubjectID, fromType = "ACCNUM",
-         toType = c("ENTREZID", "SYMBOL"), OrgDb = org.Hs.eg.db)
+head(prediction_table)
 
-# Creating a final dataframe that matches all subject and query data:
-matched_data <-
-    merge(merged_data, entrezs_symbols, by.x = "SubjectID", by.y = "ACCNUM") %>%
-    rename("QueryID" = "PROTEINID", "EntrezQuery" = "ENTREZID.x",
-           "QuerySymbol" = "SYMBOL.x", "EntrezSubject" = "ENTREZID.y",
-           "SubjectSymbol" = "SYMBOL.y", "PercentIdentity" = "Perc.Ident") %>%
-    dplyr::select(c("SubjectID", "QueryID", "SubjectSymbol", "QuerySymbol",
-                    "EntrezSubject", "EntrezQuery", "PercentIdentity"))
+length(rownames(prediction_data[[1]]))
+length(rownames(prediction_data[[2]]))
+length(rownames(prediction_data[[3]]))
+length(rownames(prediction_data[[4]]))
 
-# nolint end
-```
+for (smpl in 1:length(prediction_data)) {
+    grouped_predictions <-
+        prediction_data[[smpl]] %>%
+        group_by(qacc) %>%
+        dplyr::filter(qcovs == max(qcovs)) %>%
+        dplyr::filter(pident == max(pident)) %>%
+        dplyr::filter(pident > 70) %>%
+        as.data.frame()
 
-```{r}
-# nolint start
-matched_data <- matched_data[!(is.na(matched_data$EntrezQuery)), ]
-hggene_ranges <- genes(txdb_hs)
+    proteins_symbols <-
+        ensembldb::select(EnsDb.Mmusculus.v79, keys = grouped_predictions$qacc,
+                        keytype = "PROTEINID", columns = c("ENTREZID", "SYMBOL"))
 
-mm_sequences <- character()
-hg_sequences <- character()
+    merged_data <-
+        merge(proteins_symbols, grouped_predictions,
+            by.x = "PROTEINID", by.y = "qacc") %>%
+        dplyr::select(c("PROTEINID", "ENTREZID", "SYMBOL", "sacc", 
+                        "qcovs", "pident", "length"))
 
-for (id in 1:length(matched_data$EntrezQuery)) {
-    seq_m <- getSeq(BSgenome.Mmusculus.UCSC.mm10,
-                    mmgene_ranges[mmgene_ranges$gene_id ==
-                                  matched_data$EntrezQuery[id], ])
+    # Removing '.[1-9]' from accession numbers (if the step is skipped the
+    # following function 'bitr()' does not return any INT_FILES):
+    merged_data$sacc <-
+        merged_data$sacc %>%
+        gsub("\\.[1-9]+", "", .)
 
-    if (length(seq_m) == 0) { next }
-    else {
-        names(seq_m) <- matched_data[id, "QuerySymbol"]
-        mm_sequences <- append(mm_sequences, seq_m)
+    # Accessing Entrez identification numbers and gene symbols for every
+    # accession number (some accession numbers do not have Entrez id, therefore
+    # they are not matched):
+    entrezs_symbols <-
+        bitr(merged_data$sacc, fromType = "ACCNUM",
+            toType = c("ENTREZID", "SYMBOL"), OrgDb = org.Hs.eg.db)
+
+    matched_data <-
+        merge(merged_data, entrezs_symbols, by.x = "sacc", by.y = "ACCNUM") %>%
+        rename("EntrezQuery" = "ENTREZID.x",
+            "QuerySymbol" = "SYMBOL.x", "EntrezSubject" = "ENTREZID.y",
+            "SubjectSymbol" = "SYMBOL.y", "PercentIdentity" = "pident") %>%
+        dplyr::select(c("sacc", "PROTEINID", "SubjectSymbol", "QuerySymbol",
+                        "EntrezSubject", "EntrezQuery", "PercentIdentity", "length", "qcovs"))
+
+    matched_data <- matched_data[!(is.na(matched_data$EntrezQuery)), ]
+    hggene_ranges <- genes(txdb_hs)
+
+    mm_sequences <- character()
+    hg_sequences <- character()
+
+    for (id in 1:length(rownames(matched_data))) {
+        gene_ids1 <- mmgene_ranges$gene_id
+        certain_id1 <- matched_data$EntrezQuery[id]
+        seq_m <- getSeq(BSgenome.Mmusculus.UCSC.mm10, 
+                        mmgene_ranges[gene_ids1 == certain_id1, ])
+
+        if (length(seq_m) == 0) { next }
+        else {
+            names(seq_m) <- matched_data[id, "QuerySymbol"]
+            mm_sequences <- append(mm_sequences, seq_m)
+        }
+
+        gene_ids2 <- hggene_ranges$gene_id
+        certain_id2 <- matched_data$EntrezSubject[id]
+        seq_h <- getSeq(BSgenome.Hsapiens.UCSC.hg38,
+                        hggene_ranges[gene_ids2 == certain_id2, ])
+
+        if (length(seq_h) == 0) { next }
+        else {
+            names(seq_h) <- matched_data[id, "SubjectSymbol"]
+            hg_sequences <- append(hg_sequences, seq_h)
+        }
     }
 
-    seq_h <- getSeq(BSgenome.Hsapiens.UCSC.hg38,
-                    hggene_ranges[hggene_ranges$gene_id ==
-                                  matched_data$EntrezSubject[id], ])
+    mm_sequences <- unique(mm_sequences)
+    hg_sequences <- unique(hg_sequences)
 
-    if (length(seq_h) == 0) { next }
-    else {
-        names(seq_h) <- matched_data[id, "SubjectSymbol"]
-        hg_sequences <- append(hg_sequences, seq_h)
+    writeXStringSet(mm_sequences,
+                    filepath = paste0(RESULTS, paste0("Sequences/mm_sequences_", smpl), ".fasta"),
+                    format = "fasta")
+
+    writeXStringSet(hg_sequences,
+                    filepath = paste0(RESULTS, paste0("Sequences/hg_sequences_", smpl), "fasta"),
+                    format = "fasta")
+
+    mm_seq_list[[smpl]] <- mm_sequences
+    hg_seq_list[[smpl]] <- hg_sequences
+}
+percent_merges <- list()
+
+find_PWM_hits <- function (mm_seq_list, hg_seq_list, pwm, min_score) {
+    for (seq in 1:length(mm_seq_list)) {
+    # nolint start
+    percentages_query <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(percentages_query) <- c("Gene", "QueryPWMHits")
+
+    percentages_subject <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(percentages_subject) <- c("Gene", "SubjectPWMHits")
+
+    for (gene in 1:length(mm_seq_list[[seq]])) {
+        mm_hits <-
+            as.numeric(countPWM(as.matrix(pwm), as.character(mm_seq_list[[seq]][gene]),
+                                min.score = min_score))
+
+        row <- c(names(mm_seq_list[[seq]][gene]), mm_hits)
+        percentages_query[nrow(percentages_query) + 1, ] <- row            
     }
+
+    print("oook")
+    write.csv(percentages_query, paste0(RESULTS, paste0("PWM_hits/percent_mm_", seq), ".csv"),
+            row.names = FALSE)
+    percentages_query$Gene <- toupper(percentages_query$Gene)
+print("osssss")
+    for (gene in 1:length(hg_seq_list[[seq]])) {
+        hg_hits <- as.numeric(countPWM(as.matrix(pwm),
+                                    as.character(hg_seq_list[[seq]][gene]),
+                                    min.score = min_score))
+
+        row <- c(names(hg_seq_list[[seq]][gene]), hg_hits)
+        percentages_subject[nrow(percentages_subject) + 1, ] <- row            
+    }
+
+    write.csv(percentages_subject, paste0(RESULTS, paste0("PWM_hits/percent_hg_", seq), ".csv"),
+            row.names = FALSE)
+
+    percent_merge <- merge(percentages_query, percentages_subject)
+    percent_merge["Percentage"] <- ""
+
+    print(head(percent_merge))
+
+    for (row in 1:(length(rownames(percent_merge)))) {
+        query_hits <- percent_merge[row, "QueryPWMHits"]
+        subject_hits <- percent_merge[row, "SubjectPWMHits"]
+        percentage <- (as.numeric(query_hits) / as.numeric(subject_hits)) * 100
+
+        if (percentage %in% c("Inf", "NaN", 0)) { next }
+        else { percent_merge[row, "Percentage"] <- as.numeric(percentage) }    
+    }
+
+    percent_merges[[seq]] <- percent_merge
+    names(percent_merges)[seq] <- paste0("Sample", seq)
+
+    write.csv(percent_merge, paste0(RESULTS, paste0("percentages_", seq), ".csv"),
+            row.names = FALSE)
+    print("o čia?")
+    df[nrow(df) + 1, ] <-
+        c(paste("Sample", seq),
+          mean(as.numeric(percent_merge$Percentage), na.rm = TRUE))
+}
+results <- list("df" = df, "merges" = percent_merges)
+return(results)
+}
+
+d <- find_PWM_hits(mm_seq_list, hg_seq_list, pwm, "70%")
+a <- find_PWM_hits(mm_seq_list, hg_seq_list, pwm, "80%")
+c <- find_PWM_hits(mm_seq_list, hg_seq_list, pwm, "90%")
+
+
+
+length(a)
+
+l <- list(d, a, c)
+
+write.csv(df, paste0(RESULTS, "percetages.csv"), row.names = FALSE)
+
+scores <- c(70, 80, 90)
+plots <- list()
+
+for (pl in 1:length(l)) {
+    plot1 <-
+    ggplot(l[[pl]]$df, aes(x = Sample, y = as.numeric(Percentage))) +
+    geom_bar(width = 0.4, color = "black", fill = "#930d1f", stat = "identity") +
+    labs(title = paste0("Min.score = ", scores[pl], "%"), x = "", y = "", size = 5) +
+    geom_text(aes(label = paste0(round(as.numeric(Percentage), 2), "%")), color = "#030101",
+                size = 5, vjust = -1, fontface = 2) +
+    coord_cartesian(ylim = c(0, 100))+
+    scale_y_continuous(labels = label_number(suffix = "%")) +
+    theme(
+        panel.background = element_rect(fill = "#eeeef1", colour = "#4c0001"),
+        panel.grid.major.y = element_line(colour = "#cab5b5", size = 0.3,
+                                        linetype = "dashed"),
+        panel.grid.minor.y = element_line(colour = "#cab5b5", size = 0.3,
+                                        linetype = "dashed"),
+        panel.grid.major.x = element_line(colour = "#cab5b5", size = 0.2,
+                                        linetype = "longdash"),
+        panel.grid.minor.x = element_line(colour = "#cab5b5", size = 0.2,
+                                        linetype = "longdash"),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
+                                    size = 11, face = "bold", color = "black"),
+        axis.text.y = element_text(size = 11, face = "bold", color = "black"),
+        axis.title.x = element_text(size = 2),
+        axis.title.y = element_text(size = 16),
+        plot.title = element_text(hjust = 0.5, face = "bold"))
+
+    plots[[pl]] <- plot1
 }
 
 
+png(file = paste0(FIGURES, "Multiple_min_scores.png"), width = 900)
+ggarrange(plotlist = plots, nrow = 1, common.legend = TRUE,
+                  widths = 5, legend = "bottom")
+dev.off()
+ggarrange(plotlist = plots, nrow = 1, common.legend = TRUE,
+                  widths = 5, legend = "bottom")
 
-countPWM(as.matrix(pwm), as.character(hg_sequences[[8]]), min.score = "60%")
+
+
+
+length(hg_annot_peaks)
+length(percent_merges)
+
+names(hg_annot_peaks)
+names(percent_merges)
+
+
+coef_matrix <- matrix(nrow = length(hg_annot_peaks), ncol = length(hg_annot_peaks))
+
+# Setting colnames and rownames for the matrix:
+colnames(coef_matrix) <- names(hg_annot_peaks)
+rownames(coef_matrix) <- names(percent_merges)
+
+calc_perc <- function(a, b) {
+    c <- (a/b) *100
+    return(as.numeric(c))
+}
+
+# Calculating Jaccard coefficient for sample pair:
+for (i in 1:length(hg_annot_peaks)) {
+    for (y in 1:length(percent_merges)) {
+        # l_merges <- length(unique(percent_merges[[y]]$Gene))
+        control <-
+            hg_annot_peaks[[i]] %>%
+            filter(.$gene_symbol != "NA") %>%
+            length
+
+        l_merges <- length(hg_annot_peaks[[i]][hg_annot_peaks[[i]]$gene_symbol %in% d$merges[[y]]$Gene])
+        # l_merges <- length(unique(percent_merges[[y]][percent_merges[[y]]$gene_symbol %in% hg_annot_peaks[[i]]$Gene]$gene_symbol))
+        coef_matrix[i, y] = calc_perc(l_merges, control)
+    }
+}
+
+length(d$merges[[1]]$Gene)
+length(unique(hg_annot_peaks[[1]]$gene_symbol))
+
+
+aaa <- hg_annot_peaks[[1]][hg_annot_peaks[[1]]$gene_symbol %in% d$merges[[1]]$Gene ]
+
+length(aaa$gene_symbol)
+length(hg_annot_peaks[[1]]$gene_symbol)
+
+vvv <-
+hg_annot_peaks[[1]] %>%
+ filter(.$gene_symbol != "NA") %>%
+ filter(length(unlist(strsplit(.$gene_symbol, ""))) != 0)
+
+
+ vvv$gene_symbol
+
+ length(strsplit(unlist(hg_annot_peaks[[1]]$gene_symbol[17027], "")))
+
+
+length(unlist(strsplit(hg_annot_peaks[[1]]$gene_symbol[16991], "")))
+
+aaa$gene_symbol %in% d$merges[[1]]$Gene
+
+
+# Translating matrix to dataframe using melt() function:
+melt_coef_mat <- melt(coef_matrix, na.rm = TRUE)
+
+# Creating a heatmap that shows similarity between samples:
+plot2 <-
+    ggplot(melt_coef_mat, aes(x = Var2, y = Var1, fill = value)) +
+    geom_tile(color = "black") +
+    geom_text(aes(label = round(value, digits = 3)), size = 4.5,
+                  color = "#030101", fontface = "bold") +
+    labs(x = "", y = "") +
+    scale_fill_gradient(low = "#ffee8e", high = "#ab1f1f") +
+    guides(fill = guide_colourbar(title = "Koeficientas", face = "bold")) +
+    theme(
+        axis.text = element_text(size = 12, colour = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.title.x = element_text(size = 14, colour = "black"),
+        axis.title.y = element_text(size = 14, colour = "black"),
+        panel.grid.major = element_line(color = "#eeeeee"),
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        legend.position = "bottom"
+    )
+
+png(file = paste0(FIGURES, "Genes_in_control.png"))
+plot2
+dev.off()
+plot2
+
+gene_counts <- data.frame(matrix(nrow = 0, ncol = 4))
+colnames(gene_counts) <-
+    c("Sample", "Total_gene_count", "Query_gene_count", "Percentage")
+
+for (i in 1:length(percent_merges)) {
+    pwm_hits_query <-
+        percent_merges[[i]] %>%
+        filter(as.numeric(Percentage) > 100) %>%
+        nrow
+    pwm_hits_total <- nrow(percent_merges[[i]])
+    percentage <- round((pwm_hits_query / pwm_hits_total) * 100, 3)
+
+    data_row <-
+        c(names(percent_merges[i]), pwm_hits_total, pwm_hits_query, percentage)
+
+    gene_counts[nrow(gene_counts) + 1, ] <- data_row
+}
+
+# Calling factor() function in order to maintain certain Sample
+# order:
+gene_counts$Sample <-
+    factor(gene_counts$Sample, levels = gene_counts$Sample)
+
+# 'Melting' the dataframe:
+mg_counts<- melt(gene_counts, id = c("Sample", "Percentage"))
+
+plot3 <-
+    ggplot(mg_counts, aes(fill = variable, y = as.numeric(value), x = Sample)) + 
+    geom_bar(width = 0.7, size = 0.2, colour = "#3f2704", stat = "identity",
+             position = position_dodge(0.5)) +
+    scale_fill_manual(values = c("#e3a15e", "#c7633b"),
+                      labels = c("Bendras genų skaičius",
+                                 "Genų PWM atitikimai, viršijantys 100%")) +
+    geom_text(aes(label = ifelse(variable == "Query_gene_count",
+                                 paste0(round(as.numeric(Percentage),
+                                        digits = 2), "%"), ""),
+                  fontface = 2), vjust = -0.5, hjust = -0.3, size = 5) +
+    guides(fill = guide_legend(title = "Spalvų paaiškinimas", size = 6)) +
+    labs(x = "", y = "Genų skaičius", size = 5) +
+    theme(
+        axis.text = element_text(size = 10, colour = "black"),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1,
+                                   size = 12, face = "bold"),
+        axis.text.y = element_text(size = 12, face = "bold"),
+        axis.title.x = element_text(size = 14, colour = "black"),
+        axis.title.y = element_text(size = 14, colour = "black"),
+        panel.grid.major = element_line(color = "#eeeeee"),
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        panel.background = element_rect(fill = "#eeeef1", colour = "#4c0001"),
+        panel.grid.major.y = element_line(colour = "#cab5b5", size = 0.3,
+                                          linetype = "dashed"),
+        panel.grid.minor.y = element_line(colour = "#cab5b5", size = 0.3,
+                                          linetype = "dashed"),
+        panel.grid.major.x = element_line(colour = "#cab5b5", size = 0.2,
+                                          linetype = "longdash"),
+        panel.grid.minor.x = element_line(colour = "#cab5b5",  size = 0.2,
+                                          linetype = "longdash"),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 11)
+    )
+
+png(file = paste0(FIGURES, "Less_PWM_hits_in_control.png"), width = 800)
+plot3
+dev.off()
+plot3
+# Percentage of genes where there are less PWM hits in control
 # nolint end
 ```
 
 
-```{r}
-# nolint start
-percentages <- data.frame(matrix(ncol = 5, nrow = 0))
-colnames(percentages) <- c("QueryGene", "SubjectGene", "QueryPWMHits",
-                           "SubjectPWMHits", "Percent")
 
 
-for (gene in 1:length(mm_sequences)) {
-    mm_hits <-
-        as.numeric(countPWM(as.matrix(pwm), as.character(mm_sequences[[gene]]),
-                            min.score = "60%"))
+PATEIKTI TOKIUS GRAFIKUS:
+- vidutiško atitikimo procento stulpelinė diagrama
+- heatmap'as, vaizduojantis atitikimą tarp atspėtų genų ir anotuotų kontrolinių
+  pikų (pateikti skaičių ir procentinę dalį).
+- procentinės dalies stulpelinė diagrama, kurioje nurodyta, kiek buvo tokių genų,
+  kuriuose nustatyta daugiau TF taikinių atitikimų nei kontroliniuose mėginiuose?
+- kaip keičiasi PWM matricos atitikimas, kai min.score didinamas?
 
-    hg_hits <-
-        as.numeric(countPWM(as.matrix(pwm), as.character(hg_sequences[[gene]]),
-                            min.score = "60%"))
 
-    row <- c(names(mm_sequences[gene]), names(hg_sequences[gene]),
-             mm_hits, hg_hits, (mm_hits / hg_hits) * 100)
 
-    percentages[nrow(percentages) + 1, ] <- row            
-}
+```{r NOTES}
 
-percentages$SubjectGene %in% hg_annotated_peaks[[1]]$gene_symbol
-# nolint end
+
+
+colnames(a)
+
+length(unique(hg_annot_peaks[[2]][hg_annot_peaks[[2]]$gene_symbol %in% a$Gene ]$gene_symbol))
+
+length(prediction_list)
+
 ```
