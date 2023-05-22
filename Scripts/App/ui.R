@@ -146,7 +146,9 @@ ui <- navbarPage(
             shinydashboard::box(
               width = 12,
               withLoader(
-                plotOutput("plot6"), type = "html", loader = "dnaspin")
+                plotOutput("plot6"), type = "html", loader = "dnaspin"
+              ),
+              downloadButton("download6", "Atsisiųsti vaizdą")
             )
           )
         )
@@ -269,8 +271,9 @@ ui <- navbarPage(
     sidebarLayout(
       sidebarPanel(
         width = 4,
+        DT::dataTableOutput("samples4"),
         selectInput(
-          inputId = "organism",
+          inputId = "organism_predict",
           label = "Nurodykite, kokiame organizme spėsite transkripcijos
                   faktorių taikinius:",
           choices = c(
@@ -279,10 +282,27 @@ ui <- navbarPage(
             "Macaca mulatta", "Pan troglodytes", "Sus scrofa", "Nenurodyta"
           ),
           selected = "Nenurodyta"
+        ),
+        selectInput(
+          inputId = "min_score",
+          label = "Nurodykite minimalų transkripcijos faktoriaus PWM matricos
+                  ir sekų fragmentų atitikimo procentą:",
+          choices = c("70%", "75%", "80%", "85%", "90%", "95%"),
+          selected = "70%"
         )
       ),
       mainPanel(
-        width = 8
+        width = 8,
+        DT::dataTableOutput(outputId = "tabe"),
+        # DT::dataTableOutput(outputId = "tabe2")
+        shinydashboard::box(
+          width = 12,
+          withLoader(
+            DT::dataTableOutput(outputId = "tabe4"),
+            type = "html",
+            loader = "dnaspin"
+          )
+        )
       )
     )
   )
