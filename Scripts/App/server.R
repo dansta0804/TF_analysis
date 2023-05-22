@@ -6,7 +6,7 @@ p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
        ggseqlogo, ChIPseeker, tools, reactable, annotables, enrichplot,
-       clusterProfiler, shinyalert, rjson, ensembldb)
+       clusterProfiler, shinyalert, rjson, ensembldb, rBLAST, deepredeff)
 
 # Declaration of options:
 options(scipen = 100)
@@ -18,6 +18,7 @@ FUNCTIONS     <- paste0(PROJECT, "Scripts/functions.R")
 INPUT         <- paste0(PROJECT, "Input/")
 RESULTS       <- paste0(PROJECT, "Results/")
 HOMER_RESULTS <- paste0(RESULTS, "HOMER/")
+DATABASES     <- paste0(PROJECT, "Databases/")
 
 source(FUNCTIONS)
 
@@ -26,26 +27,37 @@ server <- function(input, output, session) {
   genome <- reactive({unlist(json[[input$organism]][3])})
   converted_table <- data.frame(matrix(ncol = 4, nrow = 0))
 
+  database <-
+    blast(db = paste0(DATABASES,
+          "Homo_sapiens_protein/GCF_000001405.38_GRCh38.p12_protein.fna"),
+          type = "blastp")
+
   observe({
     req(input$organism)
 
     result <- fromJSON(file = paste0(INPUT, "genome_data.json"))
     genome <- input$organism
+    
     bsgenome <- unlist(result[[genome]][1])
     txdb_g <- unlist(result[[genome]][2])
     orgdb <- unlist(result[[genome]][3])
+    ensdb <- unlist(result[[genome]][10])
 
-    if (length(bsgenome) != 0 && length(txdb_g) != 0 && length(orgdb) != 0) {
+    if (length(bsgenome) != 0 && length(txdb_g) != 0 && length(orgdb) != 0 &&
+        length(ensdb) != 0) {
       if (system.file(package = bsgenome) != "" &&
           system.file(package = txdb_g) != "" &&
-          system.file(package = orgdb) != "" ) {
+          system.file(package = orgdb) != "" &&
+          system.file(package = ensdb) != "") {
               library(bsgenome, character.only = TRUE)
               library(txdb_g, character.only = TRUE)
               library(orgdb, character.only = TRUE)
+              library(ensdb, character.only = TRUE)
       } else {
           BiocManager::install(bsgenome, update = FALSE)
           BiocManager::install(txdb, update = FALSE)
           BiocManager::install(orgdb, update = FALSE)
+          BiocManager::install(ensdb, update = FALSE)
       }
     }
   })
@@ -111,6 +123,11 @@ server <- function(input, output, session) {
       DT::renderDataTable({
         converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (pikais)")]},
         server = TRUE)
+
+    output$samples4 <-
+      DT::renderDataTable({
+        converted_table[, c("Grafikų pavadinimas", "Mėginio dydis (pikais)")]},
+        server = TRUE)
   
     ############################# GENOMIC DATA QUALITY #########################
     # GENOMIC DATA QUALITY - PEAK COUNT (PLOT 1):
@@ -169,7 +186,7 @@ server <- function(input, output, session) {
     output$plot1 <- renderPlot({ plot1() })
     output$download1 <- downloadHandler(
       filename = function() {
-        paste("Pikų_skaičius_mėginiuose", "png", sep = ".")
+        paste("Peak_counts", "png", sep = ".")
       },
       content = function(file){
         ggsave(file, plot1(), device = "png")
@@ -252,13 +269,13 @@ server <- function(input, output, session) {
             strip.text = element_text(colour = "black", face = "bold",
                                       size = 16)
           )
-        }
+      }
     })
 
     output$plot2 <- renderPlot({ plot2() })
     output$download2 <- downloadHandler(
       filename = function() {
-        paste("Pikų_pasiskirstymas_chromosomose", "png", sep = ".")
+        paste("Peak_distributions_chr", "png", sep = ".")
       },
       content = function(file){
         ggsave(file, plot2(), device = "png")
@@ -345,7 +362,7 @@ server <- function(input, output, session) {
     output$plot3 <- renderPlot({ plot3() })
     output$download3 <- downloadHandler(
       filename = function() {
-        paste("Mėginių_panašumas", "png", sep = ".")
+        paste("Sample_similarity", "png", sep = ".")
       },
       content = function(file){
         ggsave(file, plot3(), device = "png")
@@ -396,7 +413,7 @@ server <- function(input, output, session) {
     output$plot4 <- renderPlot({ plot4() })
     output$download4 <- downloadHandler(
       filename = function() {
-        paste("Genominė_distribucija", "png", sep = ".")
+        paste("Genomic_distribution", "png", sep = ".")
       },
       content = function(file){
         ggsave(file, plot4(), device = "png")
@@ -447,7 +464,7 @@ server <- function(input, output, session) {
     output$plot5 <- renderPlot({ plot5() })
     output$download5 <- downloadHandler(
       filename = function() {
-        paste("Atstumas_iki_TSS", "png", sep = ".")
+        paste("Distance_to_TSS", "png", sep = ".")
       },
       content = function(file){
         ggsave(file, plot5(), device = "png")
@@ -455,7 +472,7 @@ server <- function(input, output, session) {
     )
 
     # GENOMIC DATA QUALITY - PEAK PROFILE (PLOT 6):
-    output$plot6 <- renderPlot({
+    plot6 <- reactive({
       req(input$samples2_rows_selected)
 
       bigbed_files <- list()
@@ -513,6 +530,15 @@ server <- function(input, output, session) {
                   widths = 5, legend = "bottom")
       }
     })
+    output$plot6 <- renderPlot({ plot6() })
+    output$download6 <- downloadHandler(
+      filename = function() {
+        paste("Peak_profiles", "png", sep = ".")
+      },
+      content = function(file){
+        ggsave(file, plot6(), device = "png")
+      }
+    )
 
     ########################### GENOMIC DATA ANALYSIS ##########################
     go_data <- reactive({
@@ -861,6 +887,245 @@ server <- function(input, output, session) {
         homer_motifs
       }
     })
+
+    ######################### TF TARGET PREDICTION METHOD ########################
+    method_data <- reactive({
+      req(input$samples4_rows_selected)
+      req(input$pwm)
+      row_index <- input$samples4_rows_selected
+
+      if (length(row_index) > 1) {
+        shinyalert(
+          text = "Pasirinkite tik vieną mėginį!",
+          type = "error",
+          confirmButtonText = "Rinktis mėginį"
+        )
+        return()
+      }
+
+      mpwm <- read.table(file = input$pwm$datapath,  skip = 1)
+      mpwm <- t(mpwm)
+      rownames(mpwm) <- c("A", "C", "G", "T")
+
+      bigbed_files <- list()
+      grl <- GRangesList()
+      mm_genes <- GRangesList()
+      
+      genome <- input$organism
+      known_genes <- unlist(json[[genome]][2])
+      orgdb <- unlist(json[[genome]][3])
+      ensembl_annot <- unlist(json[[genome]][7])
+      gene_ranges <- genes(get(known_genes))
+
+      # Adding 'gene_symbol' column to gene_ranges GRange:
+      gene_ranges$gene_symbol <-
+        mapIds(get(orgdb), keys = gene_ranges$gene_id,
+              column = "SYMBOL", keytype = "ENTREZID")
+
+      for(rows in 1:length(row_index)) {
+        bigbed_files[[rows]] <-
+          read.table(file = converted_table[row_index[rows], "Kelias"])
+        col_len <- length(colnames(bigbed_files[[rows]]))
+
+        if (col_len > 4) {
+          colnames(bigbed_files[[rows]]) <-
+            c("chrom", "start", "end", "name",
+              rep(paste0("other", 1:(col_len - 4))))
+        } else {
+          colnames(bigbed_files[[rows]]) <- c("chrom", "start", "end", "other")
+        }
+
+        grl[[rows]] <- makeGRangesFromDataFrame(bigbed_files[[rows]],
+                                                keep.extra.columns = TRUE)
+        names(grl)[rows] <-
+          converted_table[row_index[rows], "Grafikų pavadinimas"]
+      }
+
+      if (length(row_index) == 0) {
+        return()
+      } else {
+        org_annot_peaks <-
+          annotate_peaks(grl, get(ensembl_annot), get(known_genes), orgdb)
+
+        for (sample in seq_along(org_annot_peaks)) {
+          selected_genes <-
+            tolower(org_annot_peaks[[sample]]$gene_symbol) %in%
+            tolower(gene_ranges$gene_symbol)
+          print("Čia veikia 4")
+          mm_genes[[sample]] <-
+            gene_ranges[gene_ranges$gene_symbol %in% org_annot_peaks[[sample]][selected_genes]$gene_symbol]
+          names(mm_genes)[sample] <-
+            converted_table[row_index[sample], "Grafikų pavadinimas"]
+        }
+      }
+      mm_genes
+    })
+
+    output$tabe <- DT::renderDataTable({ as.data.frame(method_data()[[1]]) })
+    #  output$tabe2 <- DT::renderDataTable({ as.data.frame(method_data()[[2]])})
+
+    output$tabe3 <- DT::renderDataTable({
+      mm_genes <- method_data()
+      genome <- input$organism
+      edb <- unlist(json[[genome]][10])
+      row_index <- input$samples4_rows_selected
+      prediction <- data.frame()
+
+      for (file in 1:length(mm_genes)) {
+        all_proteins <- character()
+        print(paste0("Reading file: ", names(mm_genes[file]), "..."))
+
+        for (gene_name in 1:length(unique(mm_genes[[file]]$gene_symbol))) {
+          gene <- mm_genes[[file]]$gene_symbol[[gene_name]]
+          if (is.na(gene)) {
+              next
+          } else {
+            proteins <-
+                proteins(get(edb), filter = GeneNameFilter(gene),
+                          return.type = "AAStringSet")
+
+            if (length(proteins) == 0) {
+                next
+            } else {
+              print(paste("Getting sequence for", gene, "..."))
+              max_val <- unlist(lapply(strsplit(aas_to_df(proteins)$seq, ""), length))
+              protein <- proteins[which.max(max_val)]
+              all_proteins <- append(all_proteins, protein)
+            }
+          }
+        }
+
+        basenamed_name <-
+          basename(converted_table[row_index[file], "Originalus pavadinimas"])
+
+        name <- paste0("Predictions_", file_path_sans_ext(basenamed_name))
+
+        writeXStringSet(
+          AAStringSet(all_proteins),
+          filepath = paste0(RESULTS, "Sequences/Protein_sequences/",
+                            name, ".fasta"),
+          format = "fasta"
+        )
+
+        # Performing blastp search using defined organism protein database and
+        # 'AAStringSet' object that contains protein sequences of annotated
+        # genes:
+        columns <-
+          paste("qseqid sseqid qacc sacc length pident",
+                "ppos qcovs evalue qstart qend sstart send")
+
+        if (!file.exists(paste0(RESULTS, "/Blastp/", name, ".csv"))) {
+          prediction <-
+            predict(database, all_proteins, BLAST_args = "-num_threads 10",
+                    custom_format = columns)
+
+          write.csv(prediction, paste0(RESULTS, "Blastp/", name,
+                                        ".csv"), row.names = FALSE)
+        } else {
+          prediction <- read.csv(paste0(RESULTS, "Blastp/", name, ".csv"),
+                                  header = TRUE)
+        }        
+      }
+      head(prediction)
+    })
+
+    output$tabe4 <- DT::renderDataTable({
+      req(input$organism_predict)
+      # Reading files that store blastp results:
+      prediction_list <-
+        list.files(path = paste0(RESULTS, "Blastp/"), "*.csv")
+      
+      prediction_data <- list()
+      query_seq_list <- list()
+      subject_seq_list <- list()
+      genome <- input$organism
+      known_genes <- unlist(json[[genome]][2])
+
+      predict_genome <- input$organism_predict
+      subject_known_genes <- unlist(json[[predict_genome]][2])
+
+      if (length(subject_known_genes) != 0) {
+        if (system.file(package = subject_known_genes) != "" ) {
+          library(subject_known_genes, character.only = TRUE)
+        } else {
+          BiocManager::install(subject_known_genes, update = FALSE)
+        }
+      }
+
+      subject_gene_ranges <- genes(get(subject_known_genes))
+
+      for (file in 1:length(prediction_list)) {
+        prediction_table <-
+          read.csv(paste0(RESULTS, "Blastp/", prediction_list[[file]]),
+                   header = TRUE)
+        names(prediction_table) <- prediction_list[[file]]
+        colnames(prediction_table) <-
+          c("qseqid", "sseqid", "qacc", "sacc", "length", "pident", "ppos",
+            "qcovs", "evalue", "qstart", "qend", "sstart", "send")
+        prediction_data[[file]] <- prediction_table
+      }
+
+      print(head(prediction_table))
+
+      for (smpl in 1:length(prediction_data)) {
+        grouped_predictions <-
+          prediction_data[[smpl]] %>%
+          group_by(qacc) %>%
+          dplyr::filter(qcovs == max(qcovs)) %>%
+          dplyr::filter(pident == max(pident)) %>%
+          dplyr::filter(pident > 70) %>%
+          as.data.frame()
+
+        proteins_symbols <-
+          ensembldb::select(
+            EnsDb.Mmusculus.v79,
+            keys = grouped_predictions$qacc,
+            keytype = "PROTEINID",
+            columns = c("ENTREZID", "SYMBOL")
+          )
+
+        merged_data <-
+          merge(proteins_symbols, grouped_predictions,
+                by.x = "PROTEINID", by.y = "qacc") %>%
+          dplyr::select(c(
+            "PROTEINID", "ENTREZID", "SYMBOL", "sacc",
+            "qcovs", "pident", "length"
+          ))
+
+        # Removing '.[1-9]' from accession numbers (if the step is skipped the
+        # following function 'bitr()' does not return any INT_FILES):
+        merged_data$sacc <-
+          merged_data$sacc %>%
+          gsub("\\.[1-9]+", "", .)
+
+        # Accessing Entrez identification numbers and gene symbols for every
+        # accession number (some accession numbers do not have Entrez id,
+        # therefore they are not matched):
+        print(head(merged_data$sacc))
+        entrezs_syms <-
+          bitr(merged_data$sacc, fromType = "ACCNUM",
+               toType = c("ENTREZID", "SYMBOL"), OrgDb = get(known_genes))
+
+        matched_data <-
+          merge(merged_data, entrezs_syms, by.x = "sacc", by.y = "ACCNUM") %>%
+          rename(
+            "EntrezQuery" = "ENTREZID.x",
+            "QuerySymbol" = "SYMBOL.x",
+            "EntrezSubject" = "ENTREZID.y",
+            "SubjectSymbol" = "SYMBOL.y",
+            "PercentIdentity" = "pident"
+          ) %>%
+          dplyr::select(c(
+            "sacc", "PROTEINID", "SubjectSymbol", "QuerySymbol",
+            "EntrezSubject", "EntrezQuery", "PercentIdentity",
+            "length", "qcovs"
+          ))
+
+        matched_data <- matched_data[!(is.na(matched_data$EntrezQuery)), ]
+        matched_data
+      }
+    })
+
   })
 }
 # nolint end
