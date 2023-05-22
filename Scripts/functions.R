@@ -5,8 +5,6 @@ p_load(imager, GenomicRanges, dplyr)
 
 # Path declarations:
 PROJECT     <- "./"
-INTER_FILES <- paste0(PROJECT, "Intermediate_data/")
-RESULTS     <- paste0(INTER_FILES, "Generated_files/")
 FIGURES     <- paste0(PROJECT, "Figures/")
 
 ########################### FUNCTION FOR SAMPLE TABLE ##########################
@@ -74,7 +72,7 @@ calculate_peaks <- function(filename) {
 # A function that reads PWM of certain transcription factor:
 get_PWM <- function(pwm_name) {
   TF_pwm <-
-    read.table(file = pwm_name) %>%
+    read.table(file = pwm_name, skip = 1) %>%
     t() %>%
     `rownames<-`(c("A", "C", "G", "T"))
   return(TF_pwm)
@@ -257,4 +255,72 @@ find_ontologies_tree <- function(data, genome, subontology) {
     )
   }
 }
+
+###################### FUNCTIONS FOR TF TARGET PREDICTION ######################
+# A function that counts PWM hits in query and subject sequences:
+find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score) {
+  percentages_qs <- data.frame(matrix(ncol = 2, nrow = 0))
+  colnames(percentages_qs) <- c("Sample", "Percentage")
+
+  for (seq in 1:length(q_seq_list)) {
+    percentages_query <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(percentages_query) <- c("Gene", "QueryPWMHits")
+
+    percentages_subject <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(percentages_subject) <- c("Gene", "SubjectPWMHits")
+
+    for (gene in 1:length(q_seq_list[[seq]])) {
+      q_hits <-
+        as.numeric(countPWM(as.matrix(pwm),
+                            as.character(q_seq_list[[seq]][gene]),
+                            min.score = min_score))
+
+      row <- c(names(q_seq_list[[seq]][gene]), q_hits)
+      percentages_query[nrow(percentages_query) + 1, ] <- row            
+    }
+
+    # write.csv(percentages_query,
+    #           paste0(RESULTS, paste0("PWM_hits/percent_mm_", seq), ".csv"),
+    #           row.names = FALSE)
+
+    percentages_query$Gene <- toupper(percentages_query$Gene)
+
+    for (gene in 1:length(s_seq_list[[seq]])) {
+      s_hits <-
+        as.numeric(countPWM(as.matrix(pwm),
+                            as.character(s_seq_list[[seq]][gene]),
+                            min.score = min_score))
+
+      row <- c(names(s_seq_list[[seq]][gene]), hg_hits)
+      percentages_subject[nrow(percentages_subject) + 1, ] <- row            
+    }
+
+    # write.csv(percentages_subject,
+    #           paste0(RESULTS, paste0("PWM_hits/percent_hg_", seq), ".csv"),
+    #           row.names = FALSE)
+
+    percent_merge <- merge(percentages_query, percentages_subject)
+    percent_merge["Percentage"] <- ""
+
+    print(head(percent_merge))
+
+    for (row in 1:(length(rownames(percent_merge)))) {
+      query_hits <- percent_merge[row, "QueryPWMHits"]
+      subject_hits <- percent_merge[row, "SubjectPWMHits"]
+      percentage <- (as.numeric(query_hits) / as.numeric(subject_hits)) * 100
+
+      if (percentage %in% c("Inf", "NaN", 0)) { next }
+      else { percent_merge[row, "Percentage"] <- as.numeric(percentage) }    
+    }
+
+    percent_merges[[seq]] <- percent_merge
+    names(percent_merges)[seq] <- paste0("Sample", seq)
+
+    # write.csv(percent_merge, paste0(RESULTS, paste0("percentages_", seq), ".csv"),
+    #         row.names = FALSE)
+
+    percentages_qs[nrow(percentages_qs) + 1, ] <-
+        c(paste("Sample", seq),
+          mean(as.numeric(percent_merge$Percentage), na.rm = TRUE))
+}}
 # nolint end
