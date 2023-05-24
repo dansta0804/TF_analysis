@@ -1,8 +1,8 @@
 # nolint start
 library(pacman)
-p_load(shinydashboard)
+p_load(shiny, shinythemes, shinydashboard, shinycustomloader)
 
-PROJECT <- "./"
+PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
 
 ui <- navbarPage(
   "ChIP sekoskaitos analizės",
@@ -258,8 +258,9 @@ ui <- navbarPage(
                 DT::dataTableOutput(outputId = "table4"),
                 type = "html",
                 loader = "dnaspin"
-              ),
-              downloadButton("downloadData", "Atsisiųsti lentelę")
+              )
+              # ,
+              # downloadButton("downloadData", "Atsisiųsti lentelę")
             )
           )
         )
@@ -271,7 +272,11 @@ ui <- navbarPage(
     sidebarLayout(
       sidebarPanel(
         width = 4,
+        p("Pasirinkite vieną arba kelis pateiktus mėginius, kuriuos naudosite
+           transkripcijos faktoriaus taikinių spėjimui:",
+           style = "font-weight:bold; font-size:17px; margin-left:0px"),
         DT::dataTableOutput("samples4"),
+        br(),
         selectInput(
           inputId = "organism_predict",
           label = "Nurodykite, kokiame organizme spėsite transkripcijos
@@ -283,24 +288,73 @@ ui <- navbarPage(
           ),
           selected = "Nenurodyta"
         ),
+        br(),
         selectInput(
           inputId = "min_score",
           label = "Nurodykite minimalų transkripcijos faktoriaus PWM matricos
                   ir sekų fragmentų atitikimo procentą:",
           choices = c("70%", "75%", "80%", "85%", "90%", "95%"),
           selected = "70%"
-        )
+        ),
+        br(),
+        br(),
+        p("Pastaba: priklausomai nuo pasirinktų mėginių dydžių metodo
+          realizacija gali užtrukti ilgiau nei 20 minučių.",
+          style = "font-weight:bold; color:red"),
       ),
       mainPanel(
         width = 8,
-        DT::dataTableOutput(outputId = "tabe"),
-        # DT::dataTableOutput(outputId = "tabe2")
-        shinydashboard::box(
-          width = 12,
-          withLoader(
-            DT::dataTableOutput(outputId = "tabe4"),
-            type = "html",
-            loader = "dnaspin"
+        tabsetPanel(
+          tabPanel(
+            "PWM matricos atitikimai", 
+            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek kiekviename
+              mėginyje vidutiniškai nustatyta pozicinės svorių matricos
+              atitikimų:"),
+            # DT::dataTableOutput(outputId = "table5")
+            shinydashboard::box(
+              width = 12,
+              withLoader(
+                plotOutput(outputId = "plot15"),
+                type = "html",
+                loader = "dnaspin"
+              )
+            )
+          ),
+          tabPanel(
+            "PWM matricos atitikimų skirtumai mėginiuose",
+            p("Pateiktoje sudėtinėje stulpelinėje diagramoje pavaizduota,
+              kokią procentinę dalį sudaro genai, kuriuose nustatytas didesnis
+              PWM matricos atitikimų skaičius užklausos sekose:"),
+            shinydashboard::box(
+              width = 12
+              # withLoader(
+              #   DT::dataTableOutput(outputId = "tabe3"),
+              #   type = "html",
+              #   loader = "dnaspin"
+              # )
+            ),
+            shinydashboard::box(
+              width = 12
+              # withLoader(
+              #   plotOutput(outputId = "tabe4"),
+              #   type = "html",
+              #   loader = "dnaspin"
+              # )
+            ),
+            shinydashboard::box(
+              width = 12
+              # withLoader(
+              #   plotOutput(outputId = "tabe5"),
+              #   type = "html",
+              #   loader = "dnaspin"
+              # )
+            )
+          ),
+          tabPanel(
+            "Rezultatų atsisiuntimas", 
+            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek kiekviename
+              mėginyje vidutiniškai nustatyta pozicinės svorių matricos
+              atitikimų:")
           )
         )
       )

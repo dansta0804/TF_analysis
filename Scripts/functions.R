@@ -258,9 +258,10 @@ find_ontologies_tree <- function(data, genome, subontology) {
 
 ###################### FUNCTIONS FOR TF TARGET PREDICTION ######################
 # A function that counts PWM hits in query and subject sequences:
-find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score) {
+find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score, samples) {
   percentages_qs <- data.frame(matrix(ncol = 2, nrow = 0))
   colnames(percentages_qs) <- c("Sample", "Percentage")
+  percent_merges <- list()
 
   for (seq in 1:length(q_seq_list)) {
     percentages_query <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -279,10 +280,6 @@ find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score) {
       percentages_query[nrow(percentages_query) + 1, ] <- row            
     }
 
-    # write.csv(percentages_query,
-    #           paste0(RESULTS, paste0("PWM_hits/percent_mm_", seq), ".csv"),
-    #           row.names = FALSE)
-
     percentages_query$Gene <- toupper(percentages_query$Gene)
 
     for (gene in 1:length(s_seq_list[[seq]])) {
@@ -291,18 +288,12 @@ find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score) {
                             as.character(s_seq_list[[seq]][gene]),
                             min.score = min_score))
 
-      row <- c(names(s_seq_list[[seq]][gene]), hg_hits)
+      row <- c(names(s_seq_list[[seq]][gene]), s_hits)
       percentages_subject[nrow(percentages_subject) + 1, ] <- row            
     }
 
-    # write.csv(percentages_subject,
-    #           paste0(RESULTS, paste0("PWM_hits/percent_hg_", seq), ".csv"),
-    #           row.names = FALSE)
-
     percent_merge <- merge(percentages_query, percentages_subject)
     percent_merge["Percentage"] <- ""
-
-    print(head(percent_merge))
 
     for (row in 1:(length(rownames(percent_merge)))) {
       query_hits <- percent_merge[row, "QueryPWMHits"]
@@ -314,13 +305,14 @@ find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score) {
     }
 
     percent_merges[[seq]] <- percent_merge
-    names(percent_merges)[seq] <- paste0("Sample", seq)
-
-    # write.csv(percent_merge, paste0(RESULTS, paste0("percentages_", seq), ".csv"),
-    #         row.names = FALSE)
+    names(percent_merges)[seq] <- samples[seq]
 
     percentages_qs[nrow(percentages_qs) + 1, ] <-
-        c(paste("Sample", seq),
+        c(samples[seq],
           mean(as.numeric(percent_merge$Percentage), na.rm = TRUE))
-}}
+  }
+
+  results <- list("df" = percentages_qs, "merges" = percent_merges)
+  return(results)
+}
 # nolint end
