@@ -1,5 +1,4 @@
-# Transkripcijos faktorių taikinių spėjimo metodo kūrimas ir
-# implementacija *Shiny* aplikacijoje
+# Transkripcijos faktorių taikinių spėjimo metodo kūrimas ir implementacija *Shiny* aplikacijoje
 
 Repozitorijoje saugomi failai, kurie yra naudojami sukurtoje
 R aplikacijoje. Ši aplikacija leidžia įvertinti įkeltų ChIP
