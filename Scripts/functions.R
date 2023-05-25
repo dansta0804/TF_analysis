@@ -295,6 +295,8 @@ find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score, samples) {
     percent_merge <- merge(percentages_query, percentages_subject)
     percent_merge["Percentage"] <- ""
 
+    print(percent_merge)
+
     for (row in 1:(length(rownames(percent_merge)))) {
       query_hits <- percent_merge[row, "QueryPWMHits"]
       subject_hits <- percent_merge[row, "SubjectPWMHits"]
@@ -307,12 +309,14 @@ find_PWM_hits <- function (q_seq_list, s_seq_list, pwm, min_score, samples) {
     percent_merges[[seq]] <- percent_merge
     names(percent_merges)[seq] <- samples[seq]
 
+    median_value <- median(as.numeric(percent_merge$Percentage), na.rm = TRUE)
+
     percentages_qs[nrow(percentages_qs) + 1, ] <-
         c(samples[seq],
-          mean(as.numeric(percent_merge$Percentage), na.rm = TRUE))
+          median(as.numeric(percent_merge$Percentage), na.rm = TRUE))
   }
 
-  results <- list("df" = percentages_qs, "merges" = percent_merges)
+  results <- list("median_value" = median_value, "merges" = percent_merges)
   return(results)
 }
 # nolint end

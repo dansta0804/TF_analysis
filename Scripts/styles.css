@@ -129,3 +129,8 @@ table.dataTable tbody tr.selected>* {
     color: red;
     font-size: 15px;
 }
+
+.info_text {
+    color: rgb(102, 10, 10);
+    font-size: 15px;
+}

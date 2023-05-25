@@ -6,7 +6,10 @@ p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
        ggseqlogo, ChIPseeker, tools, reactable, annotables, enrichplot,
-       clusterProfiler, shinyalert, rjson)
+       clusterProfiler, shinyalert, rjson, shiny, shinythemes, shinydashboard)
+
+library(BiocManager)
+options(repos = BiocManager::repositories())
 
 # Path declarations:
 PROJECT <- "./"

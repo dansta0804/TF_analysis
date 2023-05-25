@@ -1,8 +1,8 @@
 # nolint start
 library(pacman)
-p_load(shiny, shinythemes, shinydashboard, shinycustomloader)
+p_load(shiny, shinythemes, shinydashboard, shinycustomloader, reactable)
 
-PROJECT <- "/home/daniele/Desktop/IV_course/II_semester/TF_analysis/"
+PROJECT <- "./"
 
 ui <- navbarPage(
   "ChIP sekoskaitos analizės",
@@ -246,7 +246,7 @@ ui <- navbarPage(
             )
           ),
           tabPanel(
-            "Motyvų paieška De novo",
+            "Motyvų paieška de novo",
             p("Pateiktoje lentelėje pateikti identifikuoti pasirinkto mėginio
                motyvai, atlikus De novo motyvų paiešką."),
             p("Pastaba: priklausomai nuo pasirinkto mėginio dydžio De novo
@@ -259,8 +259,6 @@ ui <- navbarPage(
                 type = "html",
                 loader = "dnaspin"
               )
-              # ,
-              # downloadButton("downloadData", "Atsisiųsti lentelę")
             )
           )
         )
@@ -306,9 +304,9 @@ ui <- navbarPage(
         width = 8,
         tabsetPanel(
           tabPanel(
-            "PWM matricos atitikimai", 
-            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek kiekviename
-              mėginyje vidutiniškai nustatyta pozicinės svorių matricos
+            "PWM atitikimai", 
+            p("Pateiktoje sklaidos diagramoje pavaizduota, kiek kiekviename
+              gene nustatyta pozicinės svorių matricos
               atitikimų:"),
             # DT::dataTableOutput(outputId = "table5")
             shinydashboard::box(
@@ -317,44 +315,30 @@ ui <- navbarPage(
                 plotOutput(outputId = "plot15"),
                 type = "html",
                 loader = "dnaspin"
-              )
+              ),
+              downloadButton("download15", "Atsisiųsti vaizdą")
             )
           ),
           tabPanel(
-            "PWM matricos atitikimų skirtumai mėginiuose",
+            "PWM atitikimų skirtumai mėginiuose",
             p("Pateiktoje sudėtinėje stulpelinėje diagramoje pavaizduota,
               kokią procentinę dalį sudaro genai, kuriuose nustatytas didesnis
               PWM matricos atitikimų skaičius užklausos sekose:"),
             shinydashboard::box(
-              width = 12
-              # withLoader(
-              #   DT::dataTableOutput(outputId = "tabe3"),
-              #   type = "html",
-              #   loader = "dnaspin"
-              # )
-            ),
-            shinydashboard::box(
-              width = 12
-              # withLoader(
-              #   plotOutput(outputId = "tabe4"),
-              #   type = "html",
-              #   loader = "dnaspin"
-              # )
-            ),
-            shinydashboard::box(
-              width = 12
-              # withLoader(
-              #   plotOutput(outputId = "tabe5"),
-              #   type = "html",
-              #   loader = "dnaspin"
-              # )
+              width = 12,
+              withLoader(
+                plotOutput(outputId = "plot16"),
+                type = "html",
+                loader = "dnaspin"
+              )
             )
           ),
           tabPanel(
             "Rezultatų atsisiuntimas", 
-            p("Pateiktoje stulpelinėje diagramoje pavaizduota, kiek kiekviename
-              mėginyje vidutiniškai nustatyta pozicinės svorių matricos
-              atitikimų:")
+            p("Atsisiųsti išgautas anotuotų pikų genų aminorūgščių sekas:"),
+            downloadButton("download18", "Atsisiųsti failą"),
+            p("Atsisiųsti Blastp rezultatų lentelę:"),
+            downloadButton("download19", "Atsisiųsti failą")
           )
         )
       )
