@@ -30,15 +30,16 @@ sudaro trys R failai:
   *Shiny* aplikacijos paleidimui.
 
 **Aplikacijos paleidimas**
-1. Norint paleisti sukurtą *Shiny* aplikaciją reikia atsiųsti
-virtualios mašinos *.OVA failą, kuris gali būti atsisiųtas
+1. Norint paleisti sukurtą *Shiny* aplikaciją reikia atsisiųsti
+virtualios mašinos **Aplikacija.OVA** failą, kuris gali būti atsisiųtas
 iš čia:
+[https://www.google.com](https://www.google.com).
 
 2. Atsisiųstas failas turi būti įkeltas į Oracle VirtualBox:
 **File** > **Import appliance** > **File** dalyje reikia
-įkelti atsisiųstą *.OVA failą.
+įkelti atsisiųstą **Aplikacija.OVA** failą.
 
-3. Atsivėrus darbalaukiui reikia pasirinkti aplanką "Aplikacija".
+3. Pasirodžius darbalaukiui reikia pasirinkti aplanką "Aplikacija".
 
 4. Šiame aplanke atverti terminalą ir įrašyti komandą:
 `Rscript ./Scripts/App/app.R`
