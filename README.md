@@ -18,7 +18,7 @@ patalpintas aplikacijoje naudojamų funkcijų failas (*functions.R*),
 aplikaciją sudaranačių elementų stilių apibūdinantis CSS formato
 failas (*styles.css*) bei **App** direktorija. Šią direktoriją
 sudaro trys R failai:
-  - *ui.R* failas aprašytas aplikacijos elementų išdėstymas;
+  - *ui.R* faile aprašytas aplikacijos elementų išdėstymas;
   - *server.R* faile realizuotas R programinis kodas,
   atliekantis ChIP sekoskaitos duomenų kokybės vertinimą,
   biologines analizes bei realizuojantis transkripcijos faktorių
