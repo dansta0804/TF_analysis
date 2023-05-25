@@ -29,3 +29,18 @@ sudaro trys R failai:
   *ui.R* ir *server.R* programų kvietimas. Šis failas reikalingas
   *Shiny* aplikacijos paleidimui.
 
+**Aplikacijos paleidimas**
+1. Norint paleisti sukurtą *Shiny* aplikaciją reikia atsiųsti
+virtualios mašinos *.OVA failą, kuris gali būti atsisiųtas
+iš čia:
+
+2. Atsisiųstas failas turi būti įkeltas į Oracle VirtualBox:
+**File** > **Import appliance** > **File** dalyje reikia
+įkelti atsisiųstą *.OVA failą.
+
+3. Atsivėrus darbalaukiui reikia pasirinkti aplanką "Aplikacija".
+
+4. Šiame aplanke atverti terminalą ir įrašyti komandą:
+`Rscript ./Scripts/App/app.R`
+
+5. Pasirodžius *http* adresui jį įvesti į naudojamą naršyklę.
