@@ -33,7 +33,7 @@ sudaro trys R failai:
 1. Norint paleisti sukurtą *Shiny* aplikaciją reikia atsisiųsti
 virtualios mašinos **Aplikacija.OVA** failą, kuris gali būti atsisiųtas
 iš čia:
-[https://www.google.com](https://www.google.com).
+[Nuoroda](https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/EtEGQ8POkapLhPv6eHvl48cB-jmes81M0JPW8PVWTz2QgA?e=wjSSKJ).
 
 2. Atsisiųstas failas turi būti įkeltas į Oracle VirtualBox:
 **File** > **Import appliance** > **File** dalyje reikia
