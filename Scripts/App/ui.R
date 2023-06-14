@@ -32,7 +32,7 @@ ui <- navbarPage(
         ),
         fileInput(
           inputId = "pwm",
-          label = "Įkelkite transkripcijos faktoriaus PWM matricą:",
+          label = "Įkelkite transkripcijos faktoriaus PSM matricą:",
           multiple = FALSE,
           buttonLabel = "Ieškoti failo",
           placeholder = "Failas nepasirinktas"
@@ -169,7 +169,7 @@ ui <- navbarPage(
         width = 8,
         tabsetPanel(
           tabPanel(
-            "PWM matricos atitikimai",
+            "PSM matricos atitikimai",
             p("Pateiktoje stulpelinėje diagramoje pavaizduota, kokią procentinę
                dalį sudaro įkeltą transkripcijos faktoriaus pozicinę svorių
                matricą atitinkantys sekų fragmentai, palyginus su bendru pikų
@@ -289,7 +289,7 @@ ui <- navbarPage(
         br(),
         selectInput(
           inputId = "min_score",
-          label = "Nurodykite minimalų transkripcijos faktoriaus PWM matricos
+          label = "Nurodykite minimalų transkripcijos faktoriaus PSM matricos
                   ir sekų fragmentų atitikimo procentą:",
           choices = c("70%", "75%", "80%", "85%", "90%", "95%"),
           selected = "70%"
@@ -304,7 +304,7 @@ ui <- navbarPage(
         width = 8,
         tabsetPanel(
           tabPanel(
-            "PWM atitikimai", 
+            "PSM atitikimai", 
             p("Pateiktoje sklaidos diagramoje pavaizduota, kiek kiekviename
               gene nustatyta pozicinės svorių matricos
               atitikimų:"),
@@ -320,10 +320,10 @@ ui <- navbarPage(
             )
           ),
           tabPanel(
-            "PWM atitikimų skirtumai mėginiuose",
+            "PSM atitikimų skirtumai mėginiuose",
             p("Pateiktoje sudėtinėje stulpelinėje diagramoje pavaizduota,
               kokią procentinę dalį sudaro genai, kuriuose nustatytas didesnis
-              PWM matricos atitikimų skaičius užklausos sekose:"),
+              PSM matricos atitikimų skaičius užklausos sekose:"),
             shinydashboard::box(
               width = 12,
               withLoader(

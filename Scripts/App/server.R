@@ -1,12 +1,12 @@
 # nolint start
-library(+pacman)
+library(pacman)
 
 # Library loading:
-p_load(shiny, data.table+, rtracklayer, ggplot2+, ggthemes, plyranges, ggpubr,
+p_load(shiny, data.table, rtracklayer, ggplot2, ggthemes, plyranges, ggpubr,
        BRGenomics, reshape2, plotly, heatmaply, dplyr, gplots, genomation,
        Biostrings, scales, GenomicRanges, DT, shinythemes, shinycustomloader,
        ggseqlogo, ChIPseeker, tools, reactable, annotables, enrichplot,
-       clusterProfiler, shinyalert, rjson, ensembldb, deepredeff)
+       clusterProfiler, shinyalert, rjson, ensembldb, deepredeff, rBLAST)
 
 # Declaration of options:
 options(scipen = 100)
@@ -27,10 +27,10 @@ server <- function(input, output, session) {
   genome <- reactive({unlist(json[[input$organism]][3])})
   converted_table <- data.frame(matrix(ncol = 4, nrow = 0))
 
-  #database <-
-  #  blast(db = paste0(DATABASES,
-  #        "Homo_sapiens_protein/GCF_000001405.38_GRCh38.p12_protein.fna"),
-  #        type = "blastp")
+  database <-
+   blast(db = paste0(DATABASES,
+         "Homo_sapiens_protein/GCF_000001405.38_GRCh38.p12_protein.fna"),
+         type = "blastp")
 
   observe({
     req(input$organism)
@@ -650,7 +650,7 @@ server <- function(input, output, session) {
 
           if (length(input$pwm) == 0) {
             shinyalert(
-              text = "PWM matrica neįkelta!",
+              text = "PSM matrica neįkelta!",
               type = "error",
               confirmButtonText = "Įkelti matricą"
             )
@@ -942,7 +942,7 @@ server <- function(input, output, session) {
       print(length(input$pwm))
       if (length(input$pwm) == 0) {
         shinyalert(
-          text = "Duomenų įkėlimo skiltyje nepateikta PWM!",
+          text = "Duomenų įkėlimo skiltyje nepateikta PSM!",
           type = "error",
           confirmButtonText = "Įkelti matricą"
         )
@@ -1228,7 +1228,7 @@ server <- function(input, output, session) {
       labs(title = paste0("Atitikimų pasiskirstymas, kai\nmin.score = ",
                           input$min_score, ", mediana = ",
                           round(percentages$median_value[[1]], 2), "%"),
-           x = "Genų numeriai", y = "PWM atitikimų procentinė dalis") +
+           x = "Geno numeris lentelėje", y = "PSM atitikimų procentinė dalis") +
       coord_cartesian(ylim = c(0,
                               max(as.numeric(percentages_df$Percentage)) + 5)) +
       theme(
@@ -1335,7 +1335,7 @@ server <- function(input, output, session) {
                position = position_dodge(0.5)) +
       scale_fill_manual(values = c("#e3a15e", "#c7633b"),
                         labels = c("Bendras genų skaičius",
-                                   "Genų PWM atitikimai, viršijantys 100%")) +
+                                   "Genų PSM atitikimai, viršijantys 100%")) +
       geom_text(aes(label = ifelse(variable == "Query_gene_count",
                                    paste0(round(as.numeric(Percentage),
                                           digits = 2), "%"), ""),
