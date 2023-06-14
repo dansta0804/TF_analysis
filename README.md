@@ -45,3 +45,5 @@ iš čia:
 `Rscript ./Scripts/App/app.R`
 
 5. Pasirodžius *http* adresui jį įvesti į naudojamą naršyklę.
+
+Virtualios mašinos slaptažodis: ***ubuntu16***.
