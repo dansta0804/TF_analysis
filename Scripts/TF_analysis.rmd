@@ -54,6 +54,12 @@ bbfiles_hg <- list.files(path = HSAPIENS, "*bed")
 grl_mm <- GRangesList()
 grl_hg <- GRangesList()
 
+bbfiles_mm <- c("SRX13476140.05.bed", "SRX4298474.05.bed", "SRX4298470.05.bed",
+                "SRX2749159.05.bed")
+
+bbfiles_hg <- c("SRX11080722.05.bed", "SRX5716451.05.bed", "SRX4417526.05.bed",
+                "SRX701989.05.bed")
+
 chr_abr <- c(paste0("chr", 1:19), "chrX", "chrY")
 len_mm <- length(bbfiles_mm)    # Length of samples for Mus musculus
 len_hg <- length(bbfiles_hg)    # Length of samples for Homo sapiens
@@ -105,8 +111,6 @@ write.table(mm_annot_peaks, file = paste0(INT_FILES, "/mm_annotated_peaks.txt"),
 ```{r HS_PEAK_ANNOTATION, echo=FALSE, message=FALSE, warning=FALSE, output=FALSE}
 hg_annot_peaks <- annotate_peaks(grl_hg, grch38, txdb_hs, orgdb_hs)
 
-names(grl_hg)
-
 write.table(hg_annot_peaks, file = paste0(INT_FILES, "/hg_annotated_peaks.txt"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 # nolint end
@@ -124,7 +128,7 @@ mm_genes <- GRangesList()
 
 for (sample in seq_along(mm_annot_peaks)) {
     selected_genes <-
-        tolower(mm_annot_peaks[[6]]$gene_symbol) %in%
+        tolower(mm_annot_peaks[[sample]]$gene_symbol) %in%
         tolower(mmgene_ranges$gene_symbol)
 
     # mmgene_ranges[mmgene_ranges$gene_symbol %in% mm_annot_peaks[[8]][selected_genes]$gene_symbol]
@@ -137,11 +141,12 @@ for (sample in seq_along(mm_annot_peaks)) {
     #           paste0(PROJECT, "b.csv"),
     #           row.names = FALSE)
 
-    mm_genes[[4]] <-
-        mmgene_ranges[mmgene_ranges$gene_symbol %in% mm_annot_peaks[[6]][selected_genes]$gene_symbol]
+    mm_genes[[sample]] <-
+        mmgene_ranges[mmgene_ranges$gene_symbol %in% mm_annot_peaks[[sample]][selected_genes]$gene_symbol]
 
 }
 
+mm_annot_peaks[1]
 # Čia mm_genes[[1]] keisis į mm_genes[[2]] ir t.t.
 
 # Loading downloaded Homo sapiens protein database:
@@ -153,9 +158,9 @@ human_db <-
 
 for (file in 1:length(mm_genes)) {
     all_proteins <- character()
-    print(paste0("Reading file: ",  file, "..."))
-    for (gene_name in 1:length(unique(mm_genes[[4]]$gene_symbol))) {
-        gene <- mm_genes[[4]]$gene_symbol[[gene_name]]
+    # print(paste0("Reading file: ",  file, "..."))
+    for (gene_name in 1:length(unique(mm_genes[[1]]$gene_symbol))) {
+        gene <- mm_genes[[1]]$gene_symbol[[gene_name]]
         if (is.na(gene)) {
             next
         } else {
@@ -175,7 +180,7 @@ for (file in 1:length(mm_genes)) {
     }
     writeXStringSet(AAStringSet(all_proteins),
                     filepath = paste0(INT_FILES, "Extracted_protein_sequences_",
-                                      "sample_4_good.fasta"),
+                                      "sample_SRX13476140.05_new.fasta"),
                 format = "fasta")
 
     # Performing blastp search using defined Homo sapiens protein database and
@@ -184,13 +189,13 @@ for (file in 1:length(mm_genes)) {
         predict(human_db, all_proteins, BLAST_args = "-num_threads 10",
                 custom_format = "qseqid sseqid qacc sacc length pident ppos qcovs evalue qstart qend sstart send")
 
-    write.csv(pre, paste0(RESULTS, "Blastp/predictions_sample4_full.csv"),
+    write.csv(pre, paste0(RESULTS, "Blastp/predictions_sample_SRX13476140.05_final.csv"),
               row.names = FALSE)
 }
 
 all_proteins <-
     readAAStringSet(paste0(INT_FILES,
-                           "Extracted_protein_sequences_sample4.fasta"),
+                           "Extracted_protein_sequences_sample_SRX13476140.05_final.fasta"),
                     format="fasta")
 # nolint end
 ```
@@ -313,68 +318,6 @@ for (smpl in 1:length(prediction_data)) {
 }
 percent_merges <- list()
 
-find_PWM_hits <- function (mm_seq_list, hg_seq_list, pwm, min_score) {
-    for (seq in 1:length(mm_seq_list)) {
-    # nolint start
-    percentages_query <- data.frame(matrix(ncol = 2, nrow = 0))
-    colnames(percentages_query) <- c("Gene", "QueryPWMHits")
-
-    percentages_subject <- data.frame(matrix(ncol = 2, nrow = 0))
-    colnames(percentages_subject) <- c("Gene", "SubjectPWMHits")
-
-    for (gene in 1:length(mm_seq_list[[seq]])) {
-        mm_hits <-
-            as.numeric(countPWM(as.matrix(pwm), as.character(mm_seq_list[[seq]][gene]),
-                                min.score = min_score))
-
-        row <- c(names(mm_seq_list[[seq]][gene]), mm_hits)
-        percentages_query[nrow(percentages_query) + 1, ] <- row            
-    }
-
-    print("oook")
-    write.csv(percentages_query, paste0(RESULTS, paste0("PWM_hits/percent_mm_", seq), ".csv"),
-            row.names = FALSE)
-    percentages_query$Gene <- toupper(percentages_query$Gene)
-print("osssss")
-    for (gene in 1:length(hg_seq_list[[seq]])) {
-        hg_hits <- as.numeric(countPWM(as.matrix(pwm),
-                                    as.character(hg_seq_list[[seq]][gene]),
-                                    min.score = min_score))
-
-        row <- c(names(hg_seq_list[[seq]][gene]), hg_hits)
-        percentages_subject[nrow(percentages_subject) + 1, ] <- row            
-    }
-
-    write.csv(percentages_subject, paste0(RESULTS, paste0("PWM_hits/percent_hg_", seq), ".csv"),
-            row.names = FALSE)
-
-    percent_merge <- merge(percentages_query, percentages_subject)
-    percent_merge["Percentage"] <- ""
-
-    print(head(percent_merge))
-
-    for (row in 1:(length(rownames(percent_merge)))) {
-        query_hits <- percent_merge[row, "QueryPWMHits"]
-        subject_hits <- percent_merge[row, "SubjectPWMHits"]
-        percentage <- (as.numeric(query_hits) / as.numeric(subject_hits)) * 100
-
-        if (percentage %in% c("Inf", "NaN", 0)) { next }
-        else { percent_merge[row, "Percentage"] <- as.numeric(percentage) }    
-    }
-
-    percent_merges[[seq]] <- percent_merge
-    names(percent_merges)[seq] <- paste0("Sample", seq)
-
-    write.csv(percent_merge, paste0(RESULTS, paste0("percentages_", seq), ".csv"),
-            row.names = FALSE)
-    print("o čia?")
-    df[nrow(df) + 1, ] <-
-        c(paste("Sample", seq),
-          mean(as.numeric(percent_merge$Percentage), na.rm = TRUE))
-}
-results <- list("df" = df, "merges" = percent_merges)
-return(results)
-}
 
 d <- find_PWM_hits(mm_seq_list, hg_seq_list, pwm, "70%")
 a <- find_PWM_hits(mm_seq_list, hg_seq_list, pwm, "80%")
