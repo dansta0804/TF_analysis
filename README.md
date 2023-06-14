@@ -35,8 +35,6 @@ virtualios mašinos **Aplikacija.ova** failą, kuris gali būti atsisiųtas
 iš čia:
 [Nuoroda](https://vult-my.sharepoint.com/:f:/g/personal/daniele_stasiunaite_mif_stud_vu_lt/EtEGQ8POkapLhPv6eHvl48cB-jmes81M0JPW8PVWTz2QgA?e=wjSSKJ).
 
-Virtualios mašinos slaptažodis: ***ubuntu16***.
-
 2. Atsisiųstas failas turi būti įkeltas į Oracle VirtualBox:
 **File** > **Import appliance** > **File** dalyje reikia
 įkelti atsisiųstą **Aplikacija.ova** failą.
@@ -47,3 +45,5 @@ Virtualios mašinos slaptažodis: ***ubuntu16***.
 `Rscript ./Scripts/App/app.R`
 
 5. Pasirodžius *http* adresui jį įvesti į naudojamą naršyklę.
+
+Virtualios mašinos slaptažodis: ***ubuntu16***.
